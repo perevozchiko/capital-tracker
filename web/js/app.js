@@ -320,11 +320,133 @@ function showAccountEditor(action,account){
  $('#editValue').focus();
 }
 
+
+function showGroupEditor(action,group=null){
+ const dialog=$('#accountDialog');
+ dialog.dataset.action=action;
+ dialog.dataset.id=group?String(group.id):'';
+ $('#editTitle').textContent=t(action==='groupCreate'?'createGroup':'renameGroup');
+ $('#editHelp').textContent=t('groupHelp');
+ $('#editFields').innerHTML=`<label for="editValue">${}t('groupName')</label><input id="editValue" name="value" type="text" maxlength="100" required value="${}escapeHTML(group?.name||'')">`;
+ $('#cancelEdit').textContent=t('cancel');
+ $('#confirmEdit').textContent=t('confirm');
+ dialog.showModal();
+ $('#editValue').focus();
+}
+async function groupAction(action,id,key){
+ if(action==='toggleGroup'){
+  if(collapsedGroups.has(key))collapsedGroups.delete(key);else collapsedGroups.add(key);
+  try{localStorage.setItem('capital-collapsed-groups',JSON.stringify([...collapsedGroups]));}catch{}
+  const button=document.querySelector(`[data-action="toggleGroup"][data-group-key="${}key"]`);
+  const panel=button?.closest('.account-group');
+  if(panel){const closed=collapsedGroups.has(key);panel.classList.toggle('is-collapsed',closed);button.textContent=closed?'▸':'▾';button.setAttribute('aria-expanded',String(!closed));}
+  return;
+ }
+ if(action==='groupCreate'||action==='groupRename'){
+  showGroupEditor(action,state.groups.groups.find(g=>g.id===id));
+  return;
+ }
+ if(action==='groupDelete'){
+  const yes=await showConfirm({title:t('deleteGroup'),message:t('deleteGroupWarning'),confirmLabel:t('delete'),cancelLabel:t('cancel'),danger:true});
+  if(!yes)return;
+  await mutation(async()=>{await api('/groups/'+id,{method:'DELETE'});notify(t('groupDeleted'))});
+  return;
+ }
+ if(action==='groupUp'||action==='groupDown'){
+  const ids=state.groups.groups.map(g=>g.id),i=ids.indexOf(id),j=i+(action==='groupUp'?-1:1);
+  if(i<0||j<0||j>=ids.length)return;
+  [ids[i],ids[j]]=[ids[j],ids[i]];
+  await mutation(async()=>request('/groups/reorder','PUT',{ids}));
+ }
+}
+function moveAccountIn(items,id,targetGroup,targetID=null,after=true){
+ const itemIndex=items.findIndex(a=>a.id===id);
+ if(itemIndex<0)return items;
+ const [item]=items.splice(itemIndex,1);
+ item.group_id=targetGroup;
+ let insertIndex;
+ if(targetID!==null){
+  insertIndex=items.findIndex(a=>a.id===targetID);
+  if(insertIndex<0)return null;
+  if(after)insertIndex++;
+ }else{
+  insertIndex=items.findLastIndex(a=>a.group_id===targetGroup)+1;
+  if(insertIndex===0){
+   const order=[...state.groups.groups.map(g=>g.id),null];
+   const nextGroups=order.slice(order.indexOf(targetGroup)+1);
+   insertIndex=items.findIndex(a=>nextGroups.includes(a.group_id));
+   if(insertIndex<0)insertIndex=items.length;
+  }
+ }
+ items.splice(insertIndex,0,item);
+ return items;
+}
+let dragging=null;
+document.addEventListener('dragstart',e=>{
+ if(e.target.closest('button,select,input'))return;
+ const account=e.target.closest('[data-account-row]');
+ const header=e.target.closest('[data-group-row]');
+ if(account)dragging={kind:'account',id:Number(account.dataset.accountRow)};
+ else if(header&&header.dataset.groupRow!=='ungrouped')dragging={kind:'group',id:Number(header.dataset.groupRow)};
+ else return;
+ e.dataTransfer.effectAllowed='move';
+ e.dataTransfer.setData('text/plain',String(dragging.id));
+ e.target.classList.add('dragging');
+});
+document.addEventListener('dragend',()=>{
+ dragging=null;
+ document.querySelectorAll('.dragging,.drag-over').forEach(el=>el.classList.remove('dragging','drag-over'));
+});
+document.addEventListener('dragover',e=>{
+ if(!dragging)return;
+ const target=e.target.closest(dragging.kind==='group'?'[data-group-row]:not([data-group-row="ungrouped"])':'[data-account-row],.account-group-head,.account-group');
+ if(!target)return;
+ e.preventDefault();e.dataTransfer.dropEffect='move';
+ document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+ target.classList.add('drag-over');
+});
+document.addEventListener('drop',async e=>{
+ if(!dragging)return;
+ const source=dragging;dragging=null;
+ document.querySelectorAll('.dragging,.drag-over').forEach(el=>el.classList.remove('dragging','drag-over'));
+ try{
+  if(source.kind==='group'){
+   const header=e.target.closest('[data-group-row]');
+   if(!header||header.dataset.groupRow==='ungrouped')return;
+   e.preventDefault();
+   const target=Number(header.dataset.groupRow);
+   if(target===source.id)return;
+   const ids=state.groups.groups.map(g=>g.id);
+   ids.splice(ids.indexOf(source.id),1);
+   let idx=ids.indexOf(target);
+   if(e.clientY>header.getBoundingClientRect().top+header.offsetHeight/2)idx++;
+   ids.splice(idx,0,source.id);
+   await mutation(async()=>request('/groups/reorder','PUT',{ids}));
+   return;
+  }
+  const row=e.target.closest('[data-account-row]');
+  const panel=e.target.closest('.account-group');
+  if(!panel)return;
+  e.preventDefault();
+  const targetGroup=panel.dataset.groupId?Number(panel.dataset.groupId):null;
+  const targetID=row?Number(row.dataset.accountRow):null;
+  if(targetID===source.id)return;
+  const after=row?e.clientY>row.getBoundingClientRect().top+row.offsetHeight/2:true;
+  const items=moveAccountIn(orderedAssignments(),source.id,targetGroup,targetID,after);
+  if(items)await saveAssignments(items);
+ }catch(err){notify(err.message||t('error'),true)}
+});
+
 async function submitAccountEdit(form){
  const dialog=$('#accountDialog');
  const action=dialog.dataset.action, id=Number(dialog.dataset.id);
  const value=form.elements.namedItem('value').value;
  try{
+  if(action==='groupCreate'||action==='groupRename'){
+   if(action==='groupCreate')await request('/groups','POST',{name:value});
+   else await request('/groups/'+id,'PATCH',{name:value});
+   dialog.close();await refresh();await render();notify(t('groupSaved'));return;
+  }
   if(action==='rename')await request('/accounts/'+id,'PATCH',{name:value});
   if(action==='currency')await request('/accounts/'+id,'PATCH',{currency:value});
   if(action==='archive')await request('/accounts/'+id+'/archive','POST',{month:value});
@@ -346,7 +468,15 @@ async function accountAction(action,id){const account=state.accounts.find(a=>a.i
   await mutation(async()=>{await api('/accounts/'+id,{method:'DELETE',headers:{'X-Capital-Tracker':'1'}});notify(t('accountDeleted'))});
  }
  if(action==='history'){const hist=[];for(const m of state.months){const d=await api('/months/'+m.month);const b=d.balances.find(x=>x.account_id===id);if(b)hist.push([m.month,b.amount_minor])}const content=hist.length?hist.map(([month,value])=>`<tr><td>${monthLabel(month)}</td><td>${money(value,account.currency)}</td></tr>`).join(''):`<tr><td colspan="2">${t('historicalEmpty')}</td></tr>`;$('#pageContent').innerHTML=`<section class="card panel"><div class="panel-heading"><h2>${escapeHTML(account.name)} · ${t('balanceHistory')}</h2><button class="btn btn-small" data-page="accounts">${t('earlier')}</button></div><p class="caption">${t('accountHistoricalNote')}</p><div class="table-scroll"><table><tbody>${content}</tbody></table></div></section>`;}
- if(action==='up'||action==='down'){const ids=state.accounts.map(a=>a.id);const i=ids.indexOf(id),j=i+(action==='up'?-1:1);if(j<0||j>=ids.length)return;[ids[i],ids[j]]=[ids[j],ids[i]];await mutation(async()=>{await request('/accounts/reorder','PUT',{ids})})}
+ if(action==='up'||action==='down'){
+  const items=orderedAssignments(),a=state.accounts.find(x=>x.id===id);
+  const members=items.filter(x=>x.group_id===(a.group_id??null));
+  const i=members.findIndex(x=>x.id===id),j=i+(action==='up'?-1:1);
+  if(j<0||j>=members.length)return;
+  const x=items.findIndex(x=>x.id===members[i].id),y=items.findIndex(x=>x.id===members[j].id);
+  [items[x],items[y]]=[items[y],items[x]];
+  await saveAssignments(items);
+ }
 }
 document.addEventListener('click',async e=>{
  const node=e.target.closest('[data-page],[data-action]');if(!node)return;
@@ -357,6 +487,7 @@ document.addEventListener('click',async e=>{
   else if(action==='monthNext')await setMonth(nextMonth(state.month,1));
   else if(action==='selectColumn')await setMonth(node.dataset.month);
   else if(action==='focusAdd'){$('#accountName')?.focus()}
+  else if(action?.startsWith('group'))await groupAction(action,Number(node.dataset.groupId),node.dataset.groupKey);
   else if(action==='exportJSON')await exportJSON();
   else if(action==='importJSON')$('#jsonFileInput')?.click();
   else if(action==='clearAllData')await clearAllData();
@@ -386,7 +517,7 @@ document.addEventListener('submit',async e=>{
   return;
  }
  if(e.target.id!=='addAccountForm')return;e.preventDefault();const form=e.target;
- await mutation(async()=>{await request('/accounts','POST',{name:form.elements.name.value,currency:form.elements.currency.value,start_month:form.elements.start.value});notify(t('accountCreated'))});
+ await mutation(async()=>{await request('/accounts','POST',{name:form.elements.name.value,currency:form.elements.currency.value,start_month:form.elements.start.value,group_id:form.elements.group.value?Number(form.elements.group.value):null});notify(t('accountCreated'))});
 });
 document.addEventListener('input',e=>{if(e.target.matches('.editor-input')){state.dirty=true;e.target.classList.remove('invalid');e.target.removeAttribute('aria-invalid');if(e.target.matches('[data-balance]'))updateBalanceDifference(e.target);}});
 document.addEventListener('change',async e=>{
@@ -394,6 +525,14 @@ document.addEventListener('change',async e=>{
   const file=e.target.files?.[0];
   e.target.value='';
   await importJSON(file);
+  return;
+ }
+ if(e.target.matches('[data-move-account]')){
+  const id=Number(e.target.dataset.moveAccount),group=e.target.value?Number(e.target.value):null;
+  try{
+   const items=moveAccountIn(orderedAssignments(),id,group);
+   if(items)await saveAssignments(items);
+  }catch(err){notify(err.message||t('error'),true);await render()}
   return;
  }
  if(e.target.classList.contains('month-picker')){const changed=await setMonth(e.target.value);if(!changed&&e.target.isConnected)e.target.value=state.month;return}
