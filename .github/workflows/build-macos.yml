@@ -3,6 +3,17 @@ name: Build Capital Tracker
 # Builds are intentionally manual-only during development.
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: "Which platform should be built?"
+        required: true
+        default: macos
+        type: choice
+        options:
+          - macos
+          - linux
+          - windows
+          - all
 
 permissions:
   contents: read
@@ -10,6 +21,7 @@ permissions:
 jobs:
   macos:
     name: macOS Apple Silicon (arm64)
+    if: ${{ inputs.platform == 'macos' || inputs.platform == 'all' }}
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -88,6 +100,87 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: CapitalTracker-macos-arm64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+  linux:
+    name: Linux (amd64)
+    if: ${{ inputs.platform == 'linux' || inputs.platform == 'all' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.3'
+      - name: Resolve and verify dependencies
+        run: |
+          go mod tidy
+          go mod verify
+      - name: Go tests
+        run: go test -count=1 ./...
+      - name: JavaScript tests
+        run: |
+          node --check web/js/app.js
+          node --check web/js/numbers.js
+          node --experimental-default-type=module --test tests/numbers.test.mjs
+      - name: Go vet
+        run: go vet ./...
+      - name: Build Linux executable
+        env:
+          GOOS: linux
+          GOARCH: amd64
+          CGO_ENABLED: '0'
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags="-s -w -X main.version=0.1.3" -o dist/CapitalTracker-linux-amd64 ./cmd/capital-tracker
+          cd dist
+          sha256sum CapitalTracker-linux-amd64 > CapitalTracker-linux-amd64.sha256
+      - uses: actions/upload-artifact@v7
+        with:
+          name: CapitalTracker-linux-amd64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+  windows:
+    name: Windows (amd64)
+    if: ${{ inputs.platform == 'windows' || inputs.platform == 'all' }}
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.3'
+      - name: Resolve and verify dependencies
+        run: |
+          go mod tidy
+          go mod verify
+      - name: Go tests
+        run: go test -count=1 ./...
+      - name: JavaScript tests
+        run: |
+          node --check web/js/app.js
+          node --check web/js/numbers.js
+          node --experimental-default-type=module --test tests/numbers.test.mjs
+      - name: Go vet
+        run: go vet ./...
+      - name: Build Windows executable
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: '0'
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags="-s -w -X main.version=0.1.3" -o dist/CapitalTracker-windows-amd64.exe ./cmd/capital-tracker
+          cd dist
+          sha256sum CapitalTracker-windows-amd64.exe > CapitalTracker-windows-amd64.exe.sha256
+      - uses: actions/upload-artifact@v7
+        with:
+          name: CapitalTracker-windows-amd64
           path: dist/*
           if-no-files-found: error
           retention-days: 30
