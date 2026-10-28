@@ -18,7 +18,7 @@ type TransferDocument struct {
 	SchemaVersion  int               `json:"schema_version"`
 	ExportedAt     string            `json:"exported_at"`
 	Accounts       []Account         `json:"accounts"`
-	Groups         []AccountGroup    `json:"groups,omitempty"`
+	Groups         []AccountGroup    `json:"groups"`
 	AccountPeriods []TransferPeriod  `json:"account_periods"`
 	Months         []Month           `json:"months"`
 	Balances       []TransferBalance `json:"balances"`
