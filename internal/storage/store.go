@@ -762,12 +762,8 @@ func (s *Store) Dashboard(month string) (Dashboard, error) {
 			old, _ := strconv.ParseInt(*prev.TotalEURMinor, 10, 64)
 			delta := new(big.Int).Sub(big.NewInt(curr), big.NewInt(old)).String()
 			out.ChangeMinor = &delta
-			p, ok, e := finance.ChangePercentBasisPoints(curr, old)
-			if e != nil {
-				return out, e
-			}
+			str, ok := finance.ChangePercentBasisPointsString(curr, old)
 			if ok {
-				str := strconv.FormatInt(p, 10)
 				out.ChangePercentBP = &str
 			}
 		}
