@@ -62,7 +62,8 @@ jobs:
           status="$(curl --silent --max-time 5 --output "$RUNNER_TEMP/capital-home.html" --write-out '%{http_code}' http://127.0.0.1:18765/)"
           test "$status" = "200" || { echo "Expected HTTP 200 for /, got $status"; exit 1; }
           grep -q '<html lang="en">' "$RUNNER_TEMP/capital-home.html"
-          curl --silent --fail --max-time 5 http://127.0.0.1:18765/js/app.js | grep -q 'import'
+          curl --silent --fail --max-time 5 http://127.0.0.1:18765/js/app.js > "$RUNNER_TEMP/capital-app.js"
+          grep -q 'import' "$RUNNER_TEMP/capital-app.js"
       - uses: actions/upload-artifact@v7
         with:
           name: CapitalTracker-macos-arm64
