@@ -43,49 +43,18 @@ func handleError(w http.ResponseWriter, e error) {
 		fail(w, 404, "not_found", "")
 		return
 	}
-	if errors.Is(e, storage.ErrConflict) {
-		writeJSON(w, 409, map[string]any{"error": apiError{Code: "conflict", Reason: conflictReason(e)}})
-		return
-	}
-	if errors.Is(e, storage.ErrValidation) {
-		field := ""
-		parts := strings.SplitN(e.Error(), ": ", 2)
-		if len(parts) == 2 {
-			field = parts[1]
+	var domain *storage.DomainError
+	if errors.As(e, &domain) {
+		if errors.Is(e, storage.ErrConflict) {
+			writeJSON(w, 409, map[string]any{"error": apiError{Code: "conflict", Reason: domain.Reason}})
+			return
 		}
-		fail(w, 422, "validation_error", field)
-		return
+		if errors.Is(e, storage.ErrValidation) {
+			fail(w, 422, "validation_error", domain.Field)
+			return
+		}
 	}
 	fail(w, 500, "internal_error", "")
-}
-// Conflict reasons are stable identifiers; translations are owned by the UI.
-func conflictReason(err error) string {
-	switch strings.TrimPrefix(err.Error(), "conflict: ") {
-	case "account start must be after the last recorded month":
-		return "account_start_after_history"
-	case "currency cannot change after a month has been recorded for this account":
-		return "currency_locked_by_history"
-	case "account was active in a recorded month; deleting it would alter historical completeness":
-		return "account_delete_changes_history"
-	case "account already archived":
-		return "account_already_archived"
-	case "archive month must follow last recorded balance":
-		return "archive_after_last_balance"
-	case "archive month must be after the latest recorded month to protect history":
-		return "archive_after_history"
-	case "archive month must follow current active period start":
-		return "archive_after_active_period"
-	case "account is already active":
-		return "account_already_active"
-	case "restoration must follow archival":
-		return "restore_after_archive"
-	case "restoration must start after last recorded month to protect history":
-		return "restore_after_history"
-	case "month already exists":
-		return "month_exists"
-	default:
-		return "unknown_conflict"
-	}
 }
 
 func decode(r *http.Request, v any) error {

@@ -23,13 +23,6 @@ var migrations embed.FS
 
 const applicationID = 1128354379
 
-var ErrValidation = errors.New("validation_error")
-var ErrConflict = errors.New("conflict")
-var ErrNotFound = errors.New("not_found")
-
-func invalid(s string) error  { return fmt.Errorf("%w: %s", ErrValidation, s) }
-func conflict(s string) error { return fmt.Errorf("%w: %s", ErrConflict, s) }
-
 func now() string { return time.Now().UTC().Format(time.RFC3339Nano) }
 
 type Store struct {
@@ -139,7 +132,7 @@ func (s *Store) Backup(destination string) error {
 		return e
 	}
 	if filepath.Clean(abs) == filepath.Clean(s.Path) {
-		return invalid("backup path is database path")
+		return invalid("destination")
 	}
 	_, e = s.DB.Exec("VACUUM INTO ?", abs)
 	return e
@@ -216,7 +209,7 @@ func (s *Store) CreateAccount(name, currency, start string) (Account, error) {
 		return Account{}, e
 	}
 	if latest != "" && start <= latest {
-		return Account{}, conflict("account start must be after the last recorded month")
+		return Account{}, conflict("account_start_after_history")
 	}
 	tx, e := s.DB.Begin()
 	if e != nil {
@@ -299,7 +292,7 @@ func (s *Store) UpdateAccount(id int64, name, currency *string) (Account, error)
 				return Account{}, err
 			}
 			if protected {
-				return Account{}, conflict("currency cannot change after a month has been recorded for this account")
+				return Account{}, conflict("currency_locked_by_history")
 			}
 			a.Currency = *currency
 		}
@@ -336,7 +329,7 @@ func (s *Store) DeleteAccount(id int64) error {
 		return e
 	}
 	if protected {
-		return conflict("account was active in a recorded month; deleting it would alter historical completeness")
+		return conflict("account_delete_changes_history")
 	}
 	r, e := tx.Exec("DELETE FROM accounts WHERE id=?", id)
 	if e != nil {
@@ -359,7 +352,7 @@ func (s *Store) ArchiveAccount(id int64, month string) error {
 		return e
 	}
 	if a.ArchivedFromMonth != nil {
-		return conflict("account already archived")
+		return conflict("account_already_archived")
 	}
 	var last sql.NullString
 	e = s.DB.QueryRow("SELECT MAX(month) FROM monthly_balances WHERE account_id=?", id).Scan(&last)
@@ -367,14 +360,14 @@ func (s *Store) ArchiveAccount(id int64, month string) error {
 		return e
 	}
 	if last.Valid && month <= last.String {
-		return conflict("archive month must follow last recorded balance")
+		return conflict("archive_after_last_balance")
 	}
 	latest, e := s.LatestMonth()
 	if e != nil {
 		return e
 	}
 	if latest != "" && month <= latest {
-		return conflict("archive month must be after the latest recorded month to protect history")
+		return conflict("archive_after_history")
 	}
 	tx, e := s.DB.Begin()
 	if e != nil {
@@ -387,7 +380,7 @@ func (s *Store) ArchiveAccount(id int64, month string) error {
 	}
 	n, _ := r.RowsAffected()
 	if n != 1 {
-		return conflict("archive month must follow current active period start")
+		return conflict("archive_after_active_period")
 	}
 	if _, e = tx.Exec("UPDATE accounts SET archived_from_month=?,updated_at=? WHERE id=?", month, now(), id); e != nil {
 		return e
@@ -405,17 +398,17 @@ func (s *Store) RestoreAccount(id int64, start string) error {
 		return e
 	}
 	if a.ArchivedFromMonth == nil {
-		return conflict("account is already active")
+		return conflict("account_already_active")
 	}
 	if start < *a.ArchivedFromMonth {
-		return conflict("restoration must follow archival")
+		return conflict("restore_after_archive")
 	}
 	latest, e := s.LatestMonth()
 	if e != nil {
 		return e
 	}
 	if latest != "" && start <= latest {
-		return conflict("restoration must start after last recorded month to protect history")
+		return conflict("restore_after_history")
 	}
 	tx, e := s.DB.Begin()
 	if e != nil {
@@ -438,7 +431,7 @@ func (s *Store) Reorder(ids []int64) error {
 		return e
 	}
 	if len(ids) != len(accounts) {
-		return invalid("order must contain every account")
+		return invalid("ids")
 	}
 	expected := map[int64]bool{}
 	for _, a := range accounts {
@@ -447,7 +440,7 @@ func (s *Store) Reorder(ids []int64) error {
 	seen := map[int64]bool{}
 	for _, id := range ids {
 		if !expected[id] || seen[id] {
-			return invalid("unknown or repeated account id")
+			return invalid("ids")
 		}
 		seen[id] = true
 	}
@@ -540,7 +533,7 @@ func (s *Store) CreateMonth(month string) error {
 	_, e := s.DB.Exec("INSERT INTO months(month,created_at,updated_at) VALUES(?,?,?)", month, now(), now())
 	if e != nil {
 		if strings.Contains(strings.ToLower(e.Error()), "unique") {
-			return conflict("month already exists")
+			return conflict("month_exists")
 		}
 		return e
 	}
@@ -601,7 +594,7 @@ func (s *Store) PutMonth(month string, input MonthInput) error {
 	bvals := map[int64]int64{}
 	for _, b := range input.Balances {
 		if !active[b.AccountID] || seenB[b.AccountID] {
-			return invalid("balances: inactive or duplicated account")
+			return invalid("balances")
 		}
 		v, e := finance.ParseMinor(b.AmountMinor)
 		if e != nil {
@@ -614,7 +607,7 @@ func (s *Store) PutMonth(month string, input MonthInput) error {
 	rvals := map[string]int64{}
 	for _, r := range input.Rates {
 		if !finance.ValidCurrency(r.Currency) || r.Currency == "EUR" || seenR[r.Currency] || !needed[r.Currency] {
-			return invalid("rates: currency is not required or duplicated")
+			return invalid("rates")
 		}
 		v, e := finance.ParseRate(r.Rate)
 		if e != nil {
@@ -622,6 +615,20 @@ func (s *Store) PutMonth(month string, input MonthInput) error {
 		}
 		rvals[r.Currency] = v
 		seenR[r.Currency] = true
+	}
+	// Reject totals outside int64 before writing, so the saved month is always readable.
+	if len(accounts) > 0 && len(bvals) == len(accounts) && len(rvals) == len(needed) {
+		entries := make([]finance.Entry, 0, len(accounts))
+		for _, a := range accounts {
+			rate := finance.RateScale
+			if a.Currency != "EUR" {
+				rate = rvals[a.Currency]
+			}
+			entries = append(entries, finance.Entry{Amount: bvals[a.ID], Rate: rate})
+		}
+		if _, e := finance.TotalEURMinor(entries); e != nil {
+			return invalidReason("total_eur_minor", "total_overflow")
+		}
 	}
 	tx, e := s.DB.Begin()
 	if e != nil {
@@ -728,7 +735,7 @@ func (s *Store) Month(month string) (MonthData, error) {
 	if d.Complete {
 		total, e := finance.TotalEURMinor(entries)
 		if e != nil {
-			return d, e
+			return d, invalidReason("total_eur_minor", "total_overflow")
 		}
 		t := strconv.FormatInt(total, 10)
 		d.TotalEURMinor = &t
@@ -751,6 +758,12 @@ func (s *Store) History() ([]Point, error) {
 	for _, m := range months {
 		d, e := s.Month(m.Month)
 		if e != nil {
+			var domain *DomainError
+			if errors.As(e, &domain) && domain.Reason == "total_overflow" {
+				// Keep the remaining history usable for old or externally changed data.
+				out = append(out, Point{Month: m.Month, Complete: false})
+				continue
+			}
 			return nil, e
 		}
 		out = append(out, Point{m.Month, d.Complete, d.TotalEURMinor})
