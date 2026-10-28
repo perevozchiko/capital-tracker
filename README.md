@@ -43,7 +43,7 @@ The executable is not Apple-signed/notarized; Gatekeeper may warn when launching
 
 ## Download macOS builds
 
-On every push to `master`, pull request, or manual dispatch, GitHub Actions runs Go tests, `go vet`, builds **only macOS Apple Silicon (ARM64)** and smoke-tests the compiled executable. Intel macOS, Windows and Linux artifacts are temporarily disabled.
+During development, GitHub Actions is **manual-only**. Pushes, tags, and pull requests do not start a build. To build, open **Actions → Build Capital Tracker → Run workflow**, choose `master`, and confirm. The single job runs Go tests, `go vet`, JavaScript validation, and builds/smoke-tests **only macOS Apple Silicon (ARM64)**. Intel macOS, Windows and Linux artifacts are temporarily disabled.
 
 | Workflow artifact | Platform | Executable |
 | --- | --- | --- |
