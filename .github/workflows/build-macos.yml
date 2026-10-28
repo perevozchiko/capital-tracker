@@ -37,7 +37,7 @@ jobs:
           CGO_ENABLED: '0'
         run: |
           mkdir -p dist
-          go build -trimpath -ldflags="-s -w -X main.version=0.1.2" -o "dist/CapitalTracker-darwin-${GOARCH}" ./cmd/capital-tracker
+          go build -trimpath -ldflags="-s -w -X main.version=0.1.3" -o "dist/CapitalTracker-darwin-${GOARCH}" ./cmd/capital-tracker
           file "dist/CapitalTracker-darwin-${GOARCH}"
           cd dist
           shasum -a 256 "CapitalTracker-darwin-${GOARCH}" > "CapitalTracker-darwin-${GOARCH}.sha256"
