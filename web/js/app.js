@@ -121,12 +121,60 @@ async function saveMonth(){
  if(bad)return;
  try{await request('/months/'+state.month,'PUT',{balances,rates});state.dirty=false;await refresh();await render();notify(t('saved'))}catch(e){notify(t('endpointError')+' '+e.message,true)}
 }
+
+function showAccountEditor(action,account){
+ const dialog=$('#accountDialog');
+ const latest=state.months.at(-1)?.month||state.month;
+ const month=nextMonth(latest,1);
+ const titles={rename:'rename',currency:'changeCurrency',archive:'archive',restore:'restore'};
+ const helpers={currency:'currencyHelp',archive:'archiveWarning',restore:'restoreWarning'};
+ const labels={rename:'accountName',currency:'currency',archive:'archiveFrom',restore:'restoreFrom'};
+ dialog.dataset.action=action;
+ dialog.dataset.id=String(account.id);
+ $('#editTitle').textContent=t(titles[action])+' · '+account.name;
+ $('#editHelp').textContent=helpers[action]?t(helpers[action]):'';
+ let html='';
+ if(action==='currency'){
+  html='<label for="editValue">'+t(labels[action])+'</label><select id="editValue" name="value" required>'+
+   state.currencies.map(c=>'<option value="'+c+'"'+(c===account.currency?' selected':'')+'>'+c+'</option>').join('')+'</select>';
+ }else{
+  const value=action==='rename'?account.name:month;
+  const type=action==='rename'?'text':'month';
+  const extra=type==='month'?' min="1900-01" max="2200-12"':' maxlength="100"';
+  html='<label for="editValue">'+t(labels[action])+'</label><input id="editValue" name="value" type="'+type+'"'+extra+' required value="'+escapeHTML(value)+'">';
+ }
+ $('#editFields').innerHTML=html;
+ $('#cancelEdit').textContent=t('cancel');
+ $('#confirmEdit').textContent=t('confirm');
+ dialog.showModal();
+ $('#editValue').focus();
+}
+
+async function submitAccountEdit(form){
+ const dialog=$('#accountDialog');
+ const action=dialog.dataset.action, id=Number(dialog.dataset.id);
+ const value=form.elements.namedItem('value').value;
+ try{
+  if(action==='rename')await request('/accounts/'+id,'PATCH',{name:value});
+  if(action==='currency')await request('/accounts/'+id,'PATCH',{currency:value});
+  if(action==='archive')await request('/accounts/'+id+'/archive','POST',{month:value});
+  if(action==='restore')await request('/accounts/'+id+'/restore','POST',{start_month:value});
+  dialog.close();
+  await refresh();
+  await render();
+  notify(t(action==='archive'?'accountArchived':action==='restore'?'accountRestored':'accountUpdated'));
+ }catch(err){notify(err.message||t('error'),true)}
+}
+
 async function accountAction(action,id){const account=state.accounts.find(a=>a.id===id);if(!account)return;
- if(action==='rename'){const name=prompt(t('accountName'),account.name);if(name==null)return;await mutation(async()=>{await request('/accounts/'+id,'PATCH',{name});notify(t('accountUpdated'))})}
- if(action==='currency'){const currency=prompt(t('currency')+' (EUR / USD / RSD / RUB / TRY)',account.currency);if(currency==null)return;await mutation(async()=>{await request('/accounts/'+id,'PATCH',{currency:currency.trim().toUpperCase()});notify(t('accountUpdated'))})}
- if(action==='delete'){if(!confirm(t('confirmDelete')))return;await mutation(async()=>{await api('/accounts/'+id,{method:'DELETE',headers:{'X-Capital-Tracker':'1'}});notify(t('accountDeleted'))})}
- if(action==='archive'){alert(t('archiveWarning'));const latest=state.months.length?state.months.at(-1).month:state.month;const month=prompt(t('archiveFrom'),nextMonth(latest,1));if(!month)return;await mutation(async()=>{await request('/accounts/'+id+'/archive','POST',{month});notify(t('accountArchived'))})}
- if(action==='restore'){alert(t('restoreWarning'));const latest=state.months.length?state.months[state.months.length-1].month:state.month;const start=prompt(t('restoreFrom'),nextMonth(latest,1));if(!start)return;await mutation(async()=>{await request('/accounts/'+id+'/restore','POST',{start_month:start});notify(t('accountRestored'))})}
+ if(['rename','currency','archive','restore'].includes(action)){
+  showAccountEditor(action,account);
+  return;
+ }
+ if(action==='delete'){
+  if(!confirm(t('confirmDelete')))return;
+  await mutation(async()=>{await api('/accounts/'+id,{method:'DELETE',headers:{'X-Capital-Tracker':'1'}});notify(t('accountDeleted'))});
+ }
  if(action==='history'){const hist=[];for(const m of state.months){const d=await api('/months/'+m.month);const b=d.balances.find(x=>x.account_id===id);if(b)hist.push([m.month,b.amount_minor])}const content=hist.length?hist.map(([month,value])=>`<tr><td>${monthLabel(month)}</td><td>${money(value,account.currency)}</td></tr>`).join(''):`<tr><td colspan="2">${t('historicalEmpty')}</td></tr>`;$('#pageContent').innerHTML=`<section class="card panel"><div class="panel-heading"><h2>${escapeHTML(account.name)} · ${t('balanceHistory')}</h2><button class="btn btn-small" data-page="accounts">${t('earlier')}</button></div><p class="caption">${t('accountHistoricalNote')}</p><div class="table-scroll"><table><tbody>${content}</tbody></table></div></section>`;}
  if(action==='up'||action==='down'){const ids=state.accounts.map(a=>a.id);const i=ids.indexOf(id),j=i+(action==='up'?-1:1);if(j<0||j>=ids.length)return;[ids[i],ids[j]]=[ids[j],ids[i]];await mutation(async()=>{await request('/accounts/reorder','PUT',{ids})})}
 }
@@ -152,6 +200,11 @@ document.addEventListener('click',async e=>{
  }catch(err){notify(err.message||t('error'),true)}
 });
 document.addEventListener('submit',async e=>{
+ if(e.target.id==='editAccountForm'){
+  e.preventDefault();
+  await submitAccountEdit(e.target);
+  return;
+ }
  if(e.target.id!=='addAccountForm')return;e.preventDefault();const form=e.target;
  await mutation(async()=>{await request('/accounts','POST',{name:form.elements.name.value,currency:form.elements.currency.value,start_month:form.elements.start.value});notify(t('accountCreated'))});
 });
@@ -169,6 +222,7 @@ document.addEventListener('change',async e=>{
   try{state.settings=await request('/settings','PATCH',{language,theme});themeApply();await render()}catch(err){notify(err.message,true);await render()}
  }
 });
+$('#cancelEdit').addEventListener('click',()=>$('#accountDialog').close());
 $('#mobileMenu').addEventListener('click',()=>$('#sidebar').classList.toggle('show'));
 function pointTooltip(node,event){const p=state.history[Number(node.dataset.chartIndex)];if(!p)return;const tooltip=$('#chartTooltip');tooltip.textContent=`${monthLabel(p.month)} · ${money(p.total_eur_minor)}`;tooltip.hidden=false;const rect=node.getBoundingClientRect();const clientX=event?.clientX||rect.left+rect.width/2;const clientY=event?.clientY||rect.top;tooltip.style.left=`${Math.max(8,Math.min(window.innerWidth-200,clientX-80))}px`;tooltip.style.top=`${Math.max(8,clientY-45)}px`}
 document.addEventListener('pointerover',e=>{const n=e.target.closest('[data-chart-index]');if(n)pointTooltip(n,e)});
