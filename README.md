@@ -47,7 +47,7 @@ Run all local source checks before committing (requires Go 1.23+ and Node.js):
 ```sh
 bash scripts/check.sh
 ```
-The script checks `gofmt`, `go mod tidy -diff`, `go mod verify`, `go vet`, Go tests, JavaScript syntax and parser tests. It never changes source files.
+If it reports Go formatting differences, run `gofmt -w .` once and commit the formatted files. The script checks `gofmt`, `go mod tidy -diff`, `go mod verify`, `go vet`, Go tests, JavaScript syntax and parser tests. It never changes source files.
 
 **Builds are manual-only** during development: pushes, tags, and pull requests do not trigger compilation.
 

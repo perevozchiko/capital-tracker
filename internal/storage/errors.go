@@ -1,8 +1,6 @@
 package storage
 
-import (
-	"errors"
-)
+import "errors"
 
 var (
 	ErrValidation = errors.New("validation_error")
