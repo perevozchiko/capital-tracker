@@ -115,6 +115,8 @@ Each group header displays its **exact EUR subtotal** for the selected month (wh
 
 Group membership is **organizational and current**, not a historical dimension: moving a previously recorded account changes which group's past-month subtotal includes its balances, but never changes the account history or the overall monthly net worth. Deleting a group only moves its accounts to **Ungrouped**; it does not delete accounts, balances or history. Old databases migrate automatically to schema version 2, retaining all accounts in Ungrouped until you organize them. A pre-migration SQLite backup is made automatically.
 
+**Monthly balances** displays the same ordered groups, including **Ungrouped** and **Archive**, with EUR subtotals for the selected month. Groups are collapsible, and the collapsed state is shared with Accounts. There is no group/account reordering, dragging, renaming or deletion on this screen: only the balance values and exchange rates are editable. Accounts inactive in the selected month have no editable balance row.
+
 ## JSON import and export
 
 Open **Settings → JSON import and export** in the browser:
