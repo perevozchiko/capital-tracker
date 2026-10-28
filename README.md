@@ -30,17 +30,17 @@ The included fictional example represents a typical euro-paid working household,
 
 The example is also provided as a fully importable, versioned JSON snapshot in [`internal/demo/sample-2025-2026.json`](internal/demo/sample-2025-2026.json). You can import it via **Settings → JSON import and export** if desired, but **import replaces the currently open database**. For safe exploration, prefer `--demo`.
 
-## Application previews
+## Screenshots — real browser captures (dark theme)
 
-The following vector previews use the example dataset and the app's light-theme layout. They illustrate the dashboard and balance-entry screen; they are not captured browser screenshots.
+The default appearance is **Dark**, including the included demo data and after clearing the app. Users can still explicitly select Light or System under Settings, and previously saved theme preferences are preserved.
 
-![Dashboard preview populated with twelve months of demo financial data](docs/screenshots/demo-dashboard.svg)
+<!-- AUTO SCREENSHOTS START -->
 
-![Monthly balances editor preview showing previous balances and changes](docs/screenshots/demo-monthly.svg)
+Genuine PNG screenshots of Dashboard, Monthly balances and Accounts will be inserted here by the manual **Capture demo screenshots** workflow. The screenshots are taken from the real Go application running in Chromium, not generated illustrations.
 
-![Accounts screen preview with six demo accounts](docs/screenshots/demo-accounts.svg)
+<!-- AUTO SCREENSHOTS END -->
 
-To capture **real PNG screenshots from the running application** (dashboard, monthly editor, and account list), use the optional developer tool. It builds the actual Go server, uses a temporary isolated demo profile, and drives Chromium through Playwright. Python/Playwright is needed only for capturing screenshots, not to use the app:
+To capture the same screenshots on your machine:
 
 ```sh
 python3 -m pip install playwright
@@ -48,7 +48,9 @@ python3 -m playwright install chromium
 python3 scripts/capture-demo-screenshots.py
 ```
 
-The images are saved to `docs/screenshots/dashboard.png`, `monthly-balances.png`, and `accounts.png`; review and commit them when updating the README screenshots. This screenshot tool does not start GitHub Actions or modify the normal/demo user profile.
+The script builds and starts Capital Tracker with a temporary isolated demo database, opens Chromium, selects **Dark** in the actual Settings screen and saves full-page PNG images as `docs/screenshots/dashboard.png`, `docs/screenshots/monthly-balances.png` and `docs/screenshots/accounts.png`. No personal database is opened or modified. Browser and Python dependencies are required only for screenshots, not for normal app use.
+
+On GitHub, open **Actions → Capture demo screenshots → Run workflow**, choosing `master`. This manual-only workflow captures the images and commits the three PNGs and README update to the repository. Regular pushes and commits do **not** trigger it.
 
 ## Build and run
 
@@ -118,7 +120,7 @@ JSON schema identifier: `{"format":"capital-tracker","schema_version":1}`. Amoun
 
 Go to **Settings → Danger zone → Delete all data**. A dedicated in-app dialog explains the permanent loss and requires typing **DELETE** in English or **УДАЛИТЬ** in Russian before the destructive button becomes available.
 
-After confirmation, the app removes **all** accounts, account activity periods, recorded months, balances, exchange rates and saved preferences, restoring English and system appearance. Account IDs start from 1 again. SQLite tables and migrations stay in place, so you can begin again without reinstalling the application. All deletions are atomic: any database error rolls back the entire clear. This cannot be undone inside the app.
+After confirmation, the app removes **all** accounts, account activity periods, recorded months, balances, exchange rates and saved preferences, restoring English and dark appearance. Account IDs start from 1 again. SQLite tables and migrations stay in place, so you can begin again without reinstalling the application. All deletions are atomic: any database error rolls back the entire clear. This cannot be undone inside the app.
 
 **Export a JSON backup before clearing.** Files previously exported as JSON or SQLite backups remain untouched; the command deletes application data in the active SQLite database, not external backup files. No background or automatic clearing occurs.
 
@@ -176,7 +178,7 @@ internal/finance/     Exact conversions, validation and rounding
 internal/storage/     SQLite schema, migrations and data operations
 internal/httpapi/     Secure local REST endpoints, static file routing
 web/                  Embedded HTML, CSS, JS, dictionaries, SVG and PWA assets
-docs/screenshots/     Demo preview images (plus optionally captured PNG screenshots)
+docs/screenshots/     Real full-page screenshots captured in Chromium
 scripts/              Local source checks and optional screenshot capture
 .github/workflows/    Go checks and macOS binary artifacts
 ```

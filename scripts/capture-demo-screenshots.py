@@ -72,17 +72,33 @@ def main() -> None:
             with sync_playwright() as playwright:
                 browser = playwright.chromium.launch(headless=True)
                 try:
-                    page = browser.new_page(viewport={"width": 1440, "height": 960}, device_scale_factor=1)
+                    page = browser.new_page(
+                        viewport={"width": 1440, "height": 960},
+                        device_scale_factor=1,
+                        color_scheme="dark",
+                    )
                     page.goto(url, wait_until="networkidle")
+                    # Choose Dark via the actual Settings UI (not a CSS mock).
+                    page.locator('#navigation [data-page="settings"]').click()
+                    page.locator("#themeSelect").wait_for()
+                    with page.expect_response(
+                        lambda response: response.url.endswith("/api/settings")
+                        and response.request.method == "PATCH"
+                    ):
+                        page.locator("#themeSelect").select_option("dark")
+                    page.locator("html[data-theme='dark']").wait_for()
+                    page.locator('#navigation [data-page="dashboard"]').click()
                     page.locator(".grid-summary").wait_for()
                     page.screenshot(path=str(OUT / "dashboard.png"), full_page=True)
 
                     page.locator('#navigation [data-page="monthly"]').click()
                     page.locator(".balance-row").first.wait_for()
+                    page.locator("html[data-theme='dark']").wait_for()
                     page.screenshot(path=str(OUT / "monthly-balances.png"), full_page=True)
 
                     page.locator('#navigation [data-page="accounts"]').click()
                     page.locator(".account-row").first.wait_for()
+                    page.locator("html[data-theme='dark']").wait_for()
                     page.screenshot(path=str(OUT / "accounts.png"), full_page=True)
                 finally:
                     browser.close()
