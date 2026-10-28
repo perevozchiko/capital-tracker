@@ -17,7 +17,7 @@ export default {
  discardChanges:'Discard unsaved changes?',discard:'Discard changes',keepEditing:'Keep editing',deleteAccountTitle:'Delete account?',
  confirmDelete:'Delete this account? Only accounts without recorded balances can be deleted.',unsaved:'You have unsaved edits. Discard them?',
  monthEditor:'Monthly balance editor',balance:'Balance',rates:'Exchange rates',rateMeaning:'1 EUR equals…',ratesNote:'Enter month-end exchange rates. Rates are fixed for the selected month.',
- balancesNote:'Record your end-of-month account balances. Empty means not entered; zero means exactly zero.',saveMonth:'Save month',saved:'Month saved.',createMonth:'Create empty month',
+ balancesNote:'You can save one balance now and fill in other accounts later. Empty means not entered; zero means exactly zero.',previousBalance:'Last month',currentBalance:'This month',balanceDifference:'Change',usePrevious:'Use previous',savedIncomplete:'Partial month saved. You can fill in the rest later.',saveMonth:'Save month',saved:'Month saved.',createMonth:'Create empty month',
  enterBalance:'Enter balance',enterRate:'Enter rate',noActiveAccounts:'There are no active accounts for this month.',status:'Month status',
  editMonth:'Edit month',goToMonth:'Go to month',currentSelection:'Selected',
  preferences:'Preferences',language:'Language',theme:'Appearance',english:'English',russian:'Русский',system:'System',light:'Light',dark:'Dark',
