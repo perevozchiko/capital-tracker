@@ -49,7 +49,7 @@ jobs:
           retention-days: 30
 
   cross-platform:
-    name: ${{ matrix.goos }} arm64
+    name: ${{ matrix.goos }} ${{ matrix.arch }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -70,7 +70,7 @@ jobs:
       - name: Build executable
         env:
           GOOS: ${{ matrix.goos }}
-          GOARCH: arm64
+          GOARCH: ${{ matrix.arch }}
           CGO_ENABLED: '0'
           EXT: ${{ matrix.extension }}
         run: |
@@ -80,7 +80,7 @@ jobs:
           shasum -a 256 "CapitalTracker-${GOOS}-${GOARCH}${EXT}" > "CapitalTracker-${GOOS}-${GOARCH}${EXT}.sha256"
       - uses: actions/upload-artifact@v7
         with:
-          name: CapitalTracker-${{ matrix.goos }}-arm64
+          name: CapitalTracker-${{ matrix.goos }}-${{ matrix.arch }}
           path: dist/*
           if-no-files-found: error
           retention-days: 30
