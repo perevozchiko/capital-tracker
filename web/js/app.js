@@ -100,6 +100,7 @@ async function renderDashboard(){const d=await api('/dashboard?month='+encodeURI
 }
 function pluralAccounts(count){const rules=new Intl.PluralRules(lang());if(state.settings.language==='en')return `${count} ${count===1?'account':'accounts'}`;const f=rules.select(count);return `${count} ${f==='one'?'счёт':f==='few'?'счёта':'счетов'}`;}
 
+
 const collapsedGroups = new Set((() => {
  try { const saved=JSON.parse(localStorage.getItem('capital-collapsed-groups')||'[]');return Array.isArray(saved)?saved:[]; }
  catch { return []; }
@@ -114,7 +115,7 @@ async function saveAssignments(items){
  await render();
 }
 function groupSelector(selected,attribute){
- return `<select ${}attribute aria-label="${}t('moveToGroup')"><option value="">${}t('ungrouped')</option>${}state.groups.groups.map(g=>`<option value="${}g.id" ${}selected===g.id?'selected':''>${}escapeHTML(g.name)</option>`).join('')</select>`;
+ return `<select ${attribute} aria-label="${t('moveToGroup')}"><option value="" ${selected===null?'selected':''}>${t('ungrouped')}</option>${state.groups.groups.map(g=>`<option value="${g.id}" ${selected===g.id?'selected':''}>${escapeHTML(g.name)}</option>`).join('')}</select>`;
 }
 async function renderAccounts(){
  state.groups=await api('/groups?month='+encodeURIComponent(state.month));
@@ -125,31 +126,30 @@ async function renderAccounts(){
   const key=id===null?'ungrouped':'g-'+id;
   const closed=collapsedGroups.has(key);
   const total=group.total_eur_minor==null?'—':money(group.total_eur_minor);
-  const buttons=id===null?'':`<button class="btn btn-small" data-action="groupUp" data-group-id="${}id" ${}index===0?'disabled':'' aria-label="${}t('reorderUp')">↑</button><button class="btn btn-small" data-action="groupDown" data-group-id="${}id" ${}index===groups.length-1?'disabled':'' aria-label="${}t('reorderDown')">↓</button><button class="btn btn-small" data-action="groupRename" data-group-id="${}id">${}t('rename')</button><button class="btn btn-small btn-danger" data-action="groupDelete" data-group-id="${}id">${}t('delete')</button>`;
-  const rows=members.map((a,i)=>`<div class="account-row" data-account-row="${}a.id" draggable="true">
-   <div class="account-main"><span class="drag-handle" title="${}t('dragAccount')" aria-hidden="true">⠿</span><div class="account-mark">${}a.currency==='EUR'?'€':a.currency==='USD'?'$':a.currency==='RUB'?'₽':a.currency==='TRY'?'₺':'R'</div><div><strong>${}escapeHTML(a.name)} <span class="currency-tag">${}a.currency</span></strong><small>${}t('startMonth'): ${}escapeHTML(monthLabel(a.start_month)) · ${}a.archived_from_month?t('archived')+' '+escapeHTML(monthLabel(a.archived_from_month)):t('active')</small></div></div>
-   <div class="actions">${}groupSelector(a.group_id??null,`data-move-account="${}a.id"`)<button class="btn btn-small" data-action="up" data-id="${}a.id" ${}i===0?'disabled':'' aria-label="${}t('reorderUp')">↑</button><button class="btn btn-small" data-action="down" data-id="${}a.id" ${}i===members.length-1?'disabled':'' aria-label="${}t('reorderDown')">↓</button><button class="btn btn-small" data-action="history" data-id="${}a.id">${}t('historyAccount')</button><button class="btn btn-small" data-action="rename" data-id="${}a.id">${}t('rename')</button><button class="btn btn-small" data-action="currency" data-id="${}a.id">${}t('changeCurrency')</button><button class="btn btn-small" data-action="${}a.archived_from_month?'restore':'archive'" data-id="${}a.id">${}t(a.archived_from_month?'restore':'archive')</button><button class="btn btn-small btn-danger" data-action="delete" data-id="${}a.id">${}t('delete')</button></div>
+  const buttons=id===null?'':`<button class="btn btn-small" data-action="groupUp" data-group-id="${id}" ${index===0?'disabled':''} aria-label="${t('reorderUp')}">↑</button><button class="btn btn-small" data-action="groupDown" data-group-id="${id}" ${index===groups.length-1?'disabled':''} aria-label="${t('reorderDown')}">↓</button><button class="btn btn-small" data-action="groupRename" data-group-id="${id}">${t('rename')}</button><button class="btn btn-small btn-danger" data-action="groupDelete" data-group-id="${id}">${t('delete')}</button>`;
+  const rows=members.map((a,i)=>`<div class="account-row" data-account-row="${a.id}" draggable="true">
+   <div class="account-main"><span class="drag-handle" title="${t('dragAccount')}" aria-hidden="true">⠿</span><div class="account-mark">${a.currency==='EUR'?'€':a.currency==='USD'?'$':a.currency==='RUB'?'₽':a.currency==='TRY'?'₺':'R'}</div><div><strong>${escapeHTML(a.name)} <span class="currency-tag">${a.currency}</span></strong><small>${t('startMonth')}: ${escapeHTML(monthLabel(a.start_month))} · ${a.archived_from_month?t('archived')+' '+escapeHTML(monthLabel(a.archived_from_month)):t('active')}</small></div></div>
+   <div class="actions">${groupSelector(a.group_id??null,'data-move-account="'+a.id+'"')}<button class="btn btn-small" data-action="up" data-id="${a.id}" ${i===0?'disabled':''} aria-label="${t('reorderUp')}">↑</button><button class="btn btn-small" data-action="down" data-id="${a.id}" ${i===members.length-1?'disabled':''} aria-label="${t('reorderDown')}">↓</button><button class="btn btn-small" data-action="history" data-id="${a.id}">${t('historyAccount')}</button><button class="btn btn-small" data-action="rename" data-id="${a.id}">${t('rename')}</button><button class="btn btn-small" data-action="currency" data-id="${a.id}">${t('changeCurrency')}</button><button class="btn btn-small" data-action="${a.archived_from_month?'restore':'archive'}" data-id="${a.id}">${t(a.archived_from_month?'restore':'archive')}</button><button class="btn btn-small btn-danger" data-action="delete" data-id="${a.id}">${t('delete')}</button></div>
   </div>`).join('');
-  return `<section class="account-group ${}closed?'is-collapsed':''" data-group-id="${}id===null?'':id">
-   <div class="account-group-head" data-group-row="${}id===null?'ungrouped':id" draggable="${}id!==null">
-    <button class="group-toggle" data-action="toggleGroup" data-group-key="${}key" aria-expanded="${}!closed" aria-label="${}t('toggleGroup')">${}closed?'▸':'▾'</button>
-    <div class="group-caption"><strong>${}escapeHTML(id===null?t('ungrouped'):group.name)}</strong><small>${}pluralAccounts(members.length)</small></div>
-    <div class="group-total"><strong>${}total</strong><small>${}t('groupTotalEUR') · ${}escapeHTML(monthLabel(state.month,true))${}group.total_eur_minor==null?' · '+t('incomplete'):''</small></div>
-    <div class="group-controls">${}buttons</div>
+  return `<section class="account-group ${closed?'is-collapsed':''}" data-group-id="${id===null?'':id}">
+   <div class="account-group-head" data-group-row="${id===null?'ungrouped':id}" draggable="${id!==null}">
+    <button class="group-toggle" data-action="toggleGroup" data-group-key="${key}" aria-expanded="${!closed}" aria-label="${t('toggleGroup')}">${closed?'▸':'▾'}</button>
+    <div class="group-caption"><strong>${escapeHTML(id===null?t('ungrouped'):group.name)}</strong><small>${pluralAccounts(members.length)}</small></div>
+    <div class="group-total"><strong>${total}</strong><small>${t('groupTotalEUR')} · ${escapeHTML(monthLabel(state.month,true))}${group.total_eur_minor==null?' · '+t('incomplete'):''}</small></div>
+    <div class="group-controls">${buttons}</div>
    </div>
-   <div class="account-group-body">${}rows||`<p class="group-empty">${}t('dropAccountHere')</p>`</div>
+   <div class="account-group-body">${rows||`<p class="group-empty">${t('dropAccountHere')}</p>`}</div>
   </section>`;
  };
- const html=groups.map((g,i)=>groupRows(g,g.id,i)).join('')+
-  ((accounts.some(a=>a.group_id==null)||groups.length===0)?groupRows(state.groups.ungrouped,null,groups.length):'');
- $('#pageContent').innerHTML=`<section class="card panel"><h2>${}t('addAccount')</h2><p class="caption">${}t('currencyHelp')</p><form id="addAccountForm" class="form-row form-row-groups">
- <div class="field"><label for="accountName">${}t('accountName')</label><input id="accountName" name="name" maxlength="100" required placeholder="${}t('namePlaceholder')"></div>
- <div class="field"><label for="accountCurrency">${}t('currency')</label><select id="accountCurrency" name="currency">${}state.currencies.map(c=>`<option>${}c</option>`).join('')</select></div>
- <div class="field"><label for="accountGroup">${}t('group')</label>${}groupSelector(null,'id="accountGroup" name="group"')</div>
- <div class="field"><label for="accountStart">${}t('startMonth')</label><input id="accountStart" name="start" type="month" min="1900-01" max="2200-12" required value="${}(state.months.length&&state.month<=state.months.at(-1).month)?nextMonth(state.months.at(-1).month,1):state.month"></div>
- <button class="btn btn-primary" type="submit">${}t('createAccount')</button></form></section>
- <section class="card panel"><div class="panel-heading"><div><h2>${}t('accountList')</h2><span class="subtle">${}pluralAccounts(accounts.length)</span></div><button class="btn btn-small btn-primary" data-action="groupCreate">+ ${}t('createGroup')</button></div>
- <p class="caption">${}t('dragGroupsHint')</p>${}html</section>`;
+ const html=groups.map((g,i)=>groupRows(g,g.id,i)).join('')+groupRows(state.groups.ungrouped,null,groups.length);
+ $('#pageContent').innerHTML=`<section class="card panel"><h2>${t('addAccount')}</h2><p class="caption">${t('currencyHelp')}</p><form id="addAccountForm" class="form-row form-row-groups">
+ <div class="field"><label for="accountName">${t('accountName')}</label><input id="accountName" name="name" maxlength="100" required placeholder="${t('namePlaceholder')}"></div>
+ <div class="field"><label for="accountCurrency">${t('currency')}</label><select id="accountCurrency" name="currency">${state.currencies.map(c=>`<option>${c}</option>`).join('')}</select></div>
+ <div class="field"><label for="accountGroup">${t('group')}</label>${groupSelector(null,'id="accountGroup" name="group"')}</div>
+ <div class="field"><label for="accountStart">${t('startMonth')}</label><input id="accountStart" name="start" type="month" min="1900-01" max="2200-12" required value="${(state.months.length&&state.month<=state.months.at(-1).month)?nextMonth(state.months.at(-1).month,1):state.month}"></div>
+ <button class="btn btn-primary" type="submit">${t('createAccount')}</button></form></section>
+ <section class="card panel"><div class="panel-heading"><div><h2>${t('accountList')}</h2><span class="subtle">${pluralAccounts(accounts.length)}</span></div><button class="btn btn-small btn-primary" data-action="groupCreate">+ ${t('createGroup')}</button></div>
+ <p class="caption">${t('dragGroupsHint')}</p>${html}</section>`;
 }
 
 function updateBalanceDifference(input){
@@ -321,13 +321,14 @@ function showAccountEditor(action,account){
 }
 
 
+
 function showGroupEditor(action,group=null){
  const dialog=$('#accountDialog');
  dialog.dataset.action=action;
  dialog.dataset.id=group?String(group.id):'';
  $('#editTitle').textContent=t(action==='groupCreate'?'createGroup':'renameGroup');
  $('#editHelp').textContent=t('groupHelp');
- $('#editFields').innerHTML=`<label for="editValue">${}t('groupName')</label><input id="editValue" name="value" type="text" maxlength="100" required value="${}escapeHTML(group?.name||'')">`;
+ $('#editFields').innerHTML=`<label for="editValue">${t('groupName')}</label><input id="editValue" name="value" type="text" maxlength="100" required value="${escapeHTML(group?.name||'')}">`;
  $('#cancelEdit').textContent=t('cancel');
  $('#confirmEdit').textContent=t('confirm');
  dialog.showModal();
@@ -337,7 +338,7 @@ async function groupAction(action,id,key){
  if(action==='toggleGroup'){
   if(collapsedGroups.has(key))collapsedGroups.delete(key);else collapsedGroups.add(key);
   try{localStorage.setItem('capital-collapsed-groups',JSON.stringify([...collapsedGroups]));}catch{}
-  const button=document.querySelector(`[data-action="toggleGroup"][data-group-key="${}key"]`);
+  const button=document.querySelector(`[data-action="toggleGroup"][data-group-key="${key}"]`);
   const panel=button?.closest('.account-group');
   if(panel){const closed=collapsedGroups.has(key);panel.classList.toggle('is-collapsed',closed);button.textContent=closed?'▸':'▾';button.setAttribute('aria-expanded',String(!closed));}
   return;
