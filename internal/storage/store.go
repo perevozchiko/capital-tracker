@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/perevozchiko/capital-tracker/internal/finance"
@@ -32,6 +33,8 @@ func conflict(s string) error { return fmt.Errorf("%w: %s", ErrConflict, s) }
 func now() string { return time.Now().UTC().Format(time.RFC3339Nano) }
 
 type Store struct {
+	// Write operations are serialized so month/account validation cannot race.
+	writeMu sync.Mutex
 	DB   *sql.DB
 	Path string
 }
@@ -123,6 +126,8 @@ func Open(dataDir string) (*Store, error) {
 func (s *Store) Close() error { return s.DB.Close() }
 
 func (s *Store) Backup(destination string) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	abs, e := filepath.Abs(destination)
 	if e != nil {
 		return e
@@ -194,6 +199,8 @@ func (s *Store) LatestMonth() (string, error) {
 }
 
 func (s *Store) CreateAccount(name, currency, start string) (Account, error) {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	name = strings.TrimSpace(name)
 	if name == "" || len([]rune(name)) > 100 {
 		return Account{}, invalid("name")
@@ -238,6 +245,8 @@ func (s *Store) CreateAccount(name, currency, start string) (Account, error) {
 	return s.account(id)
 }
 func (s *Store) RenameAccount(id int64, name string) (Account, error) {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	name = strings.TrimSpace(name)
 	if name == "" || len([]rune(name)) > 100 {
 		return Account{}, invalid("name")
@@ -256,6 +265,8 @@ func (s *Store) RenameAccount(id int64, name string) (Account, error) {
 // UpdateAccount changes the name and, only before history exists, the currency.
 // An omitted field leaves its existing value unchanged.
 func (s *Store) UpdateAccount(id int64, name, currency *string) (Account, error) {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	if name == nil && currency == nil {
 		return Account{}, invalid("name")
 	}
@@ -283,13 +294,9 @@ func (s *Store) UpdateAccount(id int64, name, currency *string) (Account, error)
 			return Account{}, invalid("currency")
 		}
 		if a.Currency != *currency {
-			var count int
-			if err = tx.QueryRow("SELECT COUNT(*) FROM monthly_balances WHERE account_id=?", id).Scan(&count); err != nil {
-				return Account{}, err
-			}
-			if count > 0 {
-				return Account{}, conflict("currency cannot change after a balance has been recorded")
-			}
+			protected, err := recordedAccountPeriod(tx, id)
+			if err != nil { return Account{}, err }
+			if protected { return Account{}, conflict("currency cannot change after a month has been recorded for this account") }
 			a.Currency = *currency
 		}
 	}
@@ -302,19 +309,27 @@ func (s *Store) UpdateAccount(id int64, name, currency *string) (Account, error)
 	return s.account(id)
 }
 
+// recordedAccountPeriod prevents account edits that would silently rewrite
+// completion status for months where the account was active but has no balance.
+func recordedAccountPeriod(tx *sql.Tx, id int64) (bool, error) {
+	var exists int
+	err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM months m
+        JOIN account_periods p ON p.account_id=? AND p.start_month<=m.month
+             AND (p.end_month IS NULL OR p.end_month>m.month))`, id).Scan(&exists)
+	return exists != 0, err
+}
+
 func (s *Store) DeleteAccount(id int64) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	tx, e := s.DB.Begin()
 	if e != nil {
 		return e
 	}
 	defer tx.Rollback()
-	var n int
-	if e = tx.QueryRow("SELECT COUNT(*) FROM monthly_balances WHERE account_id=?", id).Scan(&n); e != nil {
-		return e
-	}
-	if n != 0 {
-		return conflict("account has financial history")
-	}
+	protected, e := recordedAccountPeriod(tx, id)
+	if e != nil { return e }
+	if protected { return conflict("account was active in a recorded month; deleting it would alter historical completeness") }
 	r, e := tx.Exec("DELETE FROM accounts WHERE id=?", id)
 	if e != nil {
 		return e
@@ -326,6 +341,8 @@ func (s *Store) DeleteAccount(id int64) error {
 	return tx.Commit()
 }
 func (s *Store) ArchiveAccount(id int64, month string) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	if !finance.ValidMonth(month) {
 		return invalid("month")
 	}
@@ -370,6 +387,8 @@ func (s *Store) ArchiveAccount(id int64, month string) error {
 	return tx.Commit()
 }
 func (s *Store) RestoreAccount(id int64, start string) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	if !finance.ValidMonth(start) {
 		return invalid("start_month")
 	}
@@ -404,6 +423,8 @@ func (s *Store) RestoreAccount(id int64, start string) error {
 	return tx.Commit()
 }
 func (s *Store) Reorder(ids []int64) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	accounts, e := s.Accounts()
 	if e != nil {
 		return e
@@ -475,6 +496,8 @@ func (s *Store) Months() ([]Month, error) {
 	return out, rows.Err()
 }
 func (s *Store) CreateMonth(month string) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	if !finance.ValidMonth(month) {
 		return invalid("month")
 	}
@@ -521,6 +544,8 @@ type MonthData struct {
 }
 
 func (s *Store) PutMonth(month string, input MonthInput) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	if !finance.ValidMonth(month) {
 		return invalid("month")
 	}
@@ -790,6 +815,8 @@ func (s *Store) Settings(version string) (Settings, error) {
 	return out, rows.Err()
 }
 func (s *Store) UpdateSettings(language, theme string) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	if language != "en" && language != "ru" {
 		return invalid("language")
 	}
