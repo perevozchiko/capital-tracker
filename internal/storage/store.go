@@ -503,6 +503,34 @@ func (s *Store) Months() ([]Month, error) {
 	}
 	return out, rows.Err()
 }
+// DeleteMonth deliberately discards a snapshot and all associated balances/rates.
+// Foreign-key ON DELETE CASCADE removes dependent entries in the same transaction.
+// It never modifies adjacent months or account activity periods.
+func (s *Store) DeleteMonth(month string) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
+	if !finance.ValidMonth(month) {
+		return invalid("month")
+	}
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	result, err := tx.Exec("DELETE FROM months WHERE month=?", month)
+	if err != nil {
+		return err
+	}
+	count, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return ErrNotFound
+	}
+	return tx.Commit()
+}
+
 func (s *Store) CreateMonth(month string) error {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
@@ -749,6 +777,14 @@ func shiftMonth(month string, offset int) string {
 	return fmt.Sprintf("%04d-%02d", index/12, index%12+1)
 }
 func (s *Store) Dashboard(month string) (Dashboard, error) {
+	return s.DashboardColumns(month, 12)
+}
+
+// DashboardColumns returns a bounded number of consecutive calendar months.
+func (s *Store) DashboardColumns(month string, columns int) (Dashboard, error) {
+	if columns < 1 || columns > 120 {
+		return Dashboard{}, invalid("columns")
+	}
 	var out Dashboard
 	if !finance.ValidMonth(month) {
 		return out, invalid("month")
@@ -776,7 +812,7 @@ func (s *Store) Dashboard(month string) (Dashboard, error) {
 			}
 		}
 	}
-	for i := -5; i <= 0; i++ {
+	for i := 1 - columns; i <= 0; i++ {
 		m := shiftMonth(month, i)
 		if !finance.ValidMonth(m) {
 			continue
