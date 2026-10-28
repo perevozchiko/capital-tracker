@@ -43,13 +43,11 @@ The executable is not Apple-signed/notarized; Gatekeeper may warn when launching
 
 ## Download macOS builds
 
-On each push to `master`, pull request and manual dispatch, GitHub Actions runs Go tests and `go vet` natively on Apple Silicon and Intel macOS, and compiles four **CGO-free** executables:
+On every push to `master`, pull request, or manual dispatch, GitHub Actions runs Go tests, `go vet`, builds **only macOS Apple Silicon (ARM64)** and smoke-tests the compiled executable. Intel macOS, Windows and Linux artifacts are temporarily disabled.
 
-| Workflow artifact | Mac CPU | Executable |
+| Workflow artifact | Platform | Executable |
 | --- | --- | --- |
-| `CapitalTracker-macos-arm64` | Apple Silicon (M1–M-series) | `CapitalTracker-darwin-arm64` |
-| `CapitalTracker-linux-amd64` | Linux x86-64 | `CapitalTracker-linux-amd64` |
-| `CapitalTracker-windows-amd64` | Windows x86-64 | `CapitalTracker-windows-amd64.exe` |
+| `CapitalTracker-macos-arm64` | macOS Apple Silicon (M-series) | `CapitalTracker-darwin-arm64` |
 
 Open the repository's **Actions → Build Capital Tracker → most recent successful run → Artifacts** and download the Apple Silicon artifact. A SHA-256 checksum is included. Files are not signed or notarized. Release uploads are not automated.
 
@@ -75,7 +73,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `POST` | `/api/accounts/{id}/restore` | `{"start_month":"2026-12"}` |
 | `PUT` | `/api/accounts/reorder` | `{"ids":[1,2,3]}` full atomic order |
 | `GET`, `POST` | `/api/months` | List / explicitly create empty month |
-| `GET`, `PUT`, `DELETE` | `/api/months/{YYYY-MM}` | Read / replace / delete a month (DELETE requires `{\"confirm\":true}`) |
+| `GET`, `PUT`, `DELETE` | `/api/months/{YYYY-MM}` | Read / replace / delete a month (DELETE requires `{"confirm":true}`) |
 | `GET` | `/api/dashboard?month=YYYY-MM&columns=12` | Summary, previous month and 1–120 monthly columns |
 | `GET` | `/api/capital/history` | Chronological complete/incomplete points |
 | `GET`, `PATCH` | `/api/settings` | Read / update language and appearance |
@@ -91,7 +89,7 @@ Example full monthly replacement:
 }
 ```
 
-`PUT /api/months/{month}` creates the month when needed, and removes old balance/rate entries omitted from this request. `POST /api/months` creates a deliberately empty month and rejects duplicates. `DELETE /api/months/{month}` requires JSON `{\"confirm\":true}` with the CSRF header and permanently removes the month plus its balances and rates via one SQLite transaction; other months remain unchanged. Never call `PUT` with an empty payload unintentionally, as that means clear the month. Requests are limited to 1 MiB.
+`PUT /api/months/{month}` creates the month when needed, and removes old balance/rate entries omitted from this request. `POST /api/months` creates a deliberately empty month and rejects duplicates. `DELETE /api/months/{month}` requires JSON `{"confirm":true}` with the CSRF header and permanently removes the month plus its balances and rates via one SQLite transaction; other months remain unchanged. Never call `PUT` with an empty payload unintentionally, as that means clear the month. Requests are limited to 1 MiB.
 
 ## Project structure
 
