@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -338,10 +339,16 @@ func (s *Server) Handler() http.Handler {
 		}
 		path := r.URL.Path
 		if path == "/" || path == "/index.html" {
+			// FileServer intentionally redirects /index.html to ./.
+			// Passing the root request through it causes an infinite loop.
+			index, err := fs.ReadFile(s.Assets, "index.html")
+			if err != nil {
+				http.Error(w, "application page unavailable", http.StatusInternalServerError)
+				return
+			}
 			w.Header().Set("Cache-Control", "no-cache, must-revalidate")
-			r2 := r.Clone(r.Context())
-			r2.URL.Path = "/index.html"
-			static.ServeHTTP(w, r2)
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			http.ServeContent(w, r, "index.html", time.Time{}, bytes.NewReader(index))
 			return
 		}
 		if strings.HasPrefix(path, "/css/") || strings.HasPrefix(path, "/js/") || strings.HasPrefix(path, "/icons/") || path == "/sw.js" || path == "/manifest.webmanifest" {
