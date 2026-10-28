@@ -2,7 +2,7 @@ import en from './i18n/en.js';
 import ru from './i18n/ru.js';
 
 const $ = selector => document.querySelector(selector);
-const state = {page:'dashboard',month:new Date().toLocaleDateString('sv-SE').slice(0,7),accounts:[],months:[],history:[],settings:{language:'en',theme:'system',version:'0.1.0'},monthData:null,dashboard:null,dirty:false,selectedAccount:null};
+const state = {page:'dashboard',month:new Date().toLocaleDateString('sv-SE').slice(0,7),accounts:[],months:[],history:[],settings:{language:'en',theme:'system',version:'0.1.1'},monthData:null,dashboard:null,dirty:false,selectedAccount:null};
 const icons = {
  dashboard:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
  accounts:'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/>',
@@ -51,7 +51,7 @@ function parseRate(raw){
  }
  if(!/^\d+(?:[.,]\d{1,8})?$/.test(v))throw new Error(t('invalidRate'));
  const sep=v.match(/[.,]/);
- if(sep){const p=v.split(/[.,]/);if(p[0].length<=3&&p[1].length===3)throw new Error(t('ambiguous'));}
+ if(sep&&sep[0]===','){const p=v.split(/[.,]/);if(p[0].length<=3&&p[1].length===3)throw new Error(t('ambiguous'));}
  v=v.replace(',','.');
  const [whole,f='']=v.split('.');const fixed=BigInt(whole)*100000000n+BigInt(f.padEnd(8,'0')||'0');
  if(fixed<=0n||fixed>10000000000000000n)throw new Error(t('invalidRate'));
