@@ -160,25 +160,43 @@ func TestGroupsPartialBalanceAndLegacyImport(t *testing.T) {
 }
 
 func TestArchivedAccountsUseVirtualGroupWithoutLosingOriginalGroup(t *testing.T) {
- s := openTest(t)
- group, err := s.CreateGroup("Savings")
- if err != nil { t.Fatal(err) }
- a, err := s.CreateAccountInGroup("Bank", "EUR", "2026-01", &group.ID)
- if err != nil { t.Fatal(err) }
- if err = s.PutMonth("2026-01", MonthInput{Balances: []BalanceInput{{a.ID, "10000"}}, Rates: []RateInput{}}); err != nil { t.Fatal(err) }
- if err = s.ArchiveAccount(a.ID, "2026-02"); err != nil { t.Fatal(err) }
- summary, err := s.GroupsAt("2026-01")
- if err != nil { t.Fatal(err) }
- if summary.Groups[0].TotalEURMinor != nil || !summary.Archive.Complete || summary.Archive.TotalEURMinor == nil || *summary.Archive.TotalEURMinor != "10000" {
-  t.Fatalf("unexpected archived group totals: %+v", summary)
- }
- if err = s.RestoreAccount(a.ID, "2026-02"); err != nil { t.Fatal(err) }
- restored, err := s.account(a.ID)
- if err != nil || restored.GroupID == nil || *restored.GroupID != group.ID || restored.ArchivedFromMonth != nil {
-  t.Fatalf("restoration lost the original group: %+v %v", restored, err)
- }
- summary, err = s.GroupsAt("2026-01")
- if err != nil || summary.Archive.TotalEURMinor != nil || !summary.Groups[0].Complete || *summary.Groups[0].TotalEURMinor != "10000" {
-  t.Fatalf("unexpected restored group totals: %+v %v", summary, err)
- }
+	s := openTest(t)
+	group, err := s.CreateGroup("Savings")
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, err := s.CreateAccountInGroup("Bank", "EUR", "2026-01", &group.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.PutMonth("2026-01", MonthInput{
+		Balances: []BalanceInput{{a.ID, "10000"}},
+		Rates:    []RateInput{},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.ArchiveAccount(a.ID, "2026-02"); err != nil {
+		t.Fatal(err)
+	}
+	summary, err := s.GroupsAt("2026-01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if summary.Groups[0].TotalEURMinor != nil ||
+		!summary.Archive.Complete || summary.Archive.TotalEURMinor == nil ||
+		*summary.Archive.TotalEURMinor != "10000" {
+		t.Fatalf("unexpected archived group totals: %+v", summary)
+	}
+	if err = s.RestoreAccount(a.ID, "2026-02"); err != nil {
+		t.Fatal(err)
+	}
+	restored, err := s.account(a.ID)
+	if err != nil || restored.GroupID == nil || *restored.GroupID != group.ID || restored.ArchivedFromMonth != nil {
+		t.Fatalf("restoration lost the original group: %+v %v", restored, err)
+	}
+	summary, err = s.GroupsAt("2026-01")
+	if err != nil || summary.Archive.TotalEURMinor != nil ||
+		!summary.Groups[0].Complete || *summary.Groups[0].TotalEURMinor != "10000" {
+		t.Fatalf("unexpected restored group totals: %+v %v", summary, err)
+	}
 }

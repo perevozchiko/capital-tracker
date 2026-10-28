@@ -159,3 +159,5 @@
  .group-caption,.group-total{min-width:0}
  .group-total small{white-space:normal}
 }
+
+.action-menu-content .menu-move-label select{width:100%;max-width:none}
