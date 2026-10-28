@@ -188,6 +188,7 @@ type Account struct {
 	StartMonth        string  `json:"start_month"`
 	ArchivedFromMonth *string `json:"archived_from_month"`
 	SortOrder         int64   `json:"sort_order"`
+	GroupID           *int64  `json:"group_id,omitempty"`
 	CreatedAt         string  `json:"created_at"`
 	UpdatedAt         string  `json:"updated_at"`
 }
@@ -195,14 +196,18 @@ type Account struct {
 func scanAccount(rows interface{ Scan(...any) error }) (Account, error) {
 	var a Account
 	var archived sql.NullString
-	e := rows.Scan(&a.ID, &a.Name, &a.Currency, &a.StartMonth, &archived, &a.SortOrder, &a.CreatedAt, &a.UpdatedAt)
+	var group sql.NullInt64
+	e := rows.Scan(&a.ID, &a.Name, &a.Currency, &a.StartMonth, &archived, &a.SortOrder, &a.CreatedAt, &a.UpdatedAt, &group)
 	if archived.Valid {
 		a.ArchivedFromMonth = &archived.String
+	}
+	if group.Valid {
+		a.GroupID = &group.Int64
 	}
 	return a, e
 }
 
-const accountCols = "id,name,currency,start_month,archived_from_month,sort_order,created_at,updated_at"
+const accountCols = "id,name,currency,start_month,archived_from_month,sort_order,created_at,updated_at,group_id"
 
 func (s *Store) Accounts() ([]Account, error) {
 	rows, e := s.DB.Query("SELECT " + accountCols + " FROM accounts ORDER BY sort_order,id")
@@ -234,6 +239,10 @@ func (s *Store) LatestMonth() (string, error) {
 }
 
 func (s *Store) CreateAccount(name, currency, start string) (Account, error) {
+	return s.CreateAccountInGroup(name, currency, start, nil)
+}
+
+func (s *Store) CreateAccountInGroup(name, currency, start string, groupID *int64) (Account, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
 	name = strings.TrimSpace(name)
@@ -258,12 +267,15 @@ func (s *Store) CreateAccount(name, currency, start string) (Account, error) {
 		return Account{}, e
 	}
 	defer tx.Rollback()
+	if e = validateGroupID(tx, groupID); e != nil {
+		return Account{}, e
+	}
 	ts := now()
 	var order int64
 	if e = tx.QueryRow("SELECT COALESCE(MAX(sort_order),0)+1 FROM accounts").Scan(&order); e != nil {
 		return Account{}, e
 	}
-	res, e := tx.Exec("INSERT INTO accounts(name,currency,start_month,sort_order,created_at,updated_at) VALUES(?,?,?,?,?,?)", name, currency, start, order, ts, ts)
+	res, e := tx.Exec("INSERT INTO accounts(name,currency,start_month,sort_order,created_at,updated_at,group_id) VALUES(?,?,?,?,?,?,?)", name, currency, start, order, ts, ts, groupID)
 	if e != nil {
 		return Account{}, e
 	}
