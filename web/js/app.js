@@ -225,6 +225,7 @@ async function importJSON(file){
   await api('/data/import',{method:'POST',headers:{'X-Capital-Tracker-Import':'replace'},body});
   state.settings=await api('/settings');
   themeApply();
+  collapsedGroups.clear();try{localStorage.removeItem('capital-collapsed-groups')}catch{}
   await refresh();
   state.month=state.history.filter(p=>p.complete).at(-1)?.month||state.months.at(-1)?.month||new Date().toLocaleDateString('sv-SE').slice(0,7);
   state.dirty=false;
@@ -249,6 +250,7 @@ async function clearAllData(){
  await api('/data/clear',{method:'POST',headers:{'X-Capital-Tracker-Clear':'DELETE'},body:JSON.stringify({confirm:'DELETE'})});
  state.settings=await api('/settings');
  themeApply();
+ collapsedGroups.clear();try{localStorage.removeItem('capital-collapsed-groups')}catch{}
  await refresh();
  state.page='dashboard';
  state.month=new Date().toLocaleDateString('sv-SE').slice(0,7);
