@@ -28,6 +28,9 @@ jobs:
         run: |
           go mod tidy
           go mod verify
+          echo "CAPITAL_GO_SUM_BEGIN"
+          cat go.sum
+          echo "CAPITAL_GO_SUM_END"
       - name: Unit and integration tests
         run: go test -count=1 ./...
       - name: Static analysis

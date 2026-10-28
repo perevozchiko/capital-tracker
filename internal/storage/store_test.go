@@ -45,7 +45,7 @@ func TestCompleteHistoricalWorkflow(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if *d.Month.TotalEURMinor != "752000" || *d.ChangeMinor != "52000" {
+	if *d.Month.TotalEURMinor != "760000" || *d.ChangeMinor != "60000" {
 		t.Fatalf("October: %+v", d)
 	}
 	// Replacement is idempotent and editing September changes only its total.
@@ -60,7 +60,7 @@ func TestCompleteHistoricalWorkflow(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if *d.Month.TotalEURMinor != "752000" || *d.Previous.TotalEURMinor != "710000" || *d.ChangeMinor != "42000" {
+	if *d.Month.TotalEURMinor != "760000" || *d.Previous.TotalEURMinor != "710000" || *d.ChangeMinor != "50000" {
 		t.Fatalf("history edit: %+v", d)
 	}
 	// Invalid second rate rejects the whole replacement transaction.
@@ -169,5 +169,29 @@ func TestHistoryAndRestrictions(t *testing.T) {
 	}
 	if e := s.RestoreAccount(a.ID, "2026-03"); e != nil {
 		t.Fatal(e)
+	}
+}
+
+func TestAccountCurrencyCanChangeOnlyBeforeHistory(t *testing.T) {
+	s := openTest(t)
+	a, err := s.CreateAccount("Bank", "USD", "2026-01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	currency := "RSD"
+	updated, err := s.UpdateAccount(a.ID, nil, &currency)
+	if err != nil || updated.Currency != "RSD" {
+		t.Fatalf("currency edit: %+v %v", updated, err)
+	}
+	if err = s.PutMonth("2026-01", MonthInput{Balances: []BalanceInput{{a.ID, "100"}}, Rates: []RateInput{{"RSD", "117.2"}}}); err != nil {
+		t.Fatal(err)
+	}
+	currency = "EUR"
+	if _, err = s.UpdateAccount(a.ID, nil, &currency); !errors.Is(err, ErrConflict) {
+		t.Fatalf("history changed currency: %v", err)
+	}
+	updated, err = s.account(a.ID)
+	if err != nil || updated.Currency != "RSD" {
+		t.Fatalf("currency mutated: %+v %v", updated, err)
 	}
 }

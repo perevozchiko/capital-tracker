@@ -5,7 +5,7 @@ export default {
  missingBalances:'Нет остатков',missingRates:'Нет курсов валют',noPrevious:'Предыдущий месяц отсутствует или не заполнен',
  history:'История капитала',historyEmpty:'Заполните два месяца, чтобы увидеть изменение капитала.',monthlyOverview:'Остатки за несколько месяцев',account:'Счёт',totalEUR:'Итого EUR',
  start:'Начало работы',welcome:'Добро пожаловать в Capital Tracker',welcomeBody:'Раз в месяц записывайте остатки на счетах и следите за капиталом. Сначала добавьте счёт.',addAccount:'Добавить счёт',
- accountName:'Название счёта',currency:'Валюта',startMonth:'Начальный месяц',namePlaceholder:'Например, основной банк',createAccount:'Создать счёт',saveName:'Сохранить название',rename:'Переименовать',
+ accountName:'Название счёта',currency:'Валюта',startMonth:'Начальный месяц',namePlaceholder:'Например, основной банк',createAccount:'Создать счёт',changeCurrency:'Валюта счёта',saveName:'Сохранить название',rename:'Переименовать',
  archive:'Архивировать',restore:'Восстановить',delete:'Удалить',historyAccount:'История',archived:'В архиве',active:'Активен',noAccounts:'Счетов пока нет.',
  accountList:'Мои счета',accountCount:'счетов',archiveFrom:'Первый исключённый месяц (ГГГГ-ММ)',restoreFrom:'Первый месяц после восстановления (ГГГГ-ММ)',
  archiveWarning:'Архивация сохраняет все записанные остатки. Укажите первый месяц, с которого счёт исключается из итогов.',restoreWarning:'Восстановление открывает новый период активности, не изменяя прошлые месяцы.',

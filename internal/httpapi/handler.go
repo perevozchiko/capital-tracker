@@ -191,12 +191,13 @@ func (s *Server) Handler() http.Handler {
 		switch r.Method {
 		case "PATCH":
 			var p struct {
-				Name string `json:"name"`
+				Name     *string `json:"name"`
+				Currency *string `json:"currency"`
 			}
 			if !readJSON(w, r, &p) {
 				return
 			}
-			a, e := s.Store.RenameAccount(id, p.Name)
+			a, e := s.Store.UpdateAccount(id, p.Name, p.Currency)
 			if e != nil {
 				handleError(w, e)
 				return

@@ -68,7 +68,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | Method | Endpoint | Function |
 | --- | --- | --- |
 | `GET`, `POST` | `/api/accounts` | List / create accounts (`name`, `currency`, `start_month`) |
-| `PATCH`, `DELETE` | `/api/accounts/{id}` | Rename / delete history-free account |
+| `PATCH`, `DELETE` | `/api/accounts/{id}` | Change account name or currency (currency only before any recorded balance) / delete history-free account |
 | `POST` | `/api/accounts/{id}/archive` | `{"month":"2026-11"}` |
 | `POST` | `/api/accounts/{id}/restore` | `{"start_month":"2026-12"}` |
 | `PUT` | `/api/accounts/reorder` | `{"ids":[1,2,3]}` full atomic order |

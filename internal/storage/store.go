@@ -5,6 +5,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"path/filepath"
 	"sort"
@@ -251,6 +252,56 @@ func (s *Store) RenameAccount(id int64, name string) (Account, error) {
 	}
 	return s.account(id)
 }
+
+// UpdateAccount changes the name and, only before history exists, the currency.
+// An omitted field leaves its existing value unchanged.
+func (s *Store) UpdateAccount(id int64, name, currency *string) (Account, error) {
+	if name == nil && currency == nil {
+		return Account{}, invalid("name")
+	}
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return Account{}, err
+	}
+	defer tx.Rollback()
+	a, err := scanAccount(tx.QueryRow("SELECT "+accountCols+" FROM accounts WHERE id=?", id))
+	if errors.Is(err, sql.ErrNoRows) {
+		return Account{}, ErrNotFound
+	}
+	if err != nil {
+		return Account{}, err
+	}
+	if name != nil {
+		trimmed := strings.TrimSpace(*name)
+		if trimmed == "" || len([]rune(trimmed)) > 100 {
+			return Account{}, invalid("name")
+		}
+		a.Name = trimmed
+	}
+	if currency != nil {
+		if !finance.ValidCurrency(*currency) {
+			return Account{}, invalid("currency")
+		}
+		if a.Currency != *currency {
+			var count int
+			if err = tx.QueryRow("SELECT COUNT(*) FROM monthly_balances WHERE account_id=?", id).Scan(&count); err != nil {
+				return Account{}, err
+			}
+			if count > 0 {
+				return Account{}, conflict("currency cannot change after a balance has been recorded")
+			}
+			a.Currency = *currency
+		}
+	}
+	if _, err = tx.Exec("UPDATE accounts SET name=?,currency=?,updated_at=? WHERE id=?", a.Name, a.Currency, now(), id); err != nil {
+		return Account{}, err
+	}
+	if err = tx.Commit(); err != nil {
+		return Account{}, err
+	}
+	return s.account(id)
+}
+
 func (s *Store) DeleteAccount(id int64) error {
 	tx, e := s.DB.Begin()
 	if e != nil {
@@ -684,7 +735,7 @@ func (s *Store) Dashboard(month string) (Dashboard, error) {
 		if out.Month.Complete && prev.Complete {
 			curr, _ := strconv.ParseInt(*out.Month.TotalEURMinor, 10, 64)
 			old, _ := strconv.ParseInt(*prev.TotalEURMinor, 10, 64)
-			delta := strconv.FormatInt(curr-old, 10)
+			delta := new(big.Int).Sub(big.NewInt(curr), big.NewInt(old)).String()
 			out.ChangeMinor = &delta
 			p, ok, e := finance.ChangePercentBasisPoints(curr, old)
 			if e != nil {

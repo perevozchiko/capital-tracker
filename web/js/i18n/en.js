@@ -5,7 +5,7 @@ export default {
  missingBalances:'Missing balances',missingRates:'Missing exchange rates',noPrevious:'Previous month is incomplete or missing',
  history:'Net worth history',historyEmpty:'Complete two months to see how your capital changes.',monthlyOverview:'Monthly balances overview',account:'Account',totalEUR:'Total EUR',
  start:'Get started',welcome:'Welcome to Capital Tracker',welcomeBody:'Track your money by entering account balances once a month. Create your first account to begin.',addAccount:'Add account',
- accountName:'Account name',currency:'Currency',startMonth:'Start month',namePlaceholder:'e.g. Main Bank',createAccount:'Create account',saveName:'Save name',rename:'Rename',
+ accountName:'Account name',currency:'Currency',startMonth:'Start month',namePlaceholder:'e.g. Main Bank',createAccount:'Create account',changeCurrency:'Change currency',saveName:'Save name',rename:'Rename',
  archive:'Archive',restore:'Restore',delete:'Delete',historyAccount:'History',archived:'Archived',active:'Active',noAccounts:'No accounts yet.',
  accountList:'Your accounts',accountCount:'accounts',archiveFrom:'First excluded month (YYYY-MM)',restoreFrom:'First restored month (YYYY-MM)',
  archiveWarning:'Archiving preserves all recorded balances. Enter the first month the account should be excluded from totals.',restoreWarning:'Restoration creates a new active period and never rewrites past months.',
