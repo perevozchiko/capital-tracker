@@ -71,7 +71,7 @@ async function navigate(page){if(!(await confirmClean()))return;state.page=page;
 async function setMonth(month){if(!validMonth(month)){notify(t('monthLimit'),true);return false}if(!(await confirmClean()))return false;state.month=month;await render();return true}
 function statusPill(d){return `<span class="pill ${d.complete?'good':'bad'}">${d.complete?t('complete'):t('incomplete')}</span>`}
 function renderNav(){const routes=[['dashboard','navDashboard'],['accounts','navAccounts'],['monthly','navMonthly'],['settings','navSettings']];$('#navigation').innerHTML=routes.map(([key,label])=>`<button class="nav-item ${state.page===key?'active':''}" data-page="${key}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`).join('');document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)})}
-function renderHeader(){const names={dashboard:'navDashboard',accounts:'navAccounts',monthly:'navMonthly',settings:'navSettings'};$('#pageHeading').textContent=t(names[state.page]);$('#sectionEyebrow').textContent=t('appName');$('#headerActions').innerHTML=['dashboard','monthly'].includes(state.page)?monthControls():state.page==='accounts'?`<button class="btn btn-primary" data-action="focusAdd">+ ${t('addAccount')}</button>`:'';document.documentElement.lang=state.settings.language;document.title=`${t(names[state.page])} · Capital Tracker`;}
+function renderHeader(){const names={dashboard:'navDashboard',accounts:'navAccounts',monthly:'navMonthly',settings:'navSettings'};$('#pageHeading').textContent=t(names[state.page]);$('#sectionEyebrow').textContent=t('appName');$('#headerActions').innerHTML=['dashboard','monthly'].includes(state.page)?monthControls():state.page==='accounts'?`${monthControls()}<button class="btn btn-primary" data-action="focusAdd">+ ${t('addAccount')}</button>`:'';document.documentElement.lang=state.settings.language;document.title=`${t(names[state.page])} · Capital Tracker`;}
 function emptyStart(){return `<div class="card empty"><div class="welcome-symbol">◈</div><h2>${t('welcome')}</h2><p>${t('welcomeBody')}</p><button type="button" class="btn btn-primary" data-page="accounts">+ ${t('addAccount')}</button></div>`}
 function cellFor(d,account){const active=d.accounts.some(a=>a.id===account.id);if(!active)return `<span class="td-muted" title="${t('notActive')}">·</span>`;const b=d.balances.find(x=>x.account_id===account.id);return b?money(b.amount_minor,account.currency):`<span class="td-muted" title="${t('notEntered')}">—</span>`;}
 function renderTable(d){const cols=d.columns;const headers=cols.map(x=>`<th class="${x.month===state.month?'selected-col':''}"><button data-action="selectColumn" data-month="${x.month}">${escapeHTML(monthLabel(x.month,true))}</button></th>`).join('');const rows=d.accounts.map(account=>`<tr><td><span>${escapeHTML(account.name)}</span><span class="currency-tag">${account.currency}</span></td>${cols.map(c=>`<td class="${c.month===state.month?'selected-col':''}">${cellFor(c,account)}</td>`).join('')}</tr>`).join('');const totals=cols.map(c=>`<td class="${c.month===state.month?'selected-col':''}">${c.complete?money(c.total_eur_minor):`<span class="td-muted">${t('incomplete')}</span>`}</td>`).join('');return `<div class="table-scroll"><table><thead><tr><th>${t('account')}</th>${headers}</tr></thead><tbody>${rows}<tr class="table-total"><td>${t('totalEUR')}</td>${totals}</tr></tbody></table></div><p class="footer-note">${t('displayedOriginal')} · ${t('exactTotal')}</p>`}
@@ -99,9 +99,59 @@ async function renderDashboard(){const d=await api('/dashboard?month='+encodeURI
  $('#columnCount').value=String(state.columnCount);
 }
 function pluralAccounts(count){const rules=new Intl.PluralRules(lang());if(state.settings.language==='en')return `${count} ${count===1?'account':'accounts'}`;const f=rules.select(count);return `${count} ${f==='one'?'счёт':f==='few'?'счёта':'счетов'}`;}
-async function renderAccounts(){const accounts=state.accounts;const rows=accounts.map((a,i)=>`<div class="account-row"><div class="account-main"><div class="account-mark">${a.currency==='EUR'?'€':a.currency==='USD'?'$':a.currency==='RUB'?'₽':a.currency==='TRY'?'₺':'R'}</div><div><strong>${escapeHTML(a.name)} <span class="currency-tag">${a.currency}</span></strong><small>${t('startMonth')}: ${escapeHTML(monthLabel(a.start_month))} · ${a.archived_from_month?t('archived')+' '+escapeHTML(monthLabel(a.archived_from_month)):t('active')}</small></div></div><div class="actions"><button class="btn btn-small" data-action="up" data-id="${a.id}" ${i===0?'disabled':''} aria-label="${t('reorderUp')}">↑</button><button class="btn btn-small" data-action="down" data-id="${a.id}" ${i===accounts.length-1?'disabled':''} aria-label="${t('reorderDown')}">↓</button><button class="btn btn-small" data-action="history" data-id="${a.id}">${t('historyAccount')}</button><button class="btn btn-small" data-action="rename" data-id="${a.id}">${t('rename')}</button><button class="btn btn-small" data-action="currency" data-id="${a.id}">${t('changeCurrency')}</button><button class="btn btn-small" data-action="${a.archived_from_month?'restore':'archive'}" data-id="${a.id}">${t(a.archived_from_month?'restore':'archive')}</button><button class="btn btn-small btn-danger" data-action="delete" data-id="${a.id}">${t('delete')}</button></div></div>`).join('');
- $('#pageContent').innerHTML=`<section class="card panel"><h2>${t('addAccount')}</h2><p class="caption">${t('currencyHelp')}</p><form id="addAccountForm" class="form-row"><div class="field"><label for="accountName">${t('accountName')}</label><input id="accountName" name="name" maxlength="100" required placeholder="${t('namePlaceholder')}"></div><div class="field"><label for="accountCurrency">${t('currency')}</label><select id="accountCurrency" name="currency">${state.currencies.map(c=>`<option>${c}</option>`).join('')}</select></div><div class="field"><label for="accountStart">${t('startMonth')}</label><input id="accountStart" name="start" type="month" min="1900-01" max="2200-12" required value="${(state.months.length&&state.month<=state.months.at(-1).month)?nextMonth(state.months.at(-1).month,1):state.month}"></div><button class="btn btn-primary" type="submit">${t('createAccount')}</button></form></section><section class="card panel"><div class="panel-heading"><h2>${t('accountList')}</h2><span class="subtle">${pluralAccounts(accounts.length)}</span></div>${rows||`<div class="empty">${t('noAccounts')}</div>`}</section>`;
+
+const collapsedGroups = new Set((() => {
+ try { const saved=JSON.parse(localStorage.getItem('capital-collapsed-groups')||'[]');return Array.isArray(saved)?saved:[]; }
+ catch { return []; }
+})());
+function orderedAssignments(){
+ const ids=[...state.groups.groups.map(g=>g.id),null];
+ return ids.flatMap(group_id=>state.accounts.filter(a=>(a.group_id??null)===group_id).map(a=>({id:a.id,group_id})));
 }
+async function saveAssignments(items){
+ await request('/accounts/assignments','PUT',{accounts:items});
+ await refresh();
+ await render();
+}
+function groupSelector(selected,attribute){
+ return `<select ${}attribute aria-label="${}t('moveToGroup')"><option value="">${}t('ungrouped')</option>${}state.groups.groups.map(g=>`<option value="${}g.id" ${}selected===g.id?'selected':''>${}escapeHTML(g.name)</option>`).join('')</select>`;
+}
+async function renderAccounts(){
+ state.groups=await api('/groups?month='+encodeURIComponent(state.month));
+ const accounts=state.accounts;
+ const groups=state.groups.groups;
+ const groupRows=(group,id,index)=>{
+  const members=accounts.filter(a=>(a.group_id??null)===id);
+  const key=id===null?'ungrouped':'g-'+id;
+  const closed=collapsedGroups.has(key);
+  const total=group.total_eur_minor==null?'—':money(group.total_eur_minor);
+  const buttons=id===null?'':`<button class="btn btn-small" data-action="groupUp" data-group-id="${}id" ${}index===0?'disabled':'' aria-label="${}t('reorderUp')">↑</button><button class="btn btn-small" data-action="groupDown" data-group-id="${}id" ${}index===groups.length-1?'disabled':'' aria-label="${}t('reorderDown')">↓</button><button class="btn btn-small" data-action="groupRename" data-group-id="${}id">${}t('rename')</button><button class="btn btn-small btn-danger" data-action="groupDelete" data-group-id="${}id">${}t('delete')</button>`;
+  const rows=members.map((a,i)=>`<div class="account-row" data-account-row="${}a.id" draggable="true">
+   <div class="account-main"><span class="drag-handle" title="${}t('dragAccount')" aria-hidden="true">⠿</span><div class="account-mark">${}a.currency==='EUR'?'€':a.currency==='USD'?'$':a.currency==='RUB'?'₽':a.currency==='TRY'?'₺':'R'</div><div><strong>${}escapeHTML(a.name)} <span class="currency-tag">${}a.currency</span></strong><small>${}t('startMonth'): ${}escapeHTML(monthLabel(a.start_month)) · ${}a.archived_from_month?t('archived')+' '+escapeHTML(monthLabel(a.archived_from_month)):t('active')</small></div></div>
+   <div class="actions">${}groupSelector(a.group_id??null,`data-move-account="${}a.id"`)<button class="btn btn-small" data-action="up" data-id="${}a.id" ${}i===0?'disabled':'' aria-label="${}t('reorderUp')">↑</button><button class="btn btn-small" data-action="down" data-id="${}a.id" ${}i===members.length-1?'disabled':'' aria-label="${}t('reorderDown')">↓</button><button class="btn btn-small" data-action="history" data-id="${}a.id">${}t('historyAccount')</button><button class="btn btn-small" data-action="rename" data-id="${}a.id">${}t('rename')</button><button class="btn btn-small" data-action="currency" data-id="${}a.id">${}t('changeCurrency')</button><button class="btn btn-small" data-action="${}a.archived_from_month?'restore':'archive'" data-id="${}a.id">${}t(a.archived_from_month?'restore':'archive')</button><button class="btn btn-small btn-danger" data-action="delete" data-id="${}a.id">${}t('delete')</button></div>
+  </div>`).join('');
+  return `<section class="account-group ${}closed?'is-collapsed':''" data-group-id="${}id===null?'':id">
+   <div class="account-group-head" data-group-row="${}id===null?'ungrouped':id" draggable="${}id!==null">
+    <button class="group-toggle" data-action="toggleGroup" data-group-key="${}key" aria-expanded="${}!closed" aria-label="${}t('toggleGroup')">${}closed?'▸':'▾'</button>
+    <div class="group-caption"><strong>${}escapeHTML(id===null?t('ungrouped'):group.name)}</strong><small>${}pluralAccounts(members.length)</small></div>
+    <div class="group-total"><strong>${}total</strong><small>${}t('groupTotalEUR') · ${}escapeHTML(monthLabel(state.month,true))${}group.total_eur_minor==null?' · '+t('incomplete'):''</small></div>
+    <div class="group-controls">${}buttons</div>
+   </div>
+   <div class="account-group-body">${}rows||`<p class="group-empty">${}t('dropAccountHere')</p>`</div>
+  </section>`;
+ };
+ const html=groups.map((g,i)=>groupRows(g,g.id,i)).join('')+
+  ((accounts.some(a=>a.group_id==null)||groups.length===0)?groupRows(state.groups.ungrouped,null,groups.length):'');
+ $('#pageContent').innerHTML=`<section class="card panel"><h2>${}t('addAccount')</h2><p class="caption">${}t('currencyHelp')</p><form id="addAccountForm" class="form-row form-row-groups">
+ <div class="field"><label for="accountName">${}t('accountName')</label><input id="accountName" name="name" maxlength="100" required placeholder="${}t('namePlaceholder')"></div>
+ <div class="field"><label for="accountCurrency">${}t('currency')</label><select id="accountCurrency" name="currency">${}state.currencies.map(c=>`<option>${}c</option>`).join('')</select></div>
+ <div class="field"><label for="accountGroup">${}t('group')</label>${}groupSelector(null,'id="accountGroup" name="group"')</div>
+ <div class="field"><label for="accountStart">${}t('startMonth')</label><input id="accountStart" name="start" type="month" min="1900-01" max="2200-12" required value="${}(state.months.length&&state.month<=state.months.at(-1).month)?nextMonth(state.months.at(-1).month,1):state.month"></div>
+ <button class="btn btn-primary" type="submit">${}t('createAccount')</button></form></section>
+ <section class="card panel"><div class="panel-heading"><div><h2>${}t('accountList')</h2><span class="subtle">${}pluralAccounts(accounts.length)</span></div><button class="btn btn-small btn-primary" data-action="groupCreate">+ ${}t('createGroup')</button></div>
+ <p class="caption">${}t('dragGroupsHint')</p>${}html</section>`;
+}
+
 function updateBalanceDifference(input){
  const node=document.querySelector(`[data-balance-change="${input.dataset.balance}"]`);
  if(!node)return;
@@ -162,7 +212,7 @@ async function importJSON(file){
   const body=await file.text();
   let parsed;
   try{parsed=JSON.parse(body)}catch{throw new Error(t('invalidJSONFile'))}
-  if(parsed?.format!=='capital-tracker'||parsed.schema_version!==1||!Array.isArray(parsed.accounts)||!Array.isArray(parsed.months)){
+  if(parsed?.format!=='capital-tracker'||![1,2].includes(parsed.schema_version)||!Array.isArray(parsed.accounts)||!Array.isArray(parsed.months)){
    throw new Error(t('invalidJSONFile'));
   }
   if(!(await confirmClean()))return;
