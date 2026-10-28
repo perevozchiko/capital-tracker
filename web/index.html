@@ -47,6 +47,19 @@
       </div>
     </form>
   </dialog>
+  <dialog id="clearDataDialog" class="app-dialog confirmation-dialog clear-data-dialog" aria-labelledby="clearDataTitle" aria-describedby="clearDataDescription">
+    <form id="clearDataForm">
+      <div class="dialog-emblem confirm-emblem" aria-hidden="true">!</div>
+      <h2 id="clearDataTitle"></h2>
+      <p id="clearDataDescription" class="dialog-description"></p>
+      <label id="clearDataPrompt" for="clearDataPhrase" class="clear-data-label"></label>
+      <input id="clearDataPhrase" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="30" required>
+      <div class="dialog-actions">
+        <button type="button" id="clearDataCancel" class="btn"></button>
+        <button type="submit" id="clearDataAccept" class="btn btn-danger-solid" disabled></button>
+      </div>
+    </form>
+  </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="chartTooltip" class="chart-tooltip" hidden></div>
 </body>

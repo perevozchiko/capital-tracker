@@ -72,4 +72,32 @@ func registerTransfer(mux *http.ServeMux, s *Server) {
 		}
 		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 	})
+	mux.HandleFunc("/api/data/clear", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			fail(w, http.StatusMethodNotAllowed, "method_not_allowed", "")
+			return
+		}
+		// Deliberately distinct from JSON import, with an extra opt-in header.
+		// The global handler also enforces loopback Host, Origin and CSRF.
+		if r.Header.Get("X-Capital-Tracker-Clear") != "DELETE" {
+			fail(w, http.StatusUnprocessableEntity, "validation_error", "confirm")
+			return
+		}
+		var input struct {
+			Confirm string `json:"confirm"`
+		}
+		if !readJSON(w, r, &input) {
+			return
+		}
+		if input.Confirm != "DELETE" {
+			fail(w, http.StatusUnprocessableEntity, "validation_error", "confirm")
+			return
+		}
+		if err := s.Store.ClearData(); err != nil {
+			handleError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	})
+
 }

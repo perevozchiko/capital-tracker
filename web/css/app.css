@@ -82,3 +82,12 @@
 .data-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:15px 0}
 .data-tools .btn{min-width:135px}
 @media(max-width:480px){.data-tools .btn{width:100%}}
+
+
+/* Destructive data-management action and typed confirmation */
+.danger-zone .btn-danger{border-color:var(--negative);color:var(--negative);font-weight:650}
+.danger-zone .btn-danger:hover{background:color-mix(in srgb,var(--negative) 9%,var(--surface))}
+.clear-data-dialog .clear-data-label{display:block;margin:20px 0 8px;font-weight:650;font-size:13px}
+.clear-data-dialog #clearDataPhrase{display:block;width:100%;min-height:42px;border:1px solid var(--border);border-radius:9px;padding:9px 11px;background:var(--input);color:var(--text);font:inherit}
+.clear-data-dialog #clearDataPhrase:focus-visible{outline:3px solid var(--primarySoft);border-color:var(--primary)}
+.clear-data-dialog #clearDataAccept:disabled{opacity:.45;cursor:not-allowed}

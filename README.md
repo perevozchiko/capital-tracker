@@ -73,6 +73,14 @@ Open **Settings → JSON import and export** in the browser:
 
 JSON schema identifier: `{"format":"capital-tracker","schema_version":1}`. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
 
+## Clearing all local data
+
+Go to **Settings → Danger zone → Delete all data**. A dedicated in-app dialog explains the permanent loss and requires typing **DELETE** in English or **УДАЛИТЬ** in Russian before the destructive button becomes available.
+
+After confirmation, the app removes **all** accounts, account activity periods, recorded months, balances, exchange rates and saved preferences, restoring English and system appearance. Account IDs start from 1 again. SQLite tables and migrations stay in place, so you can begin again without reinstalling the application. All deletions are atomic: any database error rolls back the entire clear. This cannot be undone inside the app.
+
+**Export a JSON backup before clearing.** Files previously exported as JSON or SQLite backups remain untouched; the command deletes application data in the active SQLite database, not external backup files. No background or automatic clearing occurs.
+
 ## Financial semantics
 
 Balances are **end-of-month snapshots** in the account's native currency, stored as **integer minor units** (cents, including RSD). A blank entry means unknown and is *not* zero. FX rates are **manually entered end-of-month rates**: `1 EUR = X USD / RSD / RUB / TRY` with up to eight decimals; the EUR rate is implicitly one. Monthly total = sum of each account's exact EUR-cent equivalent, rounded **once** to the nearest cent, ties away from zero for positive or negative amounts. Account figures in the table remain in their original currencies. Monthly changes compare only immediately consecutive **complete** months; percentage change is calculated from displayed rounded EUR-cent totals, and is undefined when the previous total is zero.
@@ -103,6 +111,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET` | `/api/currencies` | Supported ISO 4217 currency codes from Go |
 | `GET` | `/api/data/export` | Download complete application JSON snapshot |
 | `POST` | `/api/data/import` | Atomically replace data with valid exported JSON (requires `X-Capital-Tracker-Import: replace` and the regular CSRF header) |
+| `POST` | `/api/data/clear` | Erase all local app data and reset settings (requires the regular CSRF header, `X-Capital-Tracker-Clear: DELETE`, and JSON `{"confirm":"DELETE"}`) |
 
 Example full monthly replacement:
 

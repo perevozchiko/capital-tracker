@@ -1,7 +1,7 @@
 import en from './i18n/en.js';
 import ru from './i18n/ru.js';
 import { parseRateDecimal } from './numbers.js';
-import { showConfirm } from './dialogs.js';
+import { showConfirm, showTypedConfirm } from './dialogs.js';
 
 const $ = selector => document.querySelector(selector);
 const state = {page:'dashboard',month:new Date().toLocaleDateString('sv-SE').slice(0,7),accounts:[],months:[],history:[],settings:{language:'en',theme:'system',version:'0.1.3'},currencies:[],columnCount:12,monthData:null,dashboard:null,dirty:false,selectedAccount:null};
@@ -151,6 +151,33 @@ async function importJSON(file){
  }catch(err){notify(err.message||t('error'),true)}
 }
 
+
+async function clearAllData(){
+ if(!(await confirmClean()))return;
+ const phrase=t('clearDataPhrase');
+ const approved=await showTypedConfirm({
+  title:t('clearDataTitle'),
+  message:t('clearDataWarning'),
+  prompt:t('clearDataPrompt').replace('{phrase}',phrase),
+  phrase,
+  confirmLabel:t('clearAllData'),
+  cancelLabel:t('cancel')
+ });
+ if(!approved)return;
+ await api('/data/clear',{method:'POST',headers:{'X-Capital-Tracker-Clear':'DELETE'},body:JSON.stringify({confirm:'DELETE'})});
+ state.settings=await api('/settings');
+ themeApply();
+ await refresh();
+ state.page='dashboard';
+ state.month=new Date().toLocaleDateString('sv-SE').slice(0,7);
+ state.monthData=null;
+ state.dashboard=null;
+ state.dirty=false;
+ state.selectedAccount=null;
+ await render();
+ notify(t('dataCleared'));
+}
+
 function renderSettings(){
  const s=state.settings;
  $('#pageContent').innerHTML=`<section class="card panel"><h2>${t('preferences')}</h2>
@@ -164,6 +191,9 @@ function renderSettings(){
  <button class="btn" type="button" data-action="importJSON">${t('importJSON')}</button>
  <input id="jsonFileInput" type="file" accept=".json,application/json" hidden aria-label="${t('importJSON')}">
  </div><p class="footer-note">${t('jsonImportWarning')}</p></section>
+ <section class="card panel danger-zone"><h2>${t('dangerZone')}</h2>
+ <p class="caption">${t('clearDataWarning')}</p>
+ <button type="button" class="btn btn-danger" data-action="clearAllData">${t('clearAllData')}</button></section>
  <section class="card panel"><h2>${t('appName')}</h2><p class="caption">${t('appDescription')}</p>
  <p>${t('about')}</p><p class="caption">${t('version')}: ${escapeHTML(s.version)}</p></section>`;
 }
@@ -247,6 +277,7 @@ document.addEventListener('click',async e=>{
   else if(action==='focusAdd'){$('#accountName')?.focus()}
   else if(action==='exportJSON')await exportJSON();
   else if(action==='importJSON')$('#jsonFileInput')?.click();
+  else if(action==='clearAllData')await clearAllData();
   else if(action==='saveMonth')await saveMonth();
   else if(action==='deleteMonth'){
    if(!state.monthData?.exists||!(await showConfirm({title:t('deleteMonth'),message:t('confirmDeleteMonth'),confirmLabel:t('delete'),cancelLabel:t('cancel'),danger:true})))return;
