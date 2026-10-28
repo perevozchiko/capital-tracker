@@ -52,3 +52,12 @@ func TestMonths(t *testing.T) {
 		}
 	}
 }
+
+func TestPercentCannotOverflowForLargeNetWorthChanges(t *testing.T) {
+	got, ok := ChangePercentBasisPointsString(9000000000000000000, 1)
+	if !ok || got != "89999999999999999990000" {
+		t.Fatalf("unexpected large percent: %q", got)
+	}
+	small, ok := ChangePercentBasisPointsString(-1, 0)
+	if ok || small != "" { t.Fatal("zero previous month must not have percent") }
+}
