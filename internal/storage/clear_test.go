@@ -42,14 +42,14 @@ func TestClearDataRemovesEverythingAndResetsPreferences(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(cleared.Accounts) != 0 || len(cleared.AccountPeriods) != 0 ||
-		len(cleared.Months) != 0 || len(cleared.Balances) != 0 || len(cleared.Rates) != 0 {
+		len(cleared.Months) != 0 || len(cleared.Balances) != 0 || len(cleared.Rates) != 0 || len(cleared.Groups) != 0 {
 		t.Fatalf("some records survived clearing: %+v", cleared)
 	}
 	if !reflect.DeepEqual(cleared.Settings, map[string]string{"language": "en", "theme": "dark"}) {
 		t.Fatalf("unexpected settings: %+v", cleared.Settings)
 	}
 	var schema int
-	if err := s.DB.QueryRow("PRAGMA user_version").Scan(&schema); err != nil || schema != 1 {
+	if err := s.DB.QueryRow("PRAGMA user_version").Scan(&schema); err != nil || schema != 2 {
 		t.Fatalf("schema was removed: version %d, %v", schema, err)
 	}
 	created, err := s.CreateAccount("New account", "EUR", "2026-05")
