@@ -41,15 +41,20 @@ Data location: macOS `~/Library/Application Support/CapitalTracker/capital.db`; 
 
 The executable is not Apple-signed/notarized; Gatekeeper may warn when launching a downloaded binary. Build locally or follow Apple's standard security confirmation procedure for software you trust.
 
-## Download macOS builds
+## Download builds from GitHub Actions
 
-During development, GitHub Actions is **manual-only**. Pushes, tags, and pull requests do not start a build. To build, open **Actions → Build Capital Tracker → Run workflow**, choose `master`, and confirm. The single job runs Go tests, `go vet`, JavaScript validation, and builds/smoke-tests **only macOS Apple Silicon (ARM64)**. Intel macOS, Windows and Linux artifacts are temporarily disabled.
+**Builds are manual-only** during development: pushes, tags, and pull requests do not trigger compilation.
 
-| Workflow artifact | Platform | Executable |
-| --- | --- | --- |
-| `CapitalTracker-macos-arm64` | macOS Apple Silicon (M-series) | `CapitalTracker-darwin-arm64` |
+To request a binary, open **Actions → Build Capital Tracker → Run workflow**, select the `master` branch, and choose a `platform`:
 
-Open the repository's **Actions → Build Capital Tracker → most recent successful run → Artifacts** and download the Apple Silicon artifact. A SHA-256 checksum is included. Files are not signed or notarized. Release uploads are not automated.
+| Selection | Runner | Downloadable artifact | Executable |
+| --- | --- | --- | --- |
+| `macos` (default) | macOS Apple Silicon (ARM64) | `CapitalTracker-macos-arm64` | `CapitalTracker-darwin-arm64` |
+| `linux` | Linux x86-64 (AMD64) | `CapitalTracker-linux-amd64` | `CapitalTracker-linux-amd64` |
+| `windows` | Windows x86-64 (AMD64) | `CapitalTracker-windows-amd64` | `CapitalTracker-windows-amd64.exe` |
+| `all` | All three | All three artifacts | One per platform |
+
+Each selected job runs unit tests, JavaScript checks, `go vet`, and a native build. The macOS job additionally smoke-tests the server, the home page, backup, and restart. After a successful run, download your artifact from that run's **Artifacts** section. Each artifact includes a SHA-256 checksum. macOS Intel is not built; downloaded binaries are unsigned/unnotarized, and GitHub Releases are not published automatically.
 
 ## Financial semantics
 
@@ -108,7 +113,7 @@ Migration scripts are embedded under `internal/storage/migrations/`. Database id
 
 - No native macOS Intel binary in CI; no remote/mobile access over the LAN; no server-independent offline editing; no automatic FX updates.
 - There are no automatic backups, exports, imports, transactions or cloud sync.
-- Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. The Windows source currently uses an exclusive-create fallback while Windows releases are disabled.
+- Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. The Windows source currently uses an exclusive-create lock-file fallback; a stale file after an abnormal termination may require manual removal once the process is confirmed stopped.
 - Built-in browser checks such as responsive layout, theme switching and browser launch need visual/manual verification on the target OS.
 
 ## Currency definitions and schema constraints
