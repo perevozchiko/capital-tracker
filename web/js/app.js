@@ -301,7 +301,7 @@ function showAccountEditor(action,account){
  const titles={rename:'rename',currency:'changeCurrency',archive:'archive',restore:'restore'};
  const helpers={currency:'currencyHelp',archive:'archiveWarning',restore:'restoreWarning'};
  const labels={rename:'accountName',currency:'currency',archive:'archiveFrom',restore:'restoreFrom'};
- dialog.dataset.action=action;
+ dialog.dataset.editorAction=action;
  dialog.dataset.id=String(account.id);
  $('#editTitle').textContent=t(titles[action])+' · '+account.name;
  $('#editHelp').textContent=helpers[action]?t(helpers[action]):'';
@@ -326,7 +326,7 @@ function showAccountEditor(action,account){
 
 function showGroupEditor(action,group=null){
  const dialog=$('#accountDialog');
- dialog.dataset.action=action;
+ dialog.dataset.editorAction=action;
  dialog.dataset.id=group?String(group.id):'';
  $('#editTitle').textContent=t(action==='groupCreate'?'createGroup':'renameGroup');
  $('#editHelp').textContent=t('groupHelp');
@@ -442,7 +442,7 @@ document.addEventListener('drop',async e=>{
 
 async function submitAccountEdit(form){
  const dialog=$('#accountDialog');
- const action=dialog.dataset.action, id=Number(dialog.dataset.id);
+ const action=dialog.dataset.editorAction, id=Number(dialog.dataset.id);
  const value=form.elements.namedItem('value').value;
  try{
   if(action==='groupCreate'||action==='groupRename'){
