@@ -320,7 +320,11 @@ func (s *Server) Handler() http.Handler {
 				handleError(w, e)
 				return
 			}
-			settings, _ := s.Store.Settings(s.Version)
+			settings, e := s.Store.Settings(s.Version)
+			if e != nil {
+				handleError(w, e)
+				return
+			}
 			writeJSON(w, 200, settings)
 		default:
 			fail(w, 405, "method_not_allowed", "")
