@@ -114,3 +114,17 @@ func ChangePercentBasisPoints(current, previous int64) (int64, bool, error) {
 	out, err := RoundRat(pct)
 	return out, true, err
 }
+
+// ChangePercentBasisPointsString returns percentage * 100 (basis points) as
+// a decimal string, avoiding int64 overflow when the previous total is small.
+func ChangePercentBasisPointsString(current, previous int64) (string, bool) {
+	if previous == 0 { return "", false }
+	diff := new(big.Int).Sub(big.NewInt(current), big.NewInt(previous))
+	denominator := new(big.Int).Abs(big.NewInt(previous))
+	rate := new(big.Rat).SetFrac(new(big.Int).Mul(diff, big.NewInt(10000)), denominator)
+	magnitude := new(big.Int).Abs(rate.Num())
+	q, remainder := new(big.Int).QuoRem(magnitude, rate.Denom(), new(big.Int))
+	if remainder.Mul(remainder, big.NewInt(2)).Cmp(rate.Denom()) >= 0 { q.Add(q, big.NewInt(1)) }
+	if rate.Sign() < 0 { q.Neg(q) }
+	return q.String(), true
+}
