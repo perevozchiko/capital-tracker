@@ -17,6 +17,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/perevozchiko/capital-tracker/internal/demo"
 	"github.com/perevozchiko/capital-tracker/internal/httpapi"
 	"github.com/perevozchiko/capital-tracker/internal/storage"
 	"github.com/perevozchiko/capital-tracker/web"
@@ -77,8 +78,14 @@ func run() error {
 	dataDir := flags.String("data-dir", envOr("CAPITAL_TRACKER_DATA_DIR", dir), "application data directory")
 	port := flags.String("port", envOr("CAPITAL_TRACKER_PORT", "8765"), "loopback HTTP port")
 	noBrowser := flags.Bool("no-browser", false, "do not open a browser")
+	demoMode := flags.Bool("demo", false, "run with isolated fictional example data")
 	if err = flags.Parse(os.Args[1:]); err != nil {
 		return err
+	}
+	if *demoMode {
+		// Ignore normal CLI/environment data directories in demo mode.
+		// In particular, --demo can never seed the real finance database.
+		*dataDir = filepath.Join(filepath.Dir(dir), "CapitalTrackerDemo")
 	}
 	p, e := strconv.Atoi(*port)
 	if e != nil || p < 1 || p > 65535 {
@@ -115,6 +122,11 @@ func run() error {
 		return e
 	}
 	defer s.Close()
+	if *demoMode {
+		if e := demo.Seed(s); e != nil {
+			return fmt.Errorf("initialize demo data: %w", e)
+		}
+	}
 	handler := (&httpapi.Server{Store: s, Version: version, Assets: web.Assets}).Handler()
 	srv := httpapi.NewHTTPServer(net.JoinHostPort("127.0.0.1", *port), handler)
 	listener, e := net.Listen("tcp", srv.Addr)
@@ -143,6 +155,9 @@ func run() error {
 		return errors.New("HTTP server did not become ready")
 	}
 	fmt.Printf("Capital Tracker %s running at %s\nData: %s\nPress Ctrl+C to stop.\n", version, url, s.Path)
+	if *demoMode {
+		fmt.Println("DEMO MODE: fictional example finances; your normal data is untouched.")
+	}
 	if !*noBrowser {
 		if e = browser(url); e != nil {
 			fmt.Fprintln(os.Stderr, "Could not open browser:", e, "— visit", url)
