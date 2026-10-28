@@ -11,29 +11,29 @@ import (
 // AccountGroup groups current accounts. Moving an account never rewrites its
 // saved balances or changes the overall monthly capital.
 type AccountGroup struct {
-	ID        int64  \`json:"id"\`
-	Name      string \`json:"name"\`
-	SortOrder int64  \`json:"sort_order"\`
-	CreatedAt string \`json:"created_at"\`
-	UpdatedAt string \`json:"updated_at"\`
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	SortOrder int64  `json:"sort_order"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 type GroupTotal struct {
-	TotalEURMinor *string \`json:"total_eur_minor"\`
-	Complete      bool    \`json:"complete"\`
+	TotalEURMinor *string `json:"total_eur_minor"`
+	Complete      bool    `json:"complete"`
 }
 type GroupWithTotal struct {
 	AccountGroup
 	GroupTotal
 }
 type GroupsForMonth struct {
-	Groups    []GroupWithTotal \`json:"groups"\`
-	Ungrouped GroupTotal       \`json:"ungrouped"\`
-	Month     string           \`json:"month"\`
+	Groups    []GroupWithTotal `json:"groups"`
+	Ungrouped GroupTotal       `json:"ungrouped"`
+	Month     string           `json:"month"`
 }
 type AccountAssignment struct {
-	ID      int64  \`json:"id"\`
-	GroupID *int64 \`json:"group_id"\`
+	ID      int64  `json:"id"`
+	GroupID *int64 `json:"group_id"`
 }
 
 func validGroupName(name string) bool {
