@@ -12,16 +12,8 @@ permissions:
 
 jobs:
   macos:
-    name: macOS ${{ matrix.arch }} (native)
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: arm64
-            runner: macos-15
-          - arch: amd64
-            runner: macos-15-intel
+    name: macOS Apple Silicon (arm64)
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v7
@@ -41,7 +33,7 @@ jobs:
       - name: Build single executable
         env:
           GOOS: darwin
-          GOARCH: ${{ matrix.arch }}
+          GOARCH: arm64
           CGO_ENABLED: '0'
         run: |
           mkdir -p dist
@@ -51,13 +43,13 @@ jobs:
           shasum -a 256 "CapitalTracker-darwin-${GOARCH}" > "CapitalTracker-darwin-${GOARCH}.sha256"
       - uses: actions/upload-artifact@v7
         with:
-          name: CapitalTracker-macos-${{ matrix.arch }}
+          name: CapitalTracker-macos-arm64
           path: dist/*
           if-no-files-found: error
           retention-days: 30
 
   cross-platform:
-    name: ${{ matrix.goos }} ${{ matrix.arch }}
+    name: ${{ matrix.goos }} arm64
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -78,7 +70,7 @@ jobs:
       - name: Build executable
         env:
           GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.arch }}
+          GOARCH: arm64
           CGO_ENABLED: '0'
           EXT: ${{ matrix.extension }}
         run: |
@@ -88,7 +80,7 @@ jobs:
           shasum -a 256 "CapitalTracker-${GOOS}-${GOARCH}${EXT}" > "CapitalTracker-${GOOS}-${GOARCH}${EXT}.sha256"
       - uses: actions/upload-artifact@v7
         with:
-          name: CapitalTracker-${{ matrix.goos }}-${{ matrix.arch }}
+          name: CapitalTracker-${{ matrix.goos }}-arm64
           path: dist/*
           if-no-files-found: error
           retention-days: 30
