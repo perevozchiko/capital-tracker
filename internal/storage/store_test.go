@@ -195,3 +195,21 @@ func TestAccountCurrencyCanChangeOnlyBeforeHistory(t *testing.T) {
 		t.Fatalf("currency mutated: %+v %v", updated, err)
 	}
 }
+
+func TestEmptyBalanceDoesNotAllowHistoryRewriting(t *testing.T) {
+	s := openTest(t)
+	a, err := s.CreateAccount("Unfilled", "USD", "2026-03")
+	if err != nil { t.Fatal(err) }
+	if err = s.CreateMonth("2026-03"); err != nil { t.Fatal(err) }
+	if err = s.DeleteAccount(a.ID); !errors.Is(err, ErrConflict) {
+		t.Fatalf("history-affecting delete was allowed: %v", err)
+	}
+	eur := "EUR"
+	if _, err = s.UpdateAccount(a.ID, nil, &eur); !errors.Is(err, ErrConflict) {
+		t.Fatalf("history-affecting currency change was allowed: %v", err)
+	}
+	d, err := s.Month("2026-03")
+	if err != nil || len(d.MissingBalances) != 1 || len(d.MissingRates) != 1 {
+		t.Fatalf("incomplete month was rewritten: %+v %v", d, err)
+	}
+}
