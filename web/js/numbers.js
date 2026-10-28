@@ -21,3 +21,9 @@ export function parseRateDecimal(raw) {
   }
   return result;
 }
+
+// Keep account-to-account comparisons exact, including zero and negative balances.
+export function differenceMinor(currentMinor, previousMinor) {
+  if (currentMinor == null || previousMinor == null) return null;
+  return (BigInt(currentMinor) - BigInt(previousMinor)).toString();
+}

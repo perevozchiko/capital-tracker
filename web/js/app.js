@@ -1,6 +1,6 @@
 import en from './i18n/en.js';
 import ru from './i18n/ru.js';
-import { parseRateDecimal } from './numbers.js';
+import { parseRateDecimal, differenceMinor } from './numbers.js';
 import { showConfirm, showTypedConfirm } from './dialogs.js';
 
 const $ = selector => document.querySelector(selector);
@@ -102,9 +102,41 @@ function pluralAccounts(count){const rules=new Intl.PluralRules(lang());if(state
 async function renderAccounts(){const accounts=state.accounts;const rows=accounts.map((a,i)=>`<div class="account-row"><div class="account-main"><div class="account-mark">${a.currency==='EUR'?'€':a.currency==='USD'?'$':a.currency==='RUB'?'₽':a.currency==='TRY'?'₺':'R'}</div><div><strong>${escapeHTML(a.name)} <span class="currency-tag">${a.currency}</span></strong><small>${t('startMonth')}: ${escapeHTML(monthLabel(a.start_month))} · ${a.archived_from_month?t('archived')+' '+escapeHTML(monthLabel(a.archived_from_month)):t('active')}</small></div></div><div class="actions"><button class="btn btn-small" data-action="up" data-id="${a.id}" ${i===0?'disabled':''} aria-label="${t('reorderUp')}">↑</button><button class="btn btn-small" data-action="down" data-id="${a.id}" ${i===accounts.length-1?'disabled':''} aria-label="${t('reorderDown')}">↓</button><button class="btn btn-small" data-action="history" data-id="${a.id}">${t('historyAccount')}</button><button class="btn btn-small" data-action="rename" data-id="${a.id}">${t('rename')}</button><button class="btn btn-small" data-action="currency" data-id="${a.id}">${t('changeCurrency')}</button><button class="btn btn-small" data-action="${a.archived_from_month?'restore':'archive'}" data-id="${a.id}">${t(a.archived_from_month?'restore':'archive')}</button><button class="btn btn-small btn-danger" data-action="delete" data-id="${a.id}">${t('delete')}</button></div></div>`).join('');
  $('#pageContent').innerHTML=`<section class="card panel"><h2>${t('addAccount')}</h2><p class="caption">${t('currencyHelp')}</p><form id="addAccountForm" class="form-row"><div class="field"><label for="accountName">${t('accountName')}</label><input id="accountName" name="name" maxlength="100" required placeholder="${t('namePlaceholder')}"></div><div class="field"><label for="accountCurrency">${t('currency')}</label><select id="accountCurrency" name="currency">${state.currencies.map(c=>`<option>${c}</option>`).join('')}</select></div><div class="field"><label for="accountStart">${t('startMonth')}</label><input id="accountStart" name="start" type="month" min="1900-01" max="2200-12" required value="${(state.months.length&&state.month<=state.months.at(-1).month)?nextMonth(state.months.at(-1).month,1):state.month}"></div><button class="btn btn-primary" type="submit">${t('createAccount')}</button></form></section><section class="card panel"><div class="panel-heading"><h2>${t('accountList')}</h2><span class="subtle">${pluralAccounts(accounts.length)}</span></div>${rows||`<div class="empty">${t('noAccounts')}</div>`}</section>`;
 }
-async function renderMonthly(){const d=await api('/months/'+state.month);state.monthData=d;const map=new Map(d.balances.map(b=>[b.account_id,b.amount_minor]));const rates=new Map(d.rates.map(r=>[r.currency,r.rate]));const currencies=[...new Set(d.accounts.map(a=>a.currency))].filter(c=>c!=='EUR').sort();const rows=d.accounts.map(a=>`<div class="editor-row"><label for="b-${a.id}">${escapeHTML(a.name)}<small>${a.currency}</small></label><input class="editor-input" id="b-${a.id}" data-balance="${a.id}" inputmode="decimal" autocomplete="off" placeholder="${t('enterBalance')}" value="${escapeHTML(minorToInput(map.get(a.id)))}"></div>`).join('');const exchangeRows=currencies.map(c=>`<div class="editor-row"><label for="r-${c}">EUR → ${c}<small>${t('rateMeaning')} ${c}</small></label><input class="editor-input" id="r-${c}" data-rate="${c}" inputmode="decimal" autocomplete="off" placeholder="${t('enterRate')}" value="${escapeHTML(rateText(rates.get(c)||''))}"></div>`).join('');
- const missing=d.complete? t('complete'):[d.missing_balances.length?t('missingBalances')+': '+d.missing_balances.length:'',d.missing_rates.length?t('missingRates')+': '+d.missing_rates.join(', '):''].filter(Boolean).join(' · ')||t('totalProvisional');
- $('#pageContent').innerHTML=`<div class="status-block"><div class="panel-heading status-heading"><strong>${t('status')}</strong>${statusPill(d)}</div><p class="inline-status">${missing}</p>${d.complete?`<div class="metric-value metric-secondary">${money(d.total_eur_minor)}</div>`:''}</div><div class="editor-grid"><section class="card panel"><div class="panel-heading"><h2>${t('balance')}</h2><span class="subtle">${escapeHTML(monthLabel(state.month))}</span></div><p class="caption">${t('balancesNote')}</p>${rows||`<div class="empty">${t('noActiveAccounts')}</div>`}</section><section class="card panel"><div class="panel-heading"><h2>${t('rates')}</h2><span class="subtle">EUR = 1</span></div><p class="caption">${t('ratesNote')}</p><div class="editor-list">${exchangeRows||`<p class="muted">EUR = 1</p>`}</div><p class="footer-note">${t('rateFormatHelp')}</p></section></div><div class="editor-footer"><p class="subtle">${t('exactTotal')}</p><div class="overview-actions"><button class="btn btn-danger" data-action="deleteMonth" ${d.exists?'':'disabled'}>${t('deleteMonth')}</button><button class="btn btn-primary" data-action="saveMonth" ${d.accounts.length?'':'disabled'}>${t('saveMonth')}</button></div></div>`;
+function updateBalanceDifference(input){
+ const node=document.querySelector(`[data-balance-change="${input.dataset.balance}"]`);
+ if(!node)return;
+ let current=null;
+ try{current=parseMoney(input.value)}catch{}
+ const delta=differenceMinor(current,input.dataset.previousMinor||null);
+ const n=delta===null?null:BigInt(delta);
+ node.className='balance-change '+(n===null?'neutral':n>0n?'positive':n<0n?'negative':'neutral');
+ node.textContent=n===null?'—':(n>0n?'+':'')+money(delta,input.dataset.currency);
+}
+async function renderMonthly(){
+ const previousMonth=nextMonth(state.month,-1);
+ const [d,previous]=await Promise.all([
+  api('/months/'+state.month),
+  previousMonth>='1900-01'?api('/months/'+previousMonth):Promise.resolve(null)
+ ]);
+ state.monthData=d;
+ const balances=new Map(d.balances.map(b=>[b.account_id,b.amount_minor]));
+ const previousBalances=new Map((previous?.balances||[]).map(b=>[b.account_id,b.amount_minor]));
+ const rates=new Map(d.rates.map(r=>[r.currency,r.rate]));
+ const currencies=[...new Set(d.accounts.map(a=>a.currency))].filter(c=>c!=='EUR').sort();
+ const rows=d.accounts.map(a=>{
+  const last=previousBalances.get(a.id);
+  return `<div class='editor-row balance-row'>
+   <label for='b-${a.id}'>${escapeHTML(a.name)}<small>${a.currency}</small></label>
+   <div class='balance-cell balance-previous'><span class='balance-field-label' title='${escapeHTML(monthLabel(previousMonth))}'>${t('previousBalance')}</span><strong>${last==null?'—':escapeHTML(money(last,a.currency))}</strong></div>
+   <div class='balance-cell balance-current'><span class='balance-field-label'>${t('currentBalance')}</span><input class='editor-input' id='b-${a.id}' data-balance='${a.id}' data-currency='${a.currency}' data-previous-minor='${last??''}' inputmode='decimal' autocomplete='off' placeholder='${t('enterBalance')}' value='${escapeHTML(minorToInput(balances.get(a.id)))}'></div>
+   <div class='balance-cell balance-difference'><span class='balance-field-label'>${t('balanceDifference')}</span><strong class='balance-change neutral' data-balance-change='${a.id}'>—</strong></div>
+   <button type='button' class='btn btn-small balance-use-previous' data-action='copyPrevious' data-id='${a.id}' aria-label='${escapeHTML(t('usePrevious')+' — '+a.name)}' ${last==null?'disabled':''}>${t('usePrevious')}</button>
+  </div>`;
+ }).join('');
+ const exchangeRows=currencies.map(c=>`<div class='editor-row'><label for='r-${c}'>EUR → ${c}<small>${t('rateMeaning')} ${c}</small></label><input class='editor-input' id='r-${c}' data-rate='${c}' inputmode='decimal' autocomplete='off' placeholder='${t('enterRate')}' value='${escapeHTML(rateText(rates.get(c)||''))}'></div>`).join('');
+ const missing=d.complete?t('complete'):[d.missing_balances.length?t('missingBalances')+': '+d.missing_balances.length:'',d.missing_rates.length?t('missingRates')+': '+d.missing_rates.join(', '):''].filter(Boolean).join(' · ')||t('totalProvisional');
+ $('#pageContent').innerHTML=`<div class='status-block'><div class='panel-heading status-heading'><strong>${t('status')}</strong>${statusPill(d)}</div><p class='inline-status'>${missing}</p>${d.complete?`<div class='metric-value metric-secondary'>${money(d.total_eur_minor)}</div>`:''}</div><div class='editor-grid'><section class='card panel'><div class='panel-heading'><h2>${t('balance')}</h2><span class='subtle'>${escapeHTML(monthLabel(state.month))}</span></div><p class='caption'>${t('balancesNote')}</p>${rows||`<div class='empty'>${t('noActiveAccounts')}</div>`}</section><section class='card panel'><div class='panel-heading'><h2>${t('rates')}</h2><span class='subtle'>EUR = 1</span></div><p class='caption'>${t('ratesNote')}</p><div class='editor-list'>${exchangeRows||`<p class='muted'>EUR = 1</p>`}</div><p class='footer-note'>${t('rateFormatHelp')}</p></section></div><div class='editor-footer'><p class='subtle'>${t('exactTotal')}</p><div class='overview-actions'><button class='btn btn-danger' data-action='deleteMonth' ${d.exists?'':'disabled'}>${t('deleteMonth')}</button><button class='btn btn-primary' data-action='saveMonth' ${d.accounts.length?'':'disabled'}>${t('saveMonth')}</button></div></div>`;
+ document.querySelectorAll('[data-balance]').forEach(updateBalanceDifference);
  state.dirty=false;
 }
 
@@ -207,7 +239,7 @@ async function saveMonth(){
   if(el.dataset.rate){const v=parseRate(el.value);if(v!=null)rates.push({currency:el.dataset.rate,rate:v})}
  }catch(e){el.classList.add('invalid');el.setAttribute('aria-invalid','true');notify(e.message,true);bad=true}}
  if(bad)return;
- try{await request('/months/'+state.month,'PUT',{balances,rates});state.dirty=false;await refresh();await render();notify(t('saved'))}catch(e){notify(t('endpointError')+' '+e.message,true)}
+ try{await request('/months/'+state.month,'PUT',{balances,rates});state.dirty=false;await refresh();await render();notify(t(state.monthData?.complete?'saved':'savedIncomplete'))}catch(e){notify(t('endpointError')+' '+e.message,true)}
 }
 
 function showAccountEditor(action,account){
@@ -278,7 +310,14 @@ document.addEventListener('click',async e=>{
   else if(action==='exportJSON')await exportJSON();
   else if(action==='importJSON')$('#jsonFileInput')?.click();
   else if(action==='clearAllData')await clearAllData();
-  else if(action==='saveMonth')await saveMonth();
+  else if(action==='copyPrevious'){
+    const input=document.querySelector(`[data-balance="${id}"]`);
+    if(!input||input.dataset.previousMinor==='')return;
+    input.value=minorToInput(input.dataset.previousMinor);
+    input.classList.remove('invalid');input.removeAttribute('aria-invalid');
+    state.dirty=true;updateBalanceDifference(input);input.focus();
+   }
+   else if(action==='saveMonth')await saveMonth();
   else if(action==='deleteMonth'){
    if(!state.monthData?.exists||!(await showConfirm({title:t('deleteMonth'),message:t('confirmDeleteMonth'),confirmLabel:t('delete'),cancelLabel:t('cancel'),danger:true})))return;
    await request('/months/'+state.month,'DELETE',{confirm:true});
@@ -299,7 +338,7 @@ document.addEventListener('submit',async e=>{
  if(e.target.id!=='addAccountForm')return;e.preventDefault();const form=e.target;
  await mutation(async()=>{await request('/accounts','POST',{name:form.elements.name.value,currency:form.elements.currency.value,start_month:form.elements.start.value});notify(t('accountCreated'))});
 });
-document.addEventListener('input',e=>{if(e.target.matches('.editor-input')){state.dirty=true;e.target.classList.remove('invalid');}});
+document.addEventListener('input',e=>{if(e.target.matches('.editor-input')){state.dirty=true;e.target.classList.remove('invalid');e.target.removeAttribute('aria-invalid');if(e.target.matches('[data-balance]'))updateBalanceDifference(e.target);}});
 document.addEventListener('change',async e=>{
  if(e.target.id==='jsonFileInput'){
   const file=e.target.files?.[0];

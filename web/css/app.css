@@ -91,3 +91,17 @@
 .clear-data-dialog #clearDataPhrase{display:block;width:100%;min-height:42px;border:1px solid var(--border);border-radius:9px;padding:9px 11px;background:var(--input);color:var(--text);font:inherit}
 .clear-data-dialog #clearDataPhrase:focus-visible{outline:3px solid var(--primarySoft);border-color:var(--primary)}
 .clear-data-dialog #clearDataAccept:disabled{opacity:.45;cursor:not-allowed}
+
+/* Per-account month comparison and explicit carry-forward controls. */
+.balance-row{grid-template-columns:minmax(115px,1fr) minmax(100px,140px) minmax(126px,160px) minmax(88px,120px) auto;gap:12px;align-items:center}
+.balance-row .balance-cell{min-width:0;font-variant-numeric:tabular-nums}
+.balance-field-label{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-bottom:5px}
+.balance-previous strong,.balance-change{display:block;font-size:13px;overflow-wrap:anywhere;font-weight:650}
+.balance-current .editor-input{text-align:right}
+.balance-use-previous{justify-self:end;white-space:nowrap}
+@media(max-width:1450px){.editor-grid{grid-template-columns:1fr}}
+@media(max-width:900px){
+ .balance-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+ .balance-row>label{grid-column:1/-1}
+ .balance-use-previous{justify-self:stretch;align-self:end}
+}
