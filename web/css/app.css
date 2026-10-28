@@ -134,3 +134,28 @@
 .actions select.account-group-select,.actions select[data-move-account]{background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:5px 9px;min-height:31px;max-width:150px;font-size:12px}
 @media(max-width:1320px){.form-row-groups{grid-template-columns:repeat(2,minmax(0,1fr))}.form-row-groups>.btn{justify-self:start}.account-group-head{flex-wrap:wrap}.group-controls{margin-left:0}}
 @media(max-width:720px){#headerActions:has([data-action="focusAdd"]){justify-content:space-between}.group-total{margin-left:auto}.group-controls{width:100%;padding-left:34px}.account-group-body{padding:0 12px}.form-row-groups{grid-template-columns:1fr 1fr}.form-row-groups .field:first-child{grid-column:1/-1}}
+
+/* Compact overflow menus for accounts and groups; no inline action arrows/selectors. */
+.account-actions-menu{position:relative;flex:none}
+.account-actions-menu summary{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--border);border-radius:9px;color:var(--muted);font-size:24px;line-height:1;background:transparent;cursor:pointer;list-style:none;user-select:none}
+.account-actions-menu summary::-webkit-details-marker{display:none}
+.account-actions-menu summary:hover,.account-actions-menu[open] summary{background:var(--primarySoft);color:var(--text);border-color:var(--primary)}
+.account-actions-menu summary:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.account-group:has(.account-actions-menu[open]){overflow:visible;position:relative;z-index:5}
+.account-row:has(.account-actions-menu[open]),.account-group-head:has(.account-actions-menu[open]){position:relative;z-index:6}
+.action-menu-content{position:absolute;top:calc(100% + 5px);right:0;min-width:205px;max-width:calc(100vw - 34px);max-height:min(70dvh,410px);overflow-y:auto;z-index:20;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:5px;box-shadow:0 15px 38px #0005}
+.action-menu-content button{display:block;width:100%;min-height:34px;padding:8px 11px;text-align:left;color:var(--text);background:transparent;border:0;border-radius:7px;font-size:13px}
+.action-menu-content button:not(:disabled):hover,.action-menu-content button:focus-visible{background:var(--primarySoft);outline:none}
+.action-menu-content .menu-danger{color:var(--negative)}
+.menu-move-label{display:block;padding:8px 11px 6px;color:var(--muted);font-size:12px}
+.menu-move-label select{display:block;width:100%;margin-top:5px;min-height:32px;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:5px}
+.account-group-body .actions,.account-group .group-controls{width:auto;flex:none;padding:0;margin:0}
+.account-group[data-group-id="archive"] .account-row,.account-group[data-group-id="archive"] .account-group-head{cursor:default}
+@media(max-width:720px){
+ .account-group-body .account-row{flex-direction:row;align-items:center;gap:8px}
+ .account-group-body .account-main{flex:1;min-width:0;gap:8px}
+ .account-group-body .actions,.account-group .group-controls{width:auto;padding:0;margin:0}
+ .account-group-head{flex-wrap:nowrap;gap:5px}
+ .group-caption,.group-total{min-width:0}
+ .group-total small{white-space:normal}
+}

@@ -31,6 +31,7 @@ type GroupWithTotal struct {
 type GroupsForMonth struct {
 	Groups    []GroupWithTotal `json:"groups"`
 	Ungrouped GroupTotal       `json:"ungrouped"`
+	Archive   GroupTotal       `json:"archive"`
 	Month     string           `json:"month"`
 }
 
@@ -276,6 +277,7 @@ func (s *Store) GroupsAt(month string) (GroupsForMonth, error) {
 		complete[g.ID] = true
 	}
 	complete[0] = true
+	complete[-1] = true // Reserved virtual Archive section.
 	balances := map[int64]string{}
 	for _, b := range data.Balances {
 		balances[b.AccountID] = b.AmountMinor
@@ -290,7 +292,10 @@ func (s *Store) GroupsAt(month string) (GroupsForMonth, error) {
 	}
 	for _, a := range data.Accounts {
 		gid := int64(0)
-		if a.GroupID != nil {
+		if a.ArchivedFromMonth != nil {
+			// Keep group_id for restoration but show archived accounts only in Archive.
+			gid = -1
+		} else if a.GroupID != nil {
 			gid = *a.GroupID
 		}
 		activeCount[gid]++
@@ -325,6 +330,10 @@ func (s *Store) GroupsAt(month string) (GroupsForMonth, error) {
 		out.Groups = append(out.Groups, GroupWithTotal{AccountGroup: g, GroupTotal: result})
 	}
 	out.Ungrouped, err = total(0)
+	if err != nil {
+		return out, err
+	}
+	out.Archive, err = total(-1)
 	return out, err
 }
 
