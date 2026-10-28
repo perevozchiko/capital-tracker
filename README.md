@@ -6,7 +6,7 @@ A simple, local-first personal net worth tracker. Record end-of-month balances i
 - Multiple independent accounts, archived history, monthly balances and manually entered monthly FX rates.
 - Exact arithmetic, no binary floating point in stored balances or exchange rates.
 - Dashboard with adjustable 6–120 adjacent month columns (12 by default), monthly change and historical SVG chart.
-- English / Russian, System / Light / Dark appearance, responsive browser UI and PWA assets.
+- English / Russian, **Dark theme by default**, with optional Light / System modes; responsive browser UI and PWA assets.
 - A single local HTTP server with embedded assets; no cloud, login, frontend build, Node.js or bank connection.
 - Optional isolated `--demo` mode with a realistic fictional year of data.
 
