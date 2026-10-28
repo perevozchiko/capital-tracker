@@ -32,3 +32,23 @@ test('balance difference requires both months and uses exact minor units', () =>
   assert.equal(differenceMinor(null, '500'), null);
   assert.equal(differenceMinor('500', null), null);
 });
+
+test('rate parser handles exact boundaries and Unicode grouping', () => {
+  for (const [input, expected] of [
+    ['0.00000001', '0.00000001'], ['100000000', '100000000'],
+    ['  1\u00a0234\u202f567,12345678  ', '1234567.12345678'],
+    ['0001.00000001', '0001.00000001'], ['   ', null],
+  ]) assert.equal(parseRateDecimal(input), expected, input);
+  for (const input of ['0.00000000', '100000000.00000001', '.1', '1.', '+1', '1  000', '1234 567', '1\t000']) {
+    assert.throws(() => parseRateDecimal(input), undefined, input);
+  }
+});
+
+test('balance differences retain sign and exactness at large values', () => {
+  for (const [a, b, expected] of [
+    ['-100', '-300', '200'], ['-300', '-100', '-200'],
+    ['9007199254740993', '9007199254740992', '1'],
+    ['-9007199254740993', '9007199254740992', '-18014398509481985'],
+  ]) assert.equal(differenceMinor(a, b), expected);
+  assert.equal(differenceMinor(undefined, '0'), null);
+});

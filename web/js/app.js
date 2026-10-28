@@ -307,7 +307,8 @@ async function loadRates(button){
  const month=state.month;
  const inputs=[...document.querySelectorAll('[data-rate]')];
  const initial=new Map(inputs.map(input=>[input,input.value]));
- button.disabled=true;
+ const saveButton=$('[data-action="saveMonth"]');
+ button.disabled=true;if(saveButton)saveButton.disabled=true;
  const status=$('#rateLoadStatus');status.textContent=t('loading');
  try{
   const result=await api('/exchange-rates?month='+encodeURIComponent(month));
@@ -320,7 +321,7 @@ async function loadRates(button){
   if(count)state.dirty=true;
   status.textContent=t('ratesLoaded').replace('{date}',result.date).replace('{count}',count);
  }catch(err){if(button.isConnected)status.textContent=t('ratesLoadFailed');}
- finally{if(button.isConnected)button.disabled=false;}
+ finally{if(button.isConnected)button.disabled=false;if(saveButton?.isConnected)saveButton.disabled=false;}
 }
 async function saveMonth(){
  const inputs=[...document.querySelectorAll('[data-balance],[data-rate]')];const balances=[],rates=[];let bad=false;
@@ -329,7 +330,10 @@ async function saveMonth(){
   if(el.dataset.rate){const v=parseRate(el.value);if(v!=null)rates.push({currency:el.dataset.rate,rate:v})}
  }catch(e){el.classList.add('invalid');el.setAttribute('aria-invalid','true');notify(e.message,true);bad=true}}
  if(bad)return;
+ const buttons=[...document.querySelectorAll('[data-action="saveMonth"],[data-action="loadRates"]')];
+ buttons.forEach(button=>button.disabled=true);
  try{await request('/months/'+state.month,'PUT',{balances,rates});state.dirty=false;await refresh();await render();notify(t(state.monthData?.complete?'saved':'savedIncomplete'))}catch(e){notify(t('endpointError')+' '+e.message,true)}
+ finally{buttons.forEach(button=>{if(button.isConnected)button.disabled=false})}
 }
 
 function showAccountEditor(action,account){

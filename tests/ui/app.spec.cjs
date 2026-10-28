@@ -243,3 +243,111 @@ test('rate loading does not overwrite edits made while the request is pending', 
   await expect(page.locator('#rateLoadStatus')).toContainText('filled 0');
   await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.25');
 });
+
+test('saving waits for a pending rate load so loaded values are not lost', async ({ page, app }) => {
+  await open(page, app); await nav(page, 'Accounts'); await createAccount(page, 'Dollars', 'USD');
+  await nav(page, 'Monthly balances'); await setMonth(page, '2025-01');
+  await page.locator('[data-balance="1"]').fill('110');
+  let release;
+  const wait = new Promise(resolve => { release = resolve; });
+  await page.route('**/api/exchange-rates?*', async route => { await wait; await route.fulfill({json:{date:'2025-01-31',rates:{USD:'1.1'}}}); });
+  await page.locator('[data-action="loadRates"]').click();
+  await expect(page.locator('[data-action="saveMonth"]')).toBeDisabled();
+  release();
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.1');
+  await expect(page.locator('[data-action="saveMonth"]')).toBeEnabled();
+  await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('Complete');
+  await page.reload();
+  await nav(page, 'Monthly balances'); await setMonth(page, '2025-01');
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.1');
+});
+
+test('partial months, zero balances and clearing saved fields update completeness', async ({ page, app }) => {
+  await open(page, app); await nav(page, 'Accounts'); await createAccount(page, 'Euro'); await createAccount(page, 'Dollars', 'USD');
+  await nav(page, 'Monthly balances'); await setMonth(page, '2025-01');
+  await page.locator('[data-balance="1"]').fill('0'); await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('Incomplete');
+  await expect(page.locator('[data-balance="1"]')).toHaveValue('0.00');
+  await page.locator('[data-balance="2"]').fill('-110'); await page.locator('[data-rate="USD"]').fill('1.1');
+  await page.locator('[data-action="saveMonth"]').click(); await expect(page.locator('.status-block')).toContainText('Complete');
+  await page.locator('[data-rate="USD"]').fill(''); await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('Missing exchange rates');
+  await page.reload(); await nav(page, 'Monthly balances'); await setMonth(page, '2025-01');
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('');
+  await expect(page.locator('[data-balance="2"]')).toHaveValue('-110.00');
+});
+
+test('recorded history prevents currency changes, deletion and retroactive archive', async ({ page, app }) => {
+  await open(page, app); await nav(page, 'Accounts'); await createAccount(page, 'Wallet');
+  await nav(page, 'Monthly balances'); await setMonth(page, '2025-01');
+  await page.locator('[data-balance="1"]').fill('5'); await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('Complete'); await nav(page, 'Accounts');
+  await action(page, 'Wallet', 'currency'); await page.locator('#editValue').selectOption('USD'); await page.locator('#confirmEdit').click();
+  await expect(page.locator('#toast')).toContainText('currency can no longer be changed'); await page.locator('#cancelEdit').click();
+  await action(page, 'Wallet', 'delete'); await page.locator('#confirmAccept').click();
+  await expect(page.locator('#toast')).toContainText('Deleting it would change historical totals');
+  await action(page, 'Wallet', 'archive'); await page.locator('#editValue').fill('2025-01'); await page.locator('#confirmEdit').click();
+  await expect(page.locator('#accountDialog')).toBeVisible();
+  await page.locator('#cancelEdit').click(); await expect(page.locator('.account-row')).toContainText('Wallet');
+});
+
+test('month navigation offers to keep or discard unsaved changes', async ({ page, app }) => {
+  await open(page, app); await nav(page, 'Accounts'); await createAccount(page, 'Wallet');
+  await nav(page, 'Monthly balances'); await setMonth(page, '2025-01'); await page.locator('[data-balance="1"]').fill('10');
+  await page.locator('[data-action="monthNext"]').click(); await page.locator('#confirmCancel').click();
+  await expect(page.locator('.month-picker')).toHaveValue('2025-01'); await expect(page.locator('[data-balance="1"]')).toHaveValue('10');
+  await page.locator('[data-action="monthNext"]').click(); await page.locator('#confirmAccept').click();
+  await expect(page.locator('.month-picker')).toHaveValue('2025-02'); await expect(page.locator('[data-balance="1"]')).toHaveValue('');
+});
+
+test('typed clear confirmation requires exact phrase and cancel preserves data', async ({ page, app }) => {
+  await open(page, app); await nav(page, 'Accounts'); await createAccount(page, 'Wallet'); await nav(page, 'Settings');
+  await page.locator('[data-action="clearAllData"]').click();
+  await page.locator('#clearDataPhrase').fill('delete'); await expect(page.locator('#clearDataAccept')).toBeDisabled();
+  await page.locator('#clearDataPhrase').fill('DELETE '); await expect(page.locator('#clearDataAccept')).toBeDisabled();
+  await page.locator('#clearDataCancel').click(); await nav(page, 'Accounts');
+  await expect(page.locator('.account-row')).toContainText('Wallet');
+});
+
+test('rates entered in Russian accept comma decimals and survive reload', async ({ page, app }) => {
+  await open(page, app); await nav(page, 'Accounts'); await createAccount(page, 'Dollars', 'USD');
+  await nav(page, 'Settings'); await page.locator('#languageSelect').selectOption('ru');
+  await nav(page, 'Остатки по месяцам'); await setMonth(page, '2025-01');
+  await page.locator('[data-balance="1"]').fill('110,25'); await page.locator('[data-rate="USD"]').fill('1,1');
+  await page.locator('[data-action="saveMonth"]').click(); await expect(page.locator('.status-block')).toContainText('Заполнен');
+  await page.reload(); await nav(page, 'Остатки по месяцам'); await setMonth(page, '2025-01');
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('1,1');
+  await expect(page.locator('[data-balance="1"]')).toHaveValue('110.25');
+});
+
+test('rate load stays unavailable while a month save is pending', async ({ page, app }) => {
+  await open(page, app); await nav(page, 'Accounts'); await createAccount(page, 'Dollars', 'USD');
+  await nav(page, 'Monthly balances'); await setMonth(page, '2025-01');
+  await page.locator('[data-balance="1"]').fill('110');
+  let release;
+  const wait = new Promise(resolve => { release = resolve; });
+  await page.route('**/api/months/2025-01', async route => {
+    if (route.request().method() === 'PUT') await wait;
+    await route.continue();
+  });
+  await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('[data-action="loadRates"]')).toBeDisabled();
+  await expect(page.locator('[data-action="saveMonth"]')).toBeDisabled();
+  release();
+  await expect(page.locator('[data-action="loadRates"]')).toBeEnabled();
+  await expect(page.locator('.status-block')).toContainText('Incomplete');
+});
+
+test('invalid rates are rejected and can be corrected', async ({ page, app }) => {
+  await open(page, app); await nav(page, 'Accounts'); await createAccount(page, 'Dollars', 'USD');
+  await nav(page, 'Monthly balances'); await setMonth(page, '2025-01');
+  await page.locator('[data-balance="1"]').fill('100');
+  for (const value of ['0', '-1', '1.123456789', 'abc']) {
+    await page.locator('[data-rate="USD"]').fill(value); await page.locator('[data-action="saveMonth"]').click();
+    await expect(page.locator('[data-rate="USD"]')).toHaveAttribute('aria-invalid', 'true');
+  }
+  await page.locator('[data-rate="USD"]').fill('1.25');
+  await expect(page.locator('[data-rate="USD"]')).not.toHaveAttribute('aria-invalid', 'true');
+  await page.locator('[data-action="saveMonth"]').click(); await expect(page.locator('.status-block')).toContainText('Complete');
+});
