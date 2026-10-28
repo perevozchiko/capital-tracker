@@ -1,5 +1,6 @@
 import en from './i18n/en.js';
 import ru from './i18n/ru.js';
+import { parseRateDecimal } from './numbers.js';
 
 const $ = selector => document.querySelector(selector);
 const state = {page:'dashboard',month:new Date().toLocaleDateString('sv-SE').slice(0,7),accounts:[],months:[],history:[],settings:{language:'en',theme:'system',version:'0.1.3'},currencies:[],columnCount:12,monthData:null,dashboard:null,dirty:false,selectedAccount:null};
@@ -43,17 +44,8 @@ function parseMoney(input){
  return String(out);
 }
 function parseRate(raw){
- let v=raw.trim().replace(/\u00a0|\u202f/g,' ');
- if(!v)return null;
- if(v.includes(' ')){
-  if(!/^\d{1,3}(?: \d{3})+(?:[.,]\d{1,8})?$/.test(v))throw new Error(t('invalidRate'));
-  v=v.replaceAll(' ','');
- }
- if(!/^\d+(?:[.,]\d{1,8})?$/.test(v))throw new Error(t('invalidRate'));
- v=v.replace(',','.');
- const [whole,f='']=v.split('.');const fixed=BigInt(whole)*100000000n+BigInt(f.padEnd(8,'0')||'0');
- if(fixed<=0n||fixed>10000000000000000n)throw new Error(t('invalidRate'));
- return v;
+ try { return parseRateDecimal(raw); }
+ catch { throw new Error(t('invalidRate')); }
 }
 async function api(path,options={}){
  const res=await fetch('/api'+path,{...options,headers:{'Accept':'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...(options.method&&options.method!=='GET'?{'X-Capital-Tracker':'1'}:{}),...options.headers}});
