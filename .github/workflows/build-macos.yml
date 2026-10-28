@@ -37,7 +37,7 @@ jobs:
           CGO_ENABLED: '0'
         run: |
           mkdir -p dist
-          go build -trimpath -ldflags="-s -w -X main.version=0.1.0" -o "dist/CapitalTracker-darwin-${GOARCH}" ./cmd/capital-tracker
+          go build -trimpath -ldflags="-s -w -X main.version=0.1.1" -o "dist/CapitalTracker-darwin-${GOARCH}" ./cmd/capital-tracker
           file "dist/CapitalTracker-darwin-${GOARCH}"
           cd dist
           shasum -a 256 "CapitalTracker-darwin-${GOARCH}" > "CapitalTracker-darwin-${GOARCH}.sha256"
@@ -75,7 +75,7 @@ jobs:
           EXT: ${{ matrix.extension }}
         run: |
           mkdir -p dist
-          go build -trimpath -ldflags="-s -w -X main.version=0.1.0" -o "dist/CapitalTracker-${GOOS}-${GOARCH}${EXT}" ./cmd/capital-tracker
+          go build -trimpath -ldflags="-s -w -X main.version=0.1.1" -o "dist/CapitalTracker-${GOOS}-${GOARCH}${EXT}" ./cmd/capital-tracker
           cd dist
           shasum -a 256 "CapitalTracker-${GOOS}-${GOARCH}${EXT}" > "CapitalTracker-${GOOS}-${GOARCH}${EXT}.sha256"
       - uses: actions/upload-artifact@v7
