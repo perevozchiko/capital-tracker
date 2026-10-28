@@ -38,6 +38,8 @@ The following vector previews use the example dataset and the app's light-theme 
 
 ![Monthly balances editor preview showing previous balances and changes](docs/screenshots/demo-monthly.svg)
 
+![Accounts screen preview with six demo accounts](docs/screenshots/demo-accounts.svg)
+
 To capture **real PNG screenshots from the running application** (dashboard, monthly editor, and account list), use the optional developer tool. It builds the actual Go server, uses a temporary isolated demo profile, and drives Chromium through Playwright. Python/Playwright is needed only for capturing screenshots, not to use the app:
 
 ```sh
