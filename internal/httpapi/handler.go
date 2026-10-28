@@ -90,6 +90,7 @@ func pathID(s string) (int64, bool) {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	registerTransfer(mux, s)
+	registerGroups(mux, s)
 	mux.HandleFunc("/api/meta", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			fail(w, 405, "method_not_allowed", "")
@@ -118,11 +119,12 @@ func (s *Server) Handler() http.Handler {
 				Name       string `json:"name"`
 				Currency   string `json:"currency"`
 				StartMonth string `json:"start_month"`
+				GroupID    *int64 `json:"group_id"`
 			}
 			if !readJSON(w, r, &p) {
 				return
 			}
-			a, e := s.Store.CreateAccount(p.Name, p.Currency, p.StartMonth)
+			a, e := s.Store.CreateAccountInGroup(p.Name, p.Currency, p.StartMonth, p.GroupID)
 			if e != nil {
 				handleError(w, e)
 				return
