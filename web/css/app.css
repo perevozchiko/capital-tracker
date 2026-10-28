@@ -161,3 +161,12 @@
 }
 
 .action-menu-content .menu-move-label select{width:100%;max-width:none}
+
+
+/* The monthly editor displays the same groups without drag handles or action menus. */
+.monthly-group .account-group-head{cursor:default}
+.monthly-group .account-group-body{padding:4px 14px}
+.monthly-group .account-group-body .balance-row{padding:13px 0}
+.monthly-group .account-group-body .balance-row:last-child{border-bottom:0}
+.monthly-group .group-total small{white-space:normal}
+@media(max-width:720px){.monthly-group .account-group-body{padding:4px 11px}}
