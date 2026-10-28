@@ -386,7 +386,7 @@ function moveAccountIn(items,id,targetGroup,targetID=null,after=true){
 }
 let dragging=null;
 document.addEventListener('dragstart',e=>{
- if(e.target.closest('button,select,input'))return;
+ if(e.target.closest('button,select,input,summary,.account-actions-menu'))return;
  const account=e.target.closest('[data-account-row]');
  const header=e.target.closest('[data-group-row]');
  if(account)dragging={kind:'account',id:Number(account.dataset.accountRow)};
@@ -554,6 +554,11 @@ document.addEventListener('change',async e=>{
   const theme=e.target.id==='themeSelect'?e.target.value:state.settings.theme;
   try{state.settings=await request('/settings','PATCH',{language,theme});themeApply();await render()}catch(err){notify(err.message,true);await render()}
  }
+});
+document.addEventListener('keydown',e=>{
+ if(e.key!=='Escape')return;
+ const opened=document.querySelector('.account-actions-menu[open]');
+ if(opened){e.preventDefault();opened.open=false;opened.querySelector('summary')?.focus();}
 });
 document.addEventListener('click',e=>{
  if(!e.target.closest('.account-actions-menu'))document.querySelectorAll('.account-actions-menu[open]').forEach(m=>m.open=false);
