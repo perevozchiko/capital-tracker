@@ -4,3 +4,7 @@
 *.exe
 /dist/
 /CapitalTracker
+
+/node_modules/
+/test-results/
+/playwright-report/

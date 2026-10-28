@@ -1,0 +1,10 @@
+{
+  "name": "capital-tracker",
+  "private": true,
+  "scripts": {
+    "test:ui": "./scripts/test-ui.sh"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
+}

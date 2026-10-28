@@ -90,6 +90,16 @@ Run all local source checks before committing (requires Go 1.23+ and Node.js):
 ```sh
 bash scripts/check.sh
 ```
+Browser UI tests exercise the real application in headless Chromium with an isolated temporary database per test. Install Node.js 22 or newer, Go, and the browser once, then run:
+
+```sh
+npm ci
+npx playwright install chromium
+npm run test:ui
+```
+
+The suite covers navigation, settings, account and group management, monthly balances, exchange-rate loading (with deterministic mocked responses), import/export, deletion confirmations, and a mobile viewport. Test failures retain Playwright traces under `test-results/`; view one with `npx playwright show-trace <path-to-trace.zip>`. The tests do not use the normal application database. GitHub Actions runs them on pushes and pull requests.
+
 If it reports Go formatting differences, run `gofmt -w .` once and commit the formatted files. The script checks `gofmt`, `go mod tidy -diff`, `go mod verify`, `go vet`, Go tests, JavaScript syntax and parser tests. It never changes source files.
 
 **Builds are manual-only** during development: pushes, tags, and pull requests do not trigger compilation.
