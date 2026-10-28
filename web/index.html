@@ -25,14 +25,25 @@
       <main id="pageContent" tabindex="-1"><div class="empty-loading">Loading…</div></main>
     </div>
   </div>
-  <dialog id="accountDialog" class="account-dialog" aria-labelledby="editTitle">
+  <dialog id="accountDialog" class="app-dialog account-dialog" aria-labelledby="editTitle" aria-describedby="editHelp">
     <form id="editAccountForm">
-      <h2 id="editTitle"></h2>
+      <div class="dialog-heading"><div class="dialog-emblem edit-emblem" aria-hidden="true">✎</div><h2 id="editTitle"></h2></div>
       <p id="editHelp" class="caption"></p>
       <div id="editFields" class="dialog-fields"></div>
       <div class="dialog-actions">
         <button type="button" id="cancelEdit" class="btn"></button>
         <button type="submit" id="confirmEdit" class="btn btn-primary"></button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="confirmDialog" class="app-dialog confirmation-dialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+    <form method="dialog">
+      <div class="dialog-emblem confirm-emblem" aria-hidden="true">!</div>
+      <h2 id="confirmTitle"></h2>
+      <p id="confirmMessage" class="dialog-description"></p>
+      <div class="dialog-actions">
+        <button type="submit" value="cancel" id="confirmCancel" class="btn" autofocus></button>
+        <button type="submit" value="confirm" id="confirmAccept" class="btn btn-primary"></button>
       </div>
     </form>
   </dialog>

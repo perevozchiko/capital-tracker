@@ -9,6 +9,7 @@ export default {
  archive:'Archive',restore:'Restore',delete:'Delete',historyAccount:'History',archived:'Archived',active:'Active',noAccounts:'No accounts yet.',
  accountList:'Your accounts',accountCount:'accounts',archiveFrom:'First excluded month (YYYY-MM)',restoreFrom:'First restored month (YYYY-MM)',
  archiveWarning:'Archiving preserves all recorded balances. Enter the first month the account should be excluded from totals.',restoreWarning:'Restoration creates a new active period and never rewrites past months.',
+ discardChanges:'Discard unsaved changes?',discard:'Discard changes',keepEditing:'Keep editing',deleteAccountTitle:'Delete account?',
  confirmDelete:'Delete this account? Only accounts without recorded balances can be deleted.',unsaved:'You have unsaved edits. Discard them?',
  monthEditor:'Monthly balance editor',balance:'Balance',rates:'Exchange rates',rateMeaning:'1 EUR equals…',ratesNote:'Enter month-end exchange rates. Rates are fixed for the selected month.',
  balancesNote:'Record your end-of-month account balances. Empty means not entered; zero means exactly zero.',saveMonth:'Save month',saved:'Month saved.',createMonth:'Create empty month',

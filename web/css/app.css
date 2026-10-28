@@ -35,3 +35,44 @@
   font:inherit;
 }
 .dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:24px }
+
+/* Unified custom dialogs in light and dark themes. */
+.app-dialog {
+  color:var(--text);background:var(--surface);
+  width:min(460px,calc(100vw - 32px));max-height:min(88dvh,720px);
+  overflow-y:auto;border:1px solid var(--border);border-radius:20px;padding:28px;
+  box-shadow:0 28px 90px rgba(5,15,35,.28),0 7px 20px rgba(5,15,35,.10);
+  overscroll-behavior:contain;
+}
+.app-dialog::backdrop {background:rgba(9,18,36,.58);backdrop-filter:blur(5px)}
+.app-dialog[open] {animation:dialog-arrive .18s ease-out both}
+@keyframes dialog-arrive {from{opacity:0;transform:translateY(9px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.app-dialog .dialog-heading {display:flex;align-items:center;gap:13px;margin-bottom:12px}
+.app-dialog .dialog-heading h2 {margin:0;line-height:1.25;overflow-wrap:anywhere}
+.dialog-emblem {
+  flex:none;display:grid;place-items:center;width:42px;height:42px;
+  border-radius:13px;background:var(--primarySoft);color:var(--primary);
+  font-size:23px;font-weight:700;
+}
+.edit-emblem {font-size:22px}
+.confirm-emblem {margin-bottom:18px}
+.confirmation-dialog h2 {font-size:21px;line-height:1.3;letter-spacing:-.4px;margin-bottom:10px}
+.dialog-description {color:var(--muted);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
+.confirmation-dialog.is-danger .confirm-emblem {
+  background:color-mix(in srgb,var(--negative) 12%,var(--surface));color:var(--negative);
+}
+.app-dialog .dialog-actions {display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:26px}
+.app-dialog .dialog-actions .btn {min-width:104px}
+.app-dialog .dialog-fields {gap:9px}
+.app-dialog .dialog-fields :is(input,select) {min-height:42px;outline:0}
+.app-dialog .dialog-fields :is(input,select):focus-visible {border-color:var(--primary);box-shadow:0 0 0 3px var(--primarySoft)}
+.btn-danger-solid {background:var(--negative);border-color:var(--negative);color:#fff}
+.btn-danger-solid:hover {background:var(--negative);filter:brightness(1.06)}
+.toast.toast-error {background:var(--negative);color:#fff}
+:where(.btn,.nav-item,.mobile-menu):focus-visible {outline:3px solid var(--primary);outline-offset:2px}
+@media (max-width:520px) {
+  .app-dialog {padding:22px;border-radius:17px;width:calc(100vw - 24px)}
+  .app-dialog .dialog-actions {display:grid;grid-template-columns:1fr 1fr}
+  .app-dialog .dialog-actions .btn {min-width:0}
+}
+@media (prefers-reduced-motion:reduce) {.app-dialog[open] {animation:none}}

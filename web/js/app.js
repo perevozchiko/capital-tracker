@@ -1,6 +1,7 @@
 import en from './i18n/en.js';
 import ru from './i18n/ru.js';
 import { parseRateDecimal } from './numbers.js';
+import { showConfirm } from './dialogs.js';
 
 const $ = selector => document.querySelector(selector);
 const state = {page:'dashboard',month:new Date().toLocaleDateString('sv-SE').slice(0,7),accounts:[],months:[],history:[],settings:{language:'en',theme:'system',version:'0.1.3'},currencies:[],columnCount:12,monthData:null,dashboard:null,dirty:false,selectedAccount:null};
@@ -57,11 +58,17 @@ const request=(path,method,payload)=>api(path,{method,body:JSON.stringify(payloa
 function notify(message,failed=false){const element=$('#toast');element.textContent=message;element.classList.add('visible');element.classList.toggle('toast-error',failed);clearTimeout(notify.timer);notify.timer=setTimeout(()=>element.classList.remove('visible'),3500)}
 function themeApply(){const choice=state.settings.theme;const dark=window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=choice==='system'?(dark?'dark':'light'):choice;try{localStorage.setItem('capital-appearance',choice)}catch{}}
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(state.settings.theme==='system')themeApply()});
-function confirmClean(){if(!state.dirty)return true;if(!window.confirm(t('unsaved')))return false;state.dirty=false;return true;}
+async function confirmClean(){
+ if(!state.dirty)return true;
+ const discard=await showConfirm({title:t('discardChanges'),message:t('unsaved'),confirmLabel:t('discard'),cancelLabel:t('keepEditing'),danger:true});
+ if(!discard)return false;
+ state.dirty=false;
+ return true;
+}
 window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
 function monthControls(){return `<div class="toolbar"><div class="month-switch"><button class="btn btn-icon" type="button" data-action="monthPrev" aria-label="${t('earlier')}">‹</button><label>${escapeHTML(monthLabel(state.month))}</label><button class="btn btn-icon" type="button" data-action="monthNext" aria-label="${t('later')}">›</button></div><input class="btn month-picker" type="month" value="${state.month}" min="1900-01" max="2200-12" aria-label="${t('goToMonth')}"></div>`;}
-function navigate(page){if(!confirmClean())return;state.page=page;state.selectedAccount=null;render().catch(e=>notify(e.message,true));$('#sidebar').classList.remove('show')}
-async function setMonth(month){if(!validMonth(month)){notify(t('monthLimit'),true);return}if(!confirmClean())return;state.month=month;await render()}
+async function navigate(page){if(!(await confirmClean()))return;state.page=page;state.selectedAccount=null;render().catch(e=>notify(e.message,true));$('#sidebar').classList.remove('show')}
+async function setMonth(month){if(!validMonth(month)){notify(t('monthLimit'),true);return false}if(!(await confirmClean()))return false;state.month=month;await render();return true}
 function statusPill(d){return `<span class="pill ${d.complete?'good':'bad'}">${d.complete?t('complete'):t('incomplete')}</span>`}
 function renderNav(){const routes=[['dashboard','navDashboard'],['accounts','navAccounts'],['monthly','navMonthly'],['settings','navSettings']];$('#navigation').innerHTML=routes.map(([key,label])=>`<button class="nav-item ${state.page===key?'active':''}" data-page="${key}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`).join('');document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)})}
 function renderHeader(){const names={dashboard:'navDashboard',accounts:'navAccounts',monthly:'navMonthly',settings:'navSettings'};$('#pageHeading').textContent=t(names[state.page]);$('#sectionEyebrow').textContent=t('appName');$('#headerActions').innerHTML=['dashboard','monthly'].includes(state.page)?monthControls():state.page==='accounts'?`<button class="btn btn-primary" data-action="focusAdd">+ ${t('addAccount')}</button>`:'';document.documentElement.lang=state.settings.language;document.title=`${t(names[state.page])} · Capital Tracker`;}
@@ -164,7 +171,7 @@ async function accountAction(action,id){const account=state.accounts.find(a=>a.i
   return;
  }
  if(action==='delete'){
-  if(!confirm(t('confirmDelete')))return;
+  if(!(await showConfirm({title:t('deleteAccountTitle'),message:t('confirmDelete'),confirmLabel:t('delete'),cancelLabel:t('cancel'),danger:true})))return;
   await mutation(async()=>{await api('/accounts/'+id,{method:'DELETE',headers:{'X-Capital-Tracker':'1'}});notify(t('accountDeleted'))});
  }
  if(action==='history'){const hist=[];for(const m of state.months){const d=await api('/months/'+m.month);const b=d.balances.find(x=>x.account_id===id);if(b)hist.push([m.month,b.amount_minor])}const content=hist.length?hist.map(([month,value])=>`<tr><td>${monthLabel(month)}</td><td>${money(value,account.currency)}</td></tr>`).join(''):`<tr><td colspan="2">${t('historicalEmpty')}</td></tr>`;$('#pageContent').innerHTML=`<section class="card panel"><div class="panel-heading"><h2>${escapeHTML(account.name)} · ${t('balanceHistory')}</h2><button class="btn btn-small" data-page="accounts">${t('earlier')}</button></div><p class="caption">${t('accountHistoricalNote')}</p><div class="table-scroll"><table><tbody>${content}</tbody></table></div></section>`;}
@@ -172,7 +179,7 @@ async function accountAction(action,id){const account=state.accounts.find(a=>a.i
 }
 document.addEventListener('click',async e=>{
  const node=e.target.closest('[data-page],[data-action]');if(!node)return;
- const page=node.dataset.page;if(page){navigate(page);return}
+ const page=node.dataset.page;if(page){await navigate(page);return}
  const action=node.dataset.action,id=Number(node.dataset.id);
  try{
   if(action==='monthPrev')await setMonth(nextMonth(state.month,-1));
@@ -181,7 +188,7 @@ document.addEventListener('click',async e=>{
   else if(action==='focusAdd'){$('#accountName')?.focus()}
   else if(action==='saveMonth')await saveMonth();
   else if(action==='deleteMonth'){
-   if(!state.monthData?.exists||!confirm(t('confirmDeleteMonth')))return;
+   if(!state.monthData?.exists||!(await showConfirm({title:t('deleteMonth'),message:t('confirmDeleteMonth'),confirmLabel:t('delete'),cancelLabel:t('cancel'),danger:true})))return;
    await request('/months/'+state.month,'DELETE',{confirm:true});
    await refresh();
    state.month=state.months.at(-1)?.month||state.month;
@@ -202,7 +209,7 @@ document.addEventListener('submit',async e=>{
 });
 document.addEventListener('input',e=>{if(e.target.matches('.editor-input')){state.dirty=true;e.target.classList.remove('invalid');}});
 document.addEventListener('change',async e=>{
- if(e.target.classList.contains('month-picker')){await setMonth(e.target.value);return}
+ if(e.target.classList.contains('month-picker')){const changed=await setMonth(e.target.value);if(!changed&&e.target.isConnected)e.target.value=state.month;return}
  if(e.target.id==='columnCount'){
   state.columnCount=Number(e.target.value);
   await render();
@@ -215,6 +222,7 @@ document.addEventListener('change',async e=>{
  }
 });
 $('#cancelEdit').addEventListener('click',()=>$('#accountDialog').close());
+$('#accountDialog').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
 $('#mobileMenu').addEventListener('click',()=>$('#sidebar').classList.toggle('show'));
 function pointTooltip(node,event){const p=state.history[Number(node.dataset.chartIndex)];if(!p)return;const tooltip=$('#chartTooltip');tooltip.textContent=`${monthLabel(p.month)} · ${money(p.total_eur_minor)}`;tooltip.hidden=false;const rect=node.getBoundingClientRect();const clientX=event?.clientX||rect.left+rect.width/2;const clientY=event?.clientY||rect.top;tooltip.style.left=`${Math.max(8,Math.min(window.innerWidth-200,clientX-80))}px`;tooltip.style.top=`${Math.max(8,clientY-45)}px`}
 document.addEventListener('pointerover',e=>{const n=e.target.closest('[data-chart-index]');if(n)pointTooltip(n,e)});

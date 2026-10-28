@@ -23,6 +23,7 @@ go test -count=1 ./...
 
 echo "==> JavaScript syntax and tests"
 node --check web/js/app.js
+node --check web/js/dialogs.js
 node --check web/js/numbers.js
 node --experimental-default-type=module --test tests/*.test.mjs
 
