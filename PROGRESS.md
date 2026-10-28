@@ -15,7 +15,9 @@
 - [x] SQLite-dependent tests on real `modernc.org/sqlite` (GitHub Actions macOS runners, October 28, 2026)
 - [ ] Cross-platform browser launch and UI smoke test (macOS browsers not available locally)
 - [x] macOS arm64 + amd64 CI compile (prior to removal of Intel), unit tests and vet passed on commit `126e18c`
-- [ ] Verify manual build artifacts for macOS Apple Silicon, Linux AMD64 and Windows AMD64 in a new workflow_dispatch run
+- [ ] Verify manual build artifacts for macOS Apple Silicon, Linux AMD64 and Windows AMD64 in a new workflow_dispatch run (including Linux restart and backup smoke test)
+- [ ] Run scripts/check.sh locally; review gofmt output and dependency consistency
+- [ ] Verify native Windows LockFileEx on a Windows runner
 
 - [x] Serialized multi-step financial writes and added regression tests for incomplete historical months
 - [x] Correct large percentage changes using exact integer strings

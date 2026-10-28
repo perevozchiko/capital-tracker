@@ -43,6 +43,12 @@ The executable is not Apple-signed/notarized; Gatekeeper may warn when launching
 
 ## Download builds from GitHub Actions
 
+Run all local source checks before committing (requires Go 1.23+ and Node.js):
+```sh
+bash scripts/check.sh
+```
+The script checks `gofmt`, `go mod tidy -diff`, `go mod verify`, `go vet`, Go tests, JavaScript syntax and parser tests. It never changes source files.
+
 **Builds are manual-only** during development: pushes, tags, and pull requests do not trigger compilation.
 
 To request a binary, open **Actions → Build Capital Tracker → Run workflow**, select the `master` branch, and choose a `platform`:
@@ -113,7 +119,7 @@ Migration scripts are embedded under `internal/storage/migrations/`. Database id
 
 - No native macOS Intel binary in CI; no remote/mobile access over the LAN; no server-independent offline editing; no automatic FX updates.
 - There are no automatic backups, exports, imports, transactions or cloud sync.
-- Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. The Windows source currently uses an exclusive-create lock-file fallback; a stale file after an abnormal termination may require manual removal once the process is confirmed stopped.
+- Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. Windows uses the native LockFileEx advisory lock, which is also released by the OS after a crash; all platforms can leave the lock file on disk safely.
 - Built-in browser checks such as responsive layout, theme switching and browser launch need visual/manual verification on the target OS.
 
 ## Currency definitions and schema constraints
