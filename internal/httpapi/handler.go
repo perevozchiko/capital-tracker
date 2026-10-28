@@ -26,6 +26,7 @@ type apiError struct {
 	Code    string `json:"code"`
 	Field   string `json:"field,omitempty"`
 	Message string `json:"message,omitempty"`
+	Reason  string `json:"reason,omitempty"`
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
@@ -43,7 +44,7 @@ func handleError(w http.ResponseWriter, e error) {
 		return
 	}
 	if errors.Is(e, storage.ErrConflict) {
-		fail(w, 409, "conflict", "")
+		writeJSON(w, 409, map[string]any{"error": apiError{Code: "conflict", Reason: conflictReason(e)}})
 		return
 	}
 	if errors.Is(e, storage.ErrValidation) {
@@ -57,6 +58,36 @@ func handleError(w http.ResponseWriter, e error) {
 	}
 	fail(w, 500, "internal_error", "")
 }
+// Conflict reasons are stable identifiers; translations are owned by the UI.
+func conflictReason(err error) string {
+	switch strings.TrimPrefix(err.Error(), "conflict: ") {
+	case "account start must be after the last recorded month":
+		return "account_start_after_history"
+	case "currency cannot change after a month has been recorded for this account":
+		return "currency_locked_by_history"
+	case "account was active in a recorded month; deleting it would alter historical completeness":
+		return "account_delete_changes_history"
+	case "account already archived":
+		return "account_already_archived"
+	case "archive month must follow last recorded balance":
+		return "archive_after_last_balance"
+	case "archive month must be after the latest recorded month to protect history":
+		return "archive_after_history"
+	case "archive month must follow current active period start":
+		return "archive_after_active_period"
+	case "account is already active":
+		return "account_already_active"
+	case "restoration must follow archival":
+		return "restore_after_archive"
+	case "restoration must start after last recorded month to protect history":
+		return "restore_after_history"
+	case "month already exists":
+		return "month_exists"
+	default:
+		return "unknown_conflict"
+	}
+}
+
 func decode(r *http.Request, v any) error {
 	if !strings.HasPrefix(strings.ToLower(r.Header.Get("Content-Type")), "application/json") {
 		return errors.New("json content type required")
@@ -95,6 +126,13 @@ func (s *Server) Handler() http.Handler {
 			return
 		}
 		writeJSON(w, 200, map[string]string{"app": "capital-tracker", "version": s.Version})
+	})
+	mux.HandleFunc("/api/currencies", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			fail(w, 405, "method_not_allowed", "")
+			return
+		}
+		writeJSON(w, 200, map[string]any{"currencies": finance.Currencies()})
 	})
 	mux.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -253,6 +291,22 @@ func (s *Server) Handler() http.Handler {
 				return
 			}
 			writeJSON(w, 200, d)
+		case "DELETE":
+			var p struct {
+				Confirm bool `json:"confirm"`
+			}
+			if !readJSON(w, r, &p) {
+				return
+			}
+			if !p.Confirm {
+				fail(w, 422, "validation_error", "confirm")
+				return
+			}
+			if err := s.Store.DeleteMonth(month); err != nil {
+				handleError(w, err)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
 		case "PUT":
 			var p storage.MonthInput
 			if !readJSON(w, r, &p) {
@@ -293,7 +347,16 @@ func (s *Server) Handler() http.Handler {
 		if month == "" {
 			month = time.Now().Format("2006-01")
 		}
-		d, e := s.Store.Dashboard(month)
+		columns := 12
+		if q := r.URL.Query().Get("columns"); q != "" {
+			n, err := strconv.Atoi(q)
+			if err != nil || n < 1 || n > 120 {
+				fail(w, 422, "validation_error", "columns")
+				return
+			}
+			columns = n
+		}
+		d, e := s.Store.DashboardColumns(month, columns)
 		if e != nil {
 			handleError(w, e)
 			return
