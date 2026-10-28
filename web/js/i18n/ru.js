@@ -1,4 +1,8 @@
 export default {
+ jsonData:'Импорт и экспорт JSON',jsonDataHelp:'Сохраните все счета, периоды активности, остатки по месяцам, курсы валют и настройки в переносимый JSON-файл.',exportJSON:'Экспорт JSON',importJSON:'Импорт JSON',
+ jsonExported:'JSON-файл сохранён.',jsonImported:'Данные успешно импортированы.',jsonImportWarning:'Импорт заменяет все текущие данные. Перед импортом рекомендуем экспортировать существующую базу.',
+ confirmImportTitle:'Заменить все локальные данные?',confirmImportMessage:'В файле {accounts} счетов и {months} месяцев. Импорт БЕЗВОЗВРАТНО ЗАМЕНИТ все текущие счета, историю, курсы и настройки. Сначала сохраните резервную копию. Продолжить?',
+ invalidJSONFile:'Это не поддерживаемый JSON-файл Capital Tracker.',json_too_large:'Размер JSON-файла превышает лимит 8 МиБ.',field_import:'JSON-файл содержит некорректные или противоречивые данные.',
  appName:'Capital Tracker',navDashboard:'Обзор',navAccounts:'Счета',navMonthly:'Остатки по месяцам',navSettings:'Настройки',
  subtitle:'Весь капитал как на ладони',selectedMonth:'Выбранный месяц',totalNetWorth:'Общий капитал',monthlyChange:'Изменение за месяц',comparedLastMonth:'по сравнению с прошлым месяцем',
  incomplete:'Не заполнен',complete:'Заполнен',notAvailable:'Нет данных',notEntered:'Не введено',notActive:'Неактивен',

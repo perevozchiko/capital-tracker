@@ -1,4 +1,8 @@
 export default {
+ jsonData:'JSON import and export',jsonDataHelp:'Download a portable JSON copy of your accounts, activity periods, monthly balances, exchange rates and settings.',exportJSON:'Export JSON',importJSON:'Import JSON',
+ jsonExported:'JSON export downloaded.',jsonImported:'JSON data imported successfully.',jsonImportWarning:'Import replaces your entire current data. Export your current records before importing another file.',
+ confirmImportTitle:'Replace all local data?',confirmImportMessage:'The selected file contains {accounts} accounts and {months} months. Importing will permanently REPLACE all current accounts, history, rates and settings. Export a backup first. Continue?',
+ invalidJSONFile:'This is not a supported Capital Tracker JSON file.',json_too_large:'The JSON file exceeds the 8 MiB limit.',field_import:'The JSON file contains invalid or inconsistent data.',
  appName:'Capital Tracker',navDashboard:'Dashboard',navAccounts:'Accounts',navMonthly:'Monthly balances',navSettings:'Settings',
  subtitle:'A clear view of your capital',selectedMonth:'Selected month',totalNetWorth:'Total net worth',monthlyChange:'Monthly change',comparedLastMonth:'compared with previous month',
  incomplete:'Incomplete',complete:'Complete',notAvailable:'Not available',notEntered:'Not entered',notActive:'Not active',

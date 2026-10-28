@@ -62,6 +62,17 @@ To request a binary, open **Actions → Build Capital Tracker → Run workflow**
 
 Each selected job runs unit tests, JavaScript checks, `go vet`, and a native build. The macOS job additionally smoke-tests the server, the home page, backup, and restart. After a successful run, download your artifact from that run's **Artifacts** section. Each artifact includes a SHA-256 checksum. macOS Intel is not built; downloaded binaries are unsigned/unnotarized, and GitHub Releases are not published automatically.
 
+## JSON import and export
+
+Open **Settings → JSON import and export** in the browser:
+
+- **Export JSON** downloads a readable, versioned snapshot of all saved accounts, their activity periods, monthly balances (including deliberately incomplete months), exchange rates, and appearance/language preferences.
+- **Import JSON** accepts a Capital Tracker JSON export (up to **8 MiB**) and **replaces all existing app data** after an in-app confirmation. Export the current data before importing; there is no merge and no undo.
+- Import validates the format/schema version, currencies, dates, relationships and financial precision before starting a SQLite transaction. Malformed or inconsistent input is rejected; the existing data is preserved on failure. Import does not modify database migrations.
+- This is a portable application-data snapshot, **not** a replacement for the SQLite `backup` command, which remains the preferred full-database backup. JSON exports contain personal financial information and should be stored securely.
+
+JSON schema identifier: `{"format":"capital-tracker","schema_version":1}`. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
+
 ## Financial semantics
 
 Balances are **end-of-month snapshots** in the account's native currency, stored as **integer minor units** (cents, including RSD). A blank entry means unknown and is *not* zero. FX rates are **manually entered end-of-month rates**: `1 EUR = X USD / RSD / RUB / TRY` with up to eight decimals; the EUR rate is implicitly one. Monthly total = sum of each account's exact EUR-cent equivalent, rounded **once** to the nearest cent, ties away from zero for positive or negative amounts. Account figures in the table remain in their original currencies. Monthly changes compare only immediately consecutive **complete** months; percentage change is calculated from displayed rounded EUR-cent totals, and is undefined when the previous total is zero.
@@ -90,6 +101,8 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET`, `PATCH` | `/api/settings` | Read / update language and appearance |
 | `GET` | `/api/meta` | App identity and version
 | `GET` | `/api/currencies` | Supported ISO 4217 currency codes from Go |
+| `GET` | `/api/data/export` | Download complete application JSON snapshot |
+| `POST` | `/api/data/import` | Atomically replace data with valid exported JSON (requires `X-Capital-Tracker-Import: replace` and the regular CSRF header) |
 
 Example full monthly replacement:
 
@@ -118,7 +131,7 @@ Migration scripts are embedded under `internal/storage/migrations/`. Database id
 ## Limitations
 
 - No native macOS Intel binary in CI; no remote/mobile access over the LAN; no server-independent offline editing; no automatic FX updates.
-- There are no automatic backups, exports, imports, transactions or cloud sync.
+- There are no automatic backups, transactions or cloud sync. JSON exports/imports are manual-only.
 - Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. Windows uses the native LockFileEx advisory lock, which is also released by the OS after a crash; all platforms can leave the lock file on disk safely.
 - Built-in browser checks such as responsive layout, theme switching and browser launch need visual/manual verification on the target OS.
 

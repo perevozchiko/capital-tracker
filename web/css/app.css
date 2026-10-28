@@ -76,3 +76,9 @@
   .app-dialog .dialog-actions .btn {min-width:0}
 }
 @media (prefers-reduced-motion:reduce) {.app-dialog[open] {animation:none}}
+
+
+/* JSON data management controls */
+.data-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:15px 0}
+.data-tools .btn{min-width:135px}
+@media(max-width:480px){.data-tools .btn{width:100%}}

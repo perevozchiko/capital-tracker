@@ -89,6 +89,7 @@ func pathID(s string) (int64, bool) {
 }
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	registerTransfer(mux, s)
 	mux.HandleFunc("/api/meta", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			fail(w, 405, "method_not_allowed", "")

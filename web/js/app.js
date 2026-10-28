@@ -107,7 +107,66 @@ async function renderMonthly(){const d=await api('/months/'+state.month);state.m
  $('#pageContent').innerHTML=`<div class="status-block"><div class="panel-heading status-heading"><strong>${t('status')}</strong>${statusPill(d)}</div><p class="inline-status">${missing}</p>${d.complete?`<div class="metric-value metric-secondary">${money(d.total_eur_minor)}</div>`:''}</div><div class="editor-grid"><section class="card panel"><div class="panel-heading"><h2>${t('balance')}</h2><span class="subtle">${escapeHTML(monthLabel(state.month))}</span></div><p class="caption">${t('balancesNote')}</p>${rows||`<div class="empty">${t('noActiveAccounts')}</div>`}</section><section class="card panel"><div class="panel-heading"><h2>${t('rates')}</h2><span class="subtle">EUR = 1</span></div><p class="caption">${t('ratesNote')}</p><div class="editor-list">${exchangeRows||`<p class="muted">EUR = 1</p>`}</div><p class="footer-note">${t('rateFormatHelp')}</p></section></div><div class="editor-footer"><p class="subtle">${t('exactTotal')}</p><div class="overview-actions"><button class="btn btn-danger" data-action="deleteMonth" ${d.exists?'':'disabled'}>${t('deleteMonth')}</button><button class="btn btn-primary" data-action="saveMonth" ${d.accounts.length?'':'disabled'}>${t('saveMonth')}</button></div></div>`;
  state.dirty=false;
 }
-function renderSettings(){const s=state.settings;$('#pageContent').innerHTML=`<section class="card panel"><h2>${t('preferences')}</h2><div class="settings-row"><div><strong>${t('language')}</strong><p class="subtle">English / Русский</p></div><select id="languageSelect"><option value="en" ${s.language==='en'?'selected':''}>English</option><option value="ru" ${s.language==='ru'?'selected':''}>Русский</option></select></div><div class="settings-row"><div><strong>${t('theme')}</strong></div><select id="themeSelect">${['system','light','dark'].map(v=>`<option value="${v}" ${s.theme===v?'selected':''}>${t(v)}</option>`).join('')}</select></div></section><section class="card panel"><h2>${t('appName')}</h2><p class="caption">${t('appDescription')}</p><p>${t('about')}</p><p class="caption">${t('version')}: ${escapeHTML(s.version)}</p></section>`}
+
+async function exportJSON(){
+ try {
+  const snapshot=await api('/data/export');
+  const file=new Blob([JSON.stringify(snapshot,null,2)+'\n'],{type:'application/json'});
+  const url=URL.createObjectURL(file);
+  const anchor=document.createElement('a');
+  anchor.href=url;
+  anchor.download='capital-tracker-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  notify(t('jsonExported'));
+ } catch(err){notify(err.message||t('error'),true)}
+}
+async function importJSON(file){
+ if(!file)return;
+ try {
+  if(file.size>8*1024*1024)throw new Error(t('json_too_large'));
+  const body=await file.text();
+  let parsed;
+  try{parsed=JSON.parse(body)}catch{throw new Error(t('invalidJSONFile'))}
+  if(parsed?.format!=='capital-tracker'||parsed.schema_version!==1||!Array.isArray(parsed.accounts)||!Array.isArray(parsed.months)){
+   throw new Error(t('invalidJSONFile'));
+  }
+  if(!(await confirmClean()))return;
+  const approved=await showConfirm({
+   title:t('confirmImportTitle'),
+   message:t('confirmImportMessage').replace('{accounts}',String(parsed.accounts.length)).replace('{months}',String(parsed.months.length)),
+   confirmLabel:t('importJSON'),cancelLabel:t('cancel'),danger:true
+  });
+  if(!approved)return;
+  await api('/data/import',{method:'POST',headers:{'X-Capital-Tracker-Import':'replace'},body});
+  state.settings=await api('/settings');
+  themeApply();
+  await refresh();
+  state.month=state.history.filter(p=>p.complete).at(-1)?.month||state.months.at(-1)?.month||new Date().toLocaleDateString('sv-SE').slice(0,7);
+  state.dirty=false;
+  await render();
+  notify(t('jsonImported'));
+ }catch(err){notify(err.message||t('error'),true)}
+}
+
+function renderSettings(){
+ const s=state.settings;
+ $('#pageContent').innerHTML=`<section class="card panel"><h2>${t('preferences')}</h2>
+ <div class="settings-row"><div><strong>${t('language')}</strong><p class="subtle">English / Русский</p></div>
+ <select id="languageSelect"><option value="en" ${s.language==='en'?'selected':''}>English</option><option value="ru" ${s.language==='ru'?'selected':''}>Русский</option></select></div>
+ <div class="settings-row"><div><strong>${t('theme')}</strong></div>
+ <select id="themeSelect">${['system','light','dark'].map(v=>`<option value="${v}" ${s.theme===v?'selected':''}>${t(v)}</option>`).join('')}</select></div></section>
+ <section class="card panel"><h2>${t('jsonData')}</h2><p class="caption">${t('jsonDataHelp')}</p>
+ <div class="data-tools">
+ <button class="btn btn-primary" type="button" data-action="exportJSON">${t('exportJSON')}</button>
+ <button class="btn" type="button" data-action="importJSON">${t('importJSON')}</button>
+ <input id="jsonFileInput" type="file" accept=".json,application/json" hidden aria-label="${t('importJSON')}">
+ </div><p class="footer-note">${t('jsonImportWarning')}</p></section>
+ <section class="card panel"><h2>${t('appName')}</h2><p class="caption">${t('appDescription')}</p>
+ <p>${t('about')}</p><p class="caption">${t('version')}: ${escapeHTML(s.version)}</p></section>`;
+}
 async function render(){renderNav();renderHeader();if(state.page==='dashboard')await renderDashboard();else if(state.page==='accounts')await renderAccounts();else if(state.page==='monthly')await renderMonthly();else renderSettings();}
 async function refresh(){const [accounts,months,history,currencies]=await Promise.all([api('/accounts'),api('/months'),api('/capital/history'),api('/currencies')]);state.accounts=accounts;state.months=months;state.history=history.points;state.currencies=currencies.currencies;}
 async function mutation(done){try{await done();await refresh();await render()}catch(e){notify(e.message||t('error'),true)}}
@@ -186,6 +245,8 @@ document.addEventListener('click',async e=>{
   else if(action==='monthNext')await setMonth(nextMonth(state.month,1));
   else if(action==='selectColumn')await setMonth(node.dataset.month);
   else if(action==='focusAdd'){$('#accountName')?.focus()}
+  else if(action==='exportJSON')await exportJSON();
+  else if(action==='importJSON')$('#jsonFileInput')?.click();
   else if(action==='saveMonth')await saveMonth();
   else if(action==='deleteMonth'){
    if(!state.monthData?.exists||!(await showConfirm({title:t('deleteMonth'),message:t('confirmDeleteMonth'),confirmLabel:t('delete'),cancelLabel:t('cancel'),danger:true})))return;
@@ -209,6 +270,12 @@ document.addEventListener('submit',async e=>{
 });
 document.addEventListener('input',e=>{if(e.target.matches('.editor-input')){state.dirty=true;e.target.classList.remove('invalid');}});
 document.addEventListener('change',async e=>{
+ if(e.target.id==='jsonFileInput'){
+  const file=e.target.files?.[0];
+  e.target.value='';
+  await importJSON(file);
+  return;
+ }
  if(e.target.classList.contains('month-picker')){const changed=await setMonth(e.target.value);if(!changed&&e.target.isConnected)e.target.value=state.month;return}
  if(e.target.id==='columnCount'){
   state.columnCount=Number(e.target.value);
