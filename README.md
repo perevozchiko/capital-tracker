@@ -47,11 +47,10 @@ On each push to `master`, pull request and manual dispatch, GitHub Actions runs 
 | Workflow artifact | Mac CPU | Executable |
 | --- | --- | --- |
 | `CapitalTracker-macos-arm64` | Apple Silicon (M1–M-series) | `CapitalTracker-darwin-arm64` |
-| `CapitalTracker-macos-amd64` | Intel | `CapitalTracker-darwin-amd64` |
 | `CapitalTracker-linux-amd64` | Linux x86-64 | `CapitalTracker-linux-amd64` |
 | `CapitalTracker-windows-amd64` | Windows x86-64 | `CapitalTracker-windows-amd64.exe` |
 
-Open the repository's **Actions → Build Capital Tracker → most recent successful run → Artifacts** and download the appropriate artifact. A SHA-256 checksum is included. Files are not signed or notarized. Release uploads are not automated.
+Open the repository's **Actions → Build Capital Tracker → most recent successful run → Artifacts** and download the Apple Silicon artifact. A SHA-256 checksum is included. Files are not signed or notarized. Release uploads are not automated.
 
 ## Financial semantics
 
@@ -107,7 +106,7 @@ Migration scripts are embedded under `internal/storage/migrations/`. Database id
 
 ## Limitations
 
-- No remote/mobile access over the LAN; no server-independent offline editing; no automatic FX updates.
+- No native macOS Intel binary in CI; no remote/mobile access over the LAN; no server-independent offline editing; no automatic FX updates.
 - There are no automatic backups, exports, imports, transactions or cloud sync.
 - Concurrent launching on the same data directory is prevented with a lock file; after an unclean crash, verify there is no running process before manually clearing `.capital-tracker.lock`.
 - Built-in browser checks such as responsive layout, theme switching and browser launch need visual/manual verification on the target OS.
