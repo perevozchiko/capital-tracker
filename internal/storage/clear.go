@@ -20,6 +20,7 @@ func (s *Store) ClearData() error {
 		"account_periods",
 		"months",
 		"accounts",
+		"account_groups",
 		"app_settings",
 	} {
 		if _, err := tx.Exec("DELETE FROM " + table); err != nil {
@@ -28,7 +29,7 @@ func (s *Store) ClearData() error {
 	}
 
 	// Reset AUTOINCREMENT IDs as for a fresh installation.
-	if _, err := tx.Exec("DELETE FROM sqlite_sequence WHERE name IN ('accounts','account_periods')"); err != nil {
+	if _, err := tx.Exec("DELETE FROM sqlite_sequence WHERE name IN ('accounts','account_periods','account_groups')"); err != nil {
 		return err
 	}
 	if _, err := tx.Exec("INSERT INTO app_settings(key,value) VALUES ('language','en'),('theme','dark')"); err != nil {
