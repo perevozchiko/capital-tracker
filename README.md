@@ -3,7 +3,7 @@
 A simple, local-first personal net worth tracker. Record end-of-month balances instead of individual transactions, and monitor total capital converted to EUR using **the exchange rate saved for each month**.
 
 - Five account currencies: EUR, USD, RSD, RUB and TRY.
-- Multiple independent accounts, archived history, monthly balances and manually entered monthly FX rates.
+- Multiple independent accounts, **collapsible and reorderable groups**, drag-and-drop account organization, archived history, monthly balances and manually entered monthly FX rates.
 - Exact arithmetic, no binary floating point in stored balances or exchange rates.
 - Dashboard with adjustable 6–120 adjacent month columns (12 by default), monthly change and historical SVG chart.
 - English / Russian, **Dark theme by default**, with optional Light / System modes; responsive browser UI and PWA assets.
@@ -26,7 +26,7 @@ go run ./cmd/capital-tracker --demo --port 8766
 
 **Demo mode never opens or changes your regular Capital Tracker database.** It uses a separate directory called `CapitalTrackerDemo` next to the regular `CapitalTracker` data directory. Normal `--data-dir` / `CAPITAL_TRACKER_DATA_DIR` overrides are deliberately ignored when `--demo` is selected. The sample is installed only if the demo database is completely empty, so edits made during a demo session remain in place when you restart it. To restore the original fixture, stop the demo and delete only the `CapitalTrackerDemo` folder, then launch with `--demo` again. Alternatively, use Settings → Danger zone → Delete all data while in demo mode, and restart.
 
-The included fictional example represents a typical euro-paid working household, **not actual financial records or official statistical averages**. It contains **12 complete end-of-month snapshots, October 2025 through September 2026**, with six accounts: EUR everyday checking, emergency savings, long-term investments, USD brokerage holdings, EUR cash, and a negative EUR car-loan balance. Fluctuating balances suggest a take-home pay around €2,800 per month, ordinary living expenses, savings, a summer holiday and gradual loan repayment; those earnings/expenses are *context only* and are not logged as transactions. Each month has its own example EUR/USD rate. Navigate between **Dashboard**, **Accounts** and **Monthly balances** to inspect the history and try editing a month.
+The included fictional example represents a typical euro-paid working household, **not actual financial records or official statistical averages**. It contains **12 complete end-of-month snapshots, October 2025 through September 2026**, with six accounts arranged in three groups (Cash and savings, Investments, Liabilities): EUR everyday checking, emergency savings, long-term investments, USD brokerage holdings, EUR cash, and a negative EUR car-loan balance. Fluctuating balances suggest a take-home pay around €2,800 per month, ordinary living expenses, savings, a summer holiday and gradual loan repayment; those earnings/expenses are *context only* and are not logged as transactions. Each month has its own example EUR/USD rate. Navigate between **Dashboard**, **Accounts** and **Monthly balances** to inspect the history and try editing a month.
 
 The example is also provided as a fully importable, versioned JSON snapshot in [`internal/demo/sample-2025-2026.json`](internal/demo/sample-2025-2026.json). You can import it via **Settings → JSON import and export** if desired, but **import replaces the currently open database**. For safe exploration, prefer `--demo`.
 
@@ -105,22 +105,32 @@ To request a binary, open **Actions → Build Capital Tracker → Run workflow**
 
 Each selected job runs unit tests, JavaScript checks, `go vet`, and a native build. The macOS job additionally smoke-tests the server, the home page, backup, and restart. After a successful run, download your artifact from that run's **Artifacts** section. Each artifact includes a SHA-256 checksum. macOS Intel is not built; downloaded binaries are unsigned/unnotarized, and GitHub Releases are not published automatically.
 
+## Account groups
+
+On **Accounts**, choose **New group** to create named sections such as Cash and savings, Investments and Loans. The group name is unique (case-insensitive). Each group has a header that can be expanded/collapsed, renamed, moved up/down with buttons or reordered by dragging the header. The collapsed/expanded state persists in this browser.
+
+Accounts can be placed in a group as soon as they are created. Existing accounts can be dragged onto another account or group header, or assigned using the group selector next to each account (keyboard and touch alternative). Arrow buttons still reorder accounts inside their groups. An always-visible **Ungrouped** section receives unassigned accounts and accepts dropped accounts.
+
+Each group header displays its **exact EUR subtotal** for the selected month (which can be switched at the top of Accounts). Group subtotals use the exchange rates saved for that particular month, include negative balances, and use the same exact rational arithmetic as the main net worth total. If any account active in that group lacks a balance or necessary rate for the selected month, its subtotal is **not displayed as zero**: the group is marked incomplete. Archived accounts stay visible but are not included in months when they are inactive. Individual group amounts are rounded once per group; due to rounding, the sum of rounded group subtotals can differ by one or more cents from the main once-rounded total.
+
+Group membership is **organizational and current**, not a historical dimension: moving a previously recorded account changes which group's past-month subtotal includes its balances, but never changes the account history or the overall monthly net worth. Deleting a group only moves its accounts to **Ungrouped**; it does not delete accounts, balances or history. Old databases migrate automatically to schema version 2, retaining all accounts in Ungrouped until you organize them. A pre-migration SQLite backup is made automatically.
+
 ## JSON import and export
 
 Open **Settings → JSON import and export** in the browser:
 
-- **Export JSON** downloads a readable, versioned snapshot of all saved accounts, their activity periods, monthly balances (including deliberately incomplete months), exchange rates, and appearance/language preferences.
+- **Export JSON** downloads a readable, versioned snapshot of all saved accounts, group memberships and group order, their activity periods, monthly balances (including deliberately incomplete months), exchange rates, and appearance/language preferences.
 - **Import JSON** accepts a Capital Tracker JSON export (up to **8 MiB**) and **replaces all existing app data** after an in-app confirmation. Export the current data before importing; there is no merge and no undo.
 - Import validates the format/schema version, currencies, dates, relationships and financial precision before starting a SQLite transaction. Malformed or inconsistent input is rejected; the existing data is preserved on failure. Import does not modify database migrations.
 - This is a portable application-data snapshot, **not** a replacement for the SQLite `backup` command, which remains the preferred full-database backup. JSON exports contain personal financial information and should be stored securely.
 
-JSON schema identifier: `{"format":"capital-tracker","schema_version":1}`. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
+JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":2}`. Older version 1 exports can still be imported; their accounts start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
 
 ## Clearing all local data
 
 Go to **Settings → Danger zone → Delete all data**. A dedicated in-app dialog explains the permanent loss and requires typing **DELETE** in English or **УДАЛИТЬ** in Russian before the destructive button becomes available.
 
-After confirmation, the app removes **all** accounts, account activity periods, recorded months, balances, exchange rates and saved preferences, restoring English and dark appearance. Account IDs start from 1 again. SQLite tables and migrations stay in place, so you can begin again without reinstalling the application. All deletions are atomic: any database error rolls back the entire clear. This cannot be undone inside the app.
+After confirmation, the app removes **all** accounts, groups, account activity periods, recorded months, balances, exchange rates and saved preferences, restoring English and dark appearance. Account IDs start from 1 again. SQLite tables and migrations stay in place, so you can begin again without reinstalling the application. All deletions are atomic: any database error rolls back the entire clear. This cannot be undone inside the app.
 
 **Export a JSON backup before clearing.** Files previously exported as JSON or SQLite backups remain untouched; the command deletes application data in the active SQLite database, not external backup files. No background or automatic clearing occurs.
 
@@ -142,11 +152,15 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 
 | Method | Endpoint | Function |
 | --- | --- | --- |
-| `GET`, `POST` | `/api/accounts` | List / create accounts (`name`, `currency`, `start_month`) |
+| `GET`, `POST` | `/api/accounts` | List / create accounts (`name`, `currency`, `start_month`, optional `group_id`) |
 | `PATCH`, `DELETE` | `/api/accounts/{id}` | Change account name or currency (currency only before any recorded balance) / delete history-free account |
 | `POST` | `/api/accounts/{id}/archive` | `{"month":"2026-11"}` |
 | `POST` | `/api/accounts/{id}/restore` | `{"start_month":"2026-12"}` |
-| `PUT` | `/api/accounts/reorder` | `{"ids":[1,2,3]}` full atomic order |
+| `PUT` | `/api/accounts/reorder` | `{"ids":[1,2,3]}` full atomic order (legacy) |
+| `PUT` | `/api/accounts/assignments` | Full atomic list `{"accounts":[{"id":1,"group_id":2},{"id":3,"group_id":null}]}`; includes **every** account in display order |
+| `GET`, `POST` | `/api/groups` | List groups with exact EUR subtotals for optional `?month=YYYY-MM`, or create a group with `{"name":"Cash"}` |
+| `PATCH`, `DELETE` | `/api/groups/{id}` | Rename group or delete container (accounts become ungrouped) |
+| `PUT` | `/api/groups/reorder` | `{"ids":[1,2,3]}` exact full group order |
 | `GET`, `POST` | `/api/months` | List / explicitly create empty month |
 | `GET`, `PUT`, `DELETE` | `/api/months/{YYYY-MM}` | Read / replace / delete a month (DELETE requires `{"confirm":true}`) |
 | `GET` | `/api/dashboard?month=YYYY-MM&columns=12` | Summary, previous month and 1–120 monthly columns |
@@ -183,7 +197,7 @@ scripts/              Local source checks and optional screenshot capture
 .github/workflows/    Go checks and macOS binary artifacts
 ```
 
-Migration scripts are embedded under `internal/storage/migrations/`. Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Only schema version 1 is defined currently. `PROGRESS.md` documents verification status.
+Migration scripts are embedded under `internal/storage/migrations/`. Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1 and 2 are defined; migration 2 adds account groups and account membership. `PROGRESS.md` documents verification status.
 
 ## Limitations
 
