@@ -5,7 +5,7 @@ A simple, local-first personal net worth tracker. Record end-of-month balances i
 - Five account currencies: EUR, USD, RSD, RUB and TRY.
 - Multiple independent accounts, archived history, monthly balances and manually entered monthly FX rates.
 - Exact arithmetic, no binary floating point in stored balances or exchange rates.
-- Dashboard with six adjacent month columns, monthly change and historical SVG chart.
+- Dashboard with adjustable 6–120 adjacent month columns (12 by default), monthly change and historical SVG chart.
 - English / Russian, System / Light / Dark appearance, responsive browser UI and PWA assets.
 - A single local HTTP server with embedded assets; no cloud, login, frontend build, Node.js or bank connection.
 
@@ -32,9 +32,10 @@ Options:
 ./CapitalTracker --port 8766 --data-dir /some/private/directory
 CAPITAL_TRACKER_PORT=8766 CAPITAL_TRACKER_DATA_DIR=/some/private/directory ./CapitalTracker
 ./CapitalTracker backup /some/other/directory/backup.db
+./CapitalTracker backup --data-dir /some/private/directory /some/other/directory/backup.db
 ```
 
-Command line options override environment variables, which override defaults. The `backup` subcommand uses the environment data directory (when supplied) and safely takes a consistent snapshot with SQLite `VACUUM INTO`; it refuses to replace an existing destination. Do not copy `capital.db` alone while the server is running: SQLite can keep live changes in `capital.db-wal`. Shut down the program before making manual filesystem backups, or use `backup` while it runs.
+Command line options override environment variables, which override defaults. The `backup` subcommand accepts `--data-dir` and the environment data directory and safely takes a consistent snapshot with SQLite `VACUUM INTO`; it refuses to replace an existing destination. Do not copy `capital.db` alone while the server is running: SQLite can keep live changes in `capital.db-wal`. Shut down the program before making manual filesystem backups, or use `backup` while it runs.
 
 Data location: macOS `~/Library/Application Support/CapitalTracker/capital.db`; Linux `${XDG_CONFIG_HOME:-~/.config}/CapitalTracker/capital.db` and Windows the standard user configuration directory. Your data is not bundled with the executable; replacing the executable will not delete your records.
 
@@ -58,13 +59,13 @@ Balances are **end-of-month snapshots** in the account's native currency, stored
 
 A month is complete only when it has at least one active account, each active account has a balance (zero is valid), and all currencies needed by active accounts have a rate. Empty months are incomplete and remain visible; missing months are not treated as zeros. There is no automatic carry-forward. Both balances and rates are replaced atomically by a `PUT` for the selected month. Omit an entry to remove it from that month. All timestamps are in UTC. Months accepted: `1900-01` through `2200-12` (including future months).
 
-Accounts have a list of activity periods. An archived account is removed from capital totals starting with its first excluded month; previous balances are kept. A restored account gets a **new period**, not a retroactive extension. To avoid silently changing historical completeness, creating accounts, archiving and restoring must not alter any already-created month. Use a start/archive/restore month *after* the latest existing month.
+Accounts have a list of activity periods. An archived account is removed from capital totals starting with its first excluded month; previous balances are kept. A restored account gets a **new period**, not a retroactive extension. To avoid silently changing historical completeness, creating accounts, archiving and restoring must not alter any already-created month. Use a start/archive/restore month *after* the latest existing month. If you accidentally record a future month, you can delete that month (and its balances and rates) using **Monthly Balances → Delete month**; deletion requires explicit confirmation and cannot be undone. Back up important data first.
 
-Amounts in JSON are represented as **decimal strings of integer minor units**, not JavaScript numbers, to avoid loss of precision. Rates are transmitted as validated decimal strings; the server converts them to eight-place fixed-point integers. The UI accepts `.` or `,` as decimal separator and spaces as grouping separators; ambiguous three-decimal representations are rejected for rates. All capital totals are calculated by Go, not JavaScript. Chart coordinates use approximate numeric geometry, while displayed amounts use exact decimal strings.
+Amounts in JSON are represented as **decimal strings of integer minor units**, not JavaScript numbers, to avoid loss of precision. Rates are transmitted as validated decimal strings; the server converts them to eight-place fixed-point integers. The UI accepts `.` or `,` as decimal separator and spaces as grouping separators; a comma is always a valid decimal separator, including three digits after the separator (`1,085`, `117,200`). Thousands must be grouped with spaces. All capital totals are calculated by Go, not JavaScript. Chart coordinates use approximate numeric geometry, while displayed amounts use exact decimal strings.
 
 ## API
 
-All endpoints use JSON (`Content-Type: application/json` on writes) and errors have the shape `{"error":{"code":"validation_error","field":"month"}}`. Requests that change data must supply `X-Capital-Tracker: 1`; the server enforces strict `Host` and `Origin` checks and does not enable cross-origin access. Endpoints:
+All endpoints use JSON (`Content-Type: application/json` on writes) and errors have the shape `{"error":{"code":"validation_error","field":"month"}}` (conflicts also include a stable localized `reason` identifier). Requests that change data must supply `X-Capital-Tracker: 1`; the server enforces strict `Host` and `Origin` checks and does not enable cross-origin access. Endpoints:
 
 | Method | Endpoint | Function |
 | --- | --- | --- |
@@ -74,11 +75,12 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `POST` | `/api/accounts/{id}/restore` | `{"start_month":"2026-12"}` |
 | `PUT` | `/api/accounts/reorder` | `{"ids":[1,2,3]}` full atomic order |
 | `GET`, `POST` | `/api/months` | List / explicitly create empty month |
-| `GET`, `PUT` | `/api/months/{YYYY-MM}` | Read / replace all balances and rates transactionally |
-| `GET` | `/api/dashboard?month=YYYY-MM` | Summary, previous month and six-column table data |
+| `GET`, `PUT`, `DELETE` | `/api/months/{YYYY-MM}` | Read / replace / delete a month (DELETE requires `{\"confirm\":true}`) |
+| `GET` | `/api/dashboard?month=YYYY-MM&columns=12` | Summary, previous month and 1–120 monthly columns |
 | `GET` | `/api/capital/history` | Chronological complete/incomplete points |
 | `GET`, `PATCH` | `/api/settings` | Read / update language and appearance |
-| `GET` | `/api/meta` | App identity and version |
+| `GET` | `/api/meta` | App identity and version
+| `GET` | `/api/currencies` | Supported ISO 4217 currency codes from Go |
 
 Example full monthly replacement:
 
@@ -89,7 +91,7 @@ Example full monthly replacement:
 }
 ```
 
-`PUT /api/months/{month}` creates the month when needed, and removes old balance/rate entries omitted from this request. `POST /api/months` creates a deliberately empty month and rejects duplicates. Never call `PUT` with an empty payload unintentionally, as that means clear the month. Requests are limited to 1 MiB.
+`PUT /api/months/{month}` creates the month when needed, and removes old balance/rate entries omitted from this request. `POST /api/months` creates a deliberately empty month and rejects duplicates. `DELETE /api/months/{month}` requires JSON `{\"confirm\":true}` with the CSRF header and permanently removes the month plus its balances and rates via one SQLite transaction; other months remain unchanged. Never call `PUT` with an empty payload unintentionally, as that means clear the month. Requests are limited to 1 MiB.
 
 ## Project structure
 
@@ -108,5 +110,9 @@ Migration scripts are embedded under `internal/storage/migrations/`. Database id
 
 - No native macOS Intel binary in CI; no remote/mobile access over the LAN; no server-independent offline editing; no automatic FX updates.
 - There are no automatic backups, exports, imports, transactions or cloud sync.
-- Concurrent launching on the same data directory is prevented with a lock file; after an unclean crash, verify there is no running process before manually clearing `.capital-tracker.lock`.
+- Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. The Windows source currently uses an exclusive-create fallback while Windows releases are disabled.
 - Built-in browser checks such as responsive layout, theme switching and browser launch need visual/manual verification on the target OS.
+
+## Currency definitions and schema constraints
+
+The canonical supported currency list is defined in `internal/finance/finance.go` and exposed to the browser by `/api/currencies`. The SQLite `CHECK` constraints intentionally repeat ISO codes as a defense against database corruption; adding a new currency requires a database migration and updating the canonical list. The MVP continues to support exactly EUR, USD, RSD, RUB and TRY.
