@@ -54,19 +54,23 @@ func run() error {
 		return err
 	}
 	if len(os.Args) > 1 && os.Args[1] == "backup" {
-		if len(os.Args) != 3 {
-			return errors.New("usage: CapitalTracker backup <destination.db>")
+		backupFlags := flag.NewFlagSet("backup", flag.ContinueOnError)
+		backupDir := backupFlags.String("data-dir", envOr("CAPITAL_TRACKER_DATA_DIR", dir), "application data directory")
+		if err := backupFlags.Parse(os.Args[2:]); err != nil {
+			return err
 		}
-		dir = envOr("CAPITAL_TRACKER_DATA_DIR", dir)
-		s, e := storage.Open(dir)
+		if backupFlags.NArg() != 1 {
+			return errors.New("usage: CapitalTracker backup [--data-dir DIR] <destination.db>")
+		}
+		s, e := storage.Open(*backupDir)
 		if e != nil {
 			return e
 		}
 		defer s.Close()
-		if e = s.Backup(os.Args[2]); e != nil {
+		if e = s.Backup(backupFlags.Arg(0)); e != nil {
 			return e
 		}
-		fmt.Println("Backup created:", os.Args[2])
+		fmt.Println("Backup created:", backupFlags.Arg(0))
 		return nil
 	}
 	flags := flag.NewFlagSet("capital-tracker", flag.ContinueOnError)
@@ -84,16 +88,16 @@ func run() error {
 		return err
 	}
 	lockFile := filepath.Join(*dataDir, ".capital-tracker.lock")
-	lock, e := os.OpenFile(lockFile, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	lock, e := acquireAppLock(lockFile)
 	if e != nil {
-		if os.IsExist(e) {
+		if errors.Is(e, errAppLocked) {
 			target := fmt.Sprintf("http://127.0.0.1:%d", p)
 			client := http.Client{Timeout: 2 * time.Second}
 			if resp, checkErr := client.Get(target + "/api/meta"); checkErr == nil {
 				var buf [128]byte
 				n, _ := resp.Body.Read(buf[:])
 				resp.Body.Close()
-				if resp.StatusCode == 200 && strings.Contains(string(buf[:n]), `"app":"capital-tracker"`) {
+				if resp.StatusCode == http.StatusOK && strings.Contains(string(buf[:n]), `"app":"capital-tracker"`) {
 					if !*noBrowser {
 						_ = browser(target)
 					}
@@ -101,13 +105,11 @@ func run() error {
 					return nil
 				}
 			}
-			return fmt.Errorf("another instance may be running (lock at %s); if it crashed, verify it is stopped and remove stale lock", lockFile)
+			return fmt.Errorf("Capital Tracker database is already in use: %w", e)
 		}
 		return e
 	}
-	fmt.Fprintln(lock, os.Getpid())
-	lock.Close()
-	defer os.Remove(lockFile)
+	defer lock.Close()
 	s, e := storage.Open(*dataDir)
 	if e != nil {
 		return e
