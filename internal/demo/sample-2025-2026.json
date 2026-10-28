@@ -1,0 +1,673 @@
+{
+  "format": "capital-tracker",
+  "schema_version": 1,
+  "exported_at": "2026-10-01T12:00:00Z",
+  "accounts": [
+    {
+      "id": 1,
+      "name": "Everyday account",
+      "currency": "EUR",
+      "start_month": "2025-10",
+      "archived_from_month": null,
+      "sort_order": 1,
+      "created_at": "2025-10-01T09:00:00Z",
+      "updated_at": "2025-10-01T09:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Emergency fund",
+      "currency": "EUR",
+      "start_month": "2025-10",
+      "archived_from_month": null,
+      "sort_order": 2,
+      "created_at": "2025-10-01T09:00:00Z",
+      "updated_at": "2025-10-01T09:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Long-term investments",
+      "currency": "EUR",
+      "start_month": "2025-10",
+      "archived_from_month": null,
+      "sort_order": 3,
+      "created_at": "2025-10-01T09:00:00Z",
+      "updated_at": "2025-10-01T09:00:00Z"
+    },
+    {
+      "id": 4,
+      "name": "USD brokerage",
+      "currency": "USD",
+      "start_month": "2025-10",
+      "archived_from_month": null,
+      "sort_order": 4,
+      "created_at": "2025-10-01T09:00:00Z",
+      "updated_at": "2025-10-01T09:00:00Z"
+    },
+    {
+      "id": 5,
+      "name": "Cash wallet",
+      "currency": "EUR",
+      "start_month": "2025-10",
+      "archived_from_month": null,
+      "sort_order": 5,
+      "created_at": "2025-10-01T09:00:00Z",
+      "updated_at": "2025-10-01T09:00:00Z"
+    },
+    {
+      "id": 6,
+      "name": "Car loan",
+      "currency": "EUR",
+      "start_month": "2025-10",
+      "archived_from_month": null,
+      "sort_order": 6,
+      "created_at": "2025-10-01T09:00:00Z",
+      "updated_at": "2025-10-01T09:00:00Z"
+    }
+  ],
+  "account_periods": [
+    {
+      "account_id": 1,
+      "start_month": "2025-10",
+      "end_month": null
+    },
+    {
+      "account_id": 2,
+      "start_month": "2025-10",
+      "end_month": null
+    },
+    {
+      "account_id": 3,
+      "start_month": "2025-10",
+      "end_month": null
+    },
+    {
+      "account_id": 4,
+      "start_month": "2025-10",
+      "end_month": null
+    },
+    {
+      "account_id": 5,
+      "start_month": "2025-10",
+      "end_month": null
+    },
+    {
+      "account_id": 6,
+      "start_month": "2025-10",
+      "end_month": null
+    }
+  ],
+  "months": [
+    {
+      "month": "2025-10",
+      "created_at": "2025-10-31T18:00:00.000Z",
+      "updated_at": "2025-10-31T18:00:00.000Z"
+    },
+    {
+      "month": "2025-11",
+      "created_at": "2025-11-30T18:00:00.000Z",
+      "updated_at": "2025-11-30T18:00:00.000Z"
+    },
+    {
+      "month": "2025-12",
+      "created_at": "2025-12-31T18:00:00.000Z",
+      "updated_at": "2025-12-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-01",
+      "created_at": "2026-01-31T18:00:00.000Z",
+      "updated_at": "2026-01-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-02",
+      "created_at": "2026-02-28T18:00:00.000Z",
+      "updated_at": "2026-02-28T18:00:00.000Z"
+    },
+    {
+      "month": "2026-03",
+      "created_at": "2026-03-31T18:00:00.000Z",
+      "updated_at": "2026-03-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-04",
+      "created_at": "2026-04-30T18:00:00.000Z",
+      "updated_at": "2026-04-30T18:00:00.000Z"
+    },
+    {
+      "month": "2026-05",
+      "created_at": "2026-05-31T18:00:00.000Z",
+      "updated_at": "2026-05-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-06",
+      "created_at": "2026-06-30T18:00:00.000Z",
+      "updated_at": "2026-06-30T18:00:00.000Z"
+    },
+    {
+      "month": "2026-07",
+      "created_at": "2026-07-31T18:00:00.000Z",
+      "updated_at": "2026-07-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-08",
+      "created_at": "2026-08-31T18:00:00.000Z",
+      "updated_at": "2026-08-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-09",
+      "created_at": "2026-09-30T18:00:00.000Z",
+      "updated_at": "2026-09-30T18:00:00.000Z"
+    }
+  ],
+  "balances": [
+    {
+      "account_id": 1,
+      "month": "2025-10",
+      "amount_minor": "210000",
+      "updated_at": "2025-10-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2025-10",
+      "amount_minor": "480000",
+      "updated_at": "2025-10-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2025-10",
+      "amount_minor": "960000",
+      "updated_at": "2025-10-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2025-10",
+      "amount_minor": "370000",
+      "updated_at": "2025-10-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2025-10",
+      "amount_minor": "18000",
+      "updated_at": "2025-10-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2025-10",
+      "amount_minor": "-780000",
+      "updated_at": "2025-10-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2025-11",
+      "amount_minor": "187000",
+      "updated_at": "2025-11-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2025-11",
+      "amount_minor": "505000",
+      "updated_at": "2025-11-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2025-11",
+      "amount_minor": "985000",
+      "updated_at": "2025-11-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2025-11",
+      "amount_minor": "379000",
+      "updated_at": "2025-11-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2025-11",
+      "amount_minor": "22000",
+      "updated_at": "2025-11-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2025-11",
+      "amount_minor": "-760000",
+      "updated_at": "2025-11-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2025-12",
+      "amount_minor": "245000",
+      "updated_at": "2025-12-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2025-12",
+      "amount_minor": "530000",
+      "updated_at": "2025-12-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2025-12",
+      "amount_minor": "1005000",
+      "updated_at": "2025-12-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2025-12",
+      "amount_minor": "390000",
+      "updated_at": "2025-12-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2025-12",
+      "amount_minor": "17000",
+      "updated_at": "2025-12-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2025-12",
+      "amount_minor": "-740000",
+      "updated_at": "2025-12-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2026-01",
+      "amount_minor": "219000",
+      "updated_at": "2026-01-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2026-01",
+      "amount_minor": "560000",
+      "updated_at": "2026-01-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2026-01",
+      "amount_minor": "996000",
+      "updated_at": "2026-01-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2026-01",
+      "amount_minor": "407000",
+      "updated_at": "2026-01-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2026-01",
+      "amount_minor": "28000",
+      "updated_at": "2026-01-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2026-01",
+      "amount_minor": "-720000",
+      "updated_at": "2026-01-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2026-02",
+      "amount_minor": "177000",
+      "updated_at": "2026-02-28T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2026-02",
+      "amount_minor": "590000",
+      "updated_at": "2026-02-28T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2026-02",
+      "amount_minor": "1023000",
+      "updated_at": "2026-02-28T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2026-02",
+      "amount_minor": "395000",
+      "updated_at": "2026-02-28T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2026-02",
+      "amount_minor": "19000",
+      "updated_at": "2026-02-28T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2026-02",
+      "amount_minor": "-700000",
+      "updated_at": "2026-02-28T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2026-03",
+      "amount_minor": "206000",
+      "updated_at": "2026-03-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2026-03",
+      "amount_minor": "625000",
+      "updated_at": "2026-03-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2026-03",
+      "amount_minor": "1059000",
+      "updated_at": "2026-03-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2026-03",
+      "amount_minor": "420000",
+      "updated_at": "2026-03-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2026-03",
+      "amount_minor": "14000",
+      "updated_at": "2026-03-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2026-03",
+      "amount_minor": "-680000",
+      "updated_at": "2026-03-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2026-04",
+      "amount_minor": "233000",
+      "updated_at": "2026-04-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2026-04",
+      "amount_minor": "650000",
+      "updated_at": "2026-04-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2026-04",
+      "amount_minor": "1084000",
+      "updated_at": "2026-04-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2026-04",
+      "amount_minor": "435000",
+      "updated_at": "2026-04-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2026-04",
+      "amount_minor": "26000",
+      "updated_at": "2026-04-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2026-04",
+      "amount_minor": "-660000",
+      "updated_at": "2026-04-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2026-05",
+      "amount_minor": "189000",
+      "updated_at": "2026-05-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2026-05",
+      "amount_minor": "675000",
+      "updated_at": "2026-05-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2026-05",
+      "amount_minor": "1110000",
+      "updated_at": "2026-05-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2026-05",
+      "amount_minor": "450000",
+      "updated_at": "2026-05-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2026-05",
+      "amount_minor": "21000",
+      "updated_at": "2026-05-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2026-05",
+      "amount_minor": "-640000",
+      "updated_at": "2026-05-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2026-06",
+      "amount_minor": "216000",
+      "updated_at": "2026-06-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2026-06",
+      "amount_minor": "700000",
+      "updated_at": "2026-06-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2026-06",
+      "amount_minor": "1097000",
+      "updated_at": "2026-06-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2026-06",
+      "amount_minor": "444000",
+      "updated_at": "2026-06-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2026-06",
+      "amount_minor": "24000",
+      "updated_at": "2026-06-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2026-06",
+      "amount_minor": "-620000",
+      "updated_at": "2026-06-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2026-07",
+      "amount_minor": "244000",
+      "updated_at": "2026-07-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2026-07",
+      "amount_minor": "725000",
+      "updated_at": "2026-07-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2026-07",
+      "amount_minor": "1123000",
+      "updated_at": "2026-07-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2026-07",
+      "amount_minor": "468000",
+      "updated_at": "2026-07-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2026-07",
+      "amount_minor": "27000",
+      "updated_at": "2026-07-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2026-07",
+      "amount_minor": "-600000",
+      "updated_at": "2026-07-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2026-08",
+      "amount_minor": "200000",
+      "updated_at": "2026-08-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2026-08",
+      "amount_minor": "760000",
+      "updated_at": "2026-08-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2026-08",
+      "amount_minor": "1159000",
+      "updated_at": "2026-08-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2026-08",
+      "amount_minor": "479000",
+      "updated_at": "2026-08-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2026-08",
+      "amount_minor": "15000",
+      "updated_at": "2026-08-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2026-08",
+      "amount_minor": "-580000",
+      "updated_at": "2026-08-31T18:00:00.000Z"
+    },
+    {
+      "account_id": 1,
+      "month": "2026-09",
+      "amount_minor": "257000",
+      "updated_at": "2026-09-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 2,
+      "month": "2026-09",
+      "amount_minor": "790000",
+      "updated_at": "2026-09-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 3,
+      "month": "2026-09",
+      "amount_minor": "1188000",
+      "updated_at": "2026-09-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 4,
+      "month": "2026-09",
+      "amount_minor": "498000",
+      "updated_at": "2026-09-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 5,
+      "month": "2026-09",
+      "amount_minor": "23000",
+      "updated_at": "2026-09-30T18:00:00.000Z"
+    },
+    {
+      "account_id": 6,
+      "month": "2026-09",
+      "amount_minor": "-560000",
+      "updated_at": "2026-09-30T18:00:00.000Z"
+    }
+  ],
+  "rates": [
+    {
+      "month": "2025-10",
+      "currency": "USD",
+      "rate_scaled": "108500000",
+      "updated_at": "2025-10-31T18:00:00.000Z"
+    },
+    {
+      "month": "2025-11",
+      "currency": "USD",
+      "rate_scaled": "107200000",
+      "updated_at": "2025-11-30T18:00:00.000Z"
+    },
+    {
+      "month": "2025-12",
+      "currency": "USD",
+      "rate_scaled": "104700000",
+      "updated_at": "2025-12-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-01",
+      "currency": "USD",
+      "rate_scaled": "106200000",
+      "updated_at": "2026-01-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-02",
+      "currency": "USD",
+      "rate_scaled": "108100000",
+      "updated_at": "2026-02-28T18:00:00.000Z"
+    },
+    {
+      "month": "2026-03",
+      "currency": "USD",
+      "rate_scaled": "109500000",
+      "updated_at": "2026-03-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-04",
+      "currency": "USD",
+      "rate_scaled": "111100000",
+      "updated_at": "2026-04-30T18:00:00.000Z"
+    },
+    {
+      "month": "2026-05",
+      "currency": "USD",
+      "rate_scaled": "112300000",
+      "updated_at": "2026-05-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-06",
+      "currency": "USD",
+      "rate_scaled": "113800000",
+      "updated_at": "2026-06-30T18:00:00.000Z"
+    },
+    {
+      "month": "2026-07",
+      "currency": "USD",
+      "rate_scaled": "115100000",
+      "updated_at": "2026-07-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-08",
+      "currency": "USD",
+      "rate_scaled": "116600000",
+      "updated_at": "2026-08-31T18:00:00.000Z"
+    },
+    {
+      "month": "2026-09",
+      "currency": "USD",
+      "rate_scaled": "117400000",
+      "updated_at": "2026-09-30T18:00:00.000Z"
+    }
+  ],
+  "settings": {
+    "language": "en",
+    "theme": "light"
+  }
+}
