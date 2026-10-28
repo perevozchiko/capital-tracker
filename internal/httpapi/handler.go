@@ -91,6 +91,7 @@ func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	registerTransfer(mux, s)
 	registerGroups(mux, s)
+	registerRates(mux)
 	mux.HandleFunc("/api/meta", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			fail(w, 405, "method_not_allowed", "")

@@ -3,7 +3,7 @@
 A simple, local-first personal net worth tracker. Record end-of-month balances instead of individual transactions, and monitor total capital converted to EUR using **the exchange rate saved for each month**.
 
 - Five account currencies: EUR, USD, RSD, RUB and TRY.
-- Multiple independent accounts, **collapsible and reorderable groups**, drag-and-drop account organization, archived history, monthly balances and manually entered monthly FX rates.
+- Multiple independent accounts, **collapsible and reorderable groups**, drag-and-drop account organization, archived history, monthly balances and monthly FX rates entered manually or loaded on request.
 - Exact arithmetic, no binary floating point in stored balances or exchange rates.
 - Dashboard with adjustable 6–120 adjacent month columns (12 by default), monthly change and historical SVG chart.
 - English / Russian, **Dark theme by default**, with optional Light / System modes; responsive browser UI and PWA assets.
@@ -138,7 +138,7 @@ After confirmation, the app removes **all** accounts, groups, account activity p
 
 ## Financial semantics
 
-Balances are **end-of-month snapshots** in the account's native currency, stored as **integer minor units** (cents, including RSD). A blank entry means unknown and is *not* zero. FX rates are **manually entered end-of-month rates**: `1 EUR = X USD / RSD / RUB / TRY` with up to eight decimals; the EUR rate is implicitly one. Monthly total = sum of each account's exact EUR-cent equivalent, rounded **once** to the nearest cent, ties away from zero for positive or negative amounts. Account figures in the table remain in their original currencies. Monthly changes compare only immediately consecutive **complete** months; percentage change is calculated from displayed rounded EUR-cent totals, and is undefined when the previous total is zero.
+Balances are **end-of-month snapshots** in the account's native currency, stored as **integer minor units** (cents, including RSD). A blank entry means unknown and is *not* zero. FX rates are **end-of-month rates**, entered manually or loaded on request: `1 EUR = X USD / RSD / RUB / TRY` with up to eight decimals; the EUR rate is implicitly one. Monthly total = sum of each account's exact EUR-cent equivalent, rounded **once** to the nearest cent, ties away from zero for positive or negative amounts. Account figures in the table remain in their original currencies. Monthly changes compare only immediately consecutive **complete** months; percentage change is calculated from displayed rounded EUR-cent totals, and is undefined when the previous total is zero.
 
 A month is complete only when it has at least one active account, each active account has a balance (zero is valid), and all currencies needed by active accounts have a rate. Empty months are incomplete and remain visible; missing months are not treated as zeros. There is no automatic carry-forward.
 
@@ -169,6 +169,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET` | `/api/capital/history` | Chronological complete/incomplete points |
 | `GET`, `PATCH` | `/api/settings` | Read / update language and appearance |
 | `GET` | `/api/meta` | App identity and version
+| `GET` | `/api/exchange-rates?month=YYYY-MM` | Fetch EUR rates for a past month-end or the latest available date for the current month; does not save them |
 | `GET` | `/api/currencies` | Supported ISO 4217 currency codes from Go |
 | `GET` | `/api/data/export` | Download complete application JSON snapshot |
 | `POST` | `/api/data/import` | Atomically replace data with valid exported JSON (requires `X-Capital-Tracker-Import: replace` and the regular CSRF header) |
@@ -207,6 +208,8 @@ Migration scripts are embedded under `internal/storage/migrations/`. Database id
 - There are no automatic backups, transactions or cloud sync. JSON exports/imports are manual-only.
 - Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. Windows uses the native LockFileEx advisory lock, which is also released by the OS after a crash; all platforms can leave the lock file on disk safely.
 - Built-in browser checks such as responsive layout, theme switching and browser launch need visual/manual verification on the target OS.
+
+The monthly editor can load rates into empty fields from [Exchange API](https://github.com/fawazahmed0/exchange-api), using the last calendar day of a past month or the latest available date for the current month. The displayed date identifies the quote; future months and unavailable historical dates cannot be loaded. Existing entries are preserved, and loaded rates are only stored when you save the month. The server contacts the provider and its fallback without sending account or balance data. Internet access is required for this optional feature; manual entry remains available. Rates are rounded to eight decimal places.
 
 ## Currency definitions and schema constraints
 

@@ -204,7 +204,7 @@ async function renderMonthly(){
   groupSection(groupData.ungrouped,null)+groupSection(groupData.archive,'archive');
  const exchangeRows=currencies.map(c=>`<div class='editor-row'><label for='r-${c}'>EUR → ${c}<small>${t('rateMeaning')} ${c}</small></label><input class='editor-input' id='r-${c}' data-rate='${c}' inputmode='decimal' autocomplete='off' placeholder='${t('enterRate')}' value='${escapeHTML(rateText(rates.get(c)||''))}'></div>`).join('');
  const missing=d.complete?t('complete'):[d.missing_balances.length?t('missingBalances')+': '+d.missing_balances.length:'',d.missing_rates.length?t('missingRates')+': '+d.missing_rates.join(', '):''].filter(Boolean).join(' · ')||t('totalProvisional');
- $('#pageContent').innerHTML=`<div class='status-block'><div class='panel-heading status-heading'><strong>${t('status')}</strong>${statusPill(d)}</div><p class='inline-status'>${missing}</p>${d.complete?`<div class='metric-value metric-secondary'>${money(d.total_eur_minor)}</div>`:''}</div><div class='editor-grid'><section class='card panel'><div class='panel-heading'><h2>${t('balance')}</h2><span class='subtle'>${escapeHTML(monthLabel(state.month))}</span></div><p class='caption'>${t('balancesNote')}</p>${rows}</section><section class='card panel'><div class='panel-heading'><h2>${t('rates')}</h2><span class='subtle'>EUR = 1</span></div><p class='caption'>${t('ratesNote')}</p><div class='editor-list'>${exchangeRows||`<p class='muted'>EUR = 1</p>`}</div><p class='footer-note'>${t('rateFormatHelp')}</p></section></div><div class='editor-footer'><p class='subtle'>${t('exactTotal')}</p><div class='overview-actions'><button class='btn btn-danger' data-action='deleteMonth' ${d.exists?'':'disabled'}>${t('deleteMonth')}</button><button class='btn btn-primary' data-action='saveMonth' ${d.accounts.length?'':'disabled'}>${t('saveMonth')}</button></div></div>`;
+ $('#pageContent').innerHTML=`<div class='status-block'><div class='panel-heading status-heading'><strong>${t('status')}</strong>${statusPill(d)}</div><p class='inline-status'>${missing}</p>${d.complete?`<div class='metric-value metric-secondary'>${money(d.total_eur_minor)}</div>`:''}</div><div class='editor-grid'><section class='card panel'><div class='panel-heading'><h2>${t('balance')}</h2><span class='subtle'>${escapeHTML(monthLabel(state.month))}</span></div><p class='caption'>${t('balancesNote')}</p>${rows}</section><section class='card panel'><div class='panel-heading'><h2>${t('rates')}</h2><span class='subtle'>EUR = 1</span></div><p class='caption'>${t('ratesNote')}</p>${currencies.length?`<button type='button' class='btn btn-small' data-action='loadRates'>${t('loadRates')}</button><p class='caption' id='rateLoadStatus' aria-live='polite'></p>`:''}<div class='editor-list'>${exchangeRows||`<p class='muted'>EUR = 1</p>`}</div><p class='footer-note'>${t('rateFormatHelp')}</p></section></div><div class='editor-footer'><p class='subtle'>${t('exactTotal')}</p><div class='overview-actions'><button class='btn btn-danger' data-action='deleteMonth' ${d.exists?'':'disabled'}>${t('deleteMonth')}</button><button class='btn btn-primary' data-action='saveMonth' ${d.accounts.length?'':'disabled'}>${t('saveMonth')}</button></div></div>`;
  document.querySelectorAll('[data-balance]').forEach(updateBalanceDifference);
  state.dirty=false;
 }
@@ -303,6 +303,25 @@ function renderSettings(){
 async function render(){renderNav();renderHeader();if(state.page==='dashboard')await renderDashboard();else if(state.page==='accounts')await renderAccounts();else if(state.page==='monthly')await renderMonthly();else renderSettings();}
 async function refresh(){const [accounts,months,history,currencies]=await Promise.all([api('/accounts'),api('/months'),api('/capital/history'),api('/currencies')]);state.accounts=accounts;state.months=months;state.history=history.points;state.currencies=currencies.currencies;}
 async function mutation(done){try{await done();await refresh();await render()}catch(e){notify(e.message||t('error'),true)}}
+async function loadRates(button){
+ const month=state.month;
+ const inputs=[...document.querySelectorAll('[data-rate]')];
+ const initial=new Map(inputs.map(input=>[input,input.value]));
+ button.disabled=true;
+ const status=$('#rateLoadStatus');status.textContent=t('loading');
+ try{
+  const result=await api('/exchange-rates?month='+encodeURIComponent(month));
+  if(state.page!=='monthly'||state.month!==month||!button.isConnected)return;
+  let count=0;
+  for(const input of inputs){
+   const rate=result.rates[input.dataset.rate];
+   if(input.isConnected && input.value===initial.get(input) && !input.value.trim() && rate){input.value=rateText(rate);input.classList.remove('invalid');input.removeAttribute('aria-invalid');count++}
+  }
+  if(count)state.dirty=true;
+  status.textContent=t('ratesLoaded').replace('{date}',result.date).replace('{count}',count);
+ }catch(err){if(button.isConnected)status.textContent=t('ratesLoadFailed');}
+ finally{if(button.isConnected)button.disabled=false;}
+}
 async function saveMonth(){
  const inputs=[...document.querySelectorAll('[data-balance],[data-rate]')];const balances=[],rates=[];let bad=false;
  for(const el of inputs){el.classList.remove('invalid');try{
@@ -525,6 +544,7 @@ document.addEventListener('click',async e=>{
     input.classList.remove('invalid');input.removeAttribute('aria-invalid');
     state.dirty=true;updateBalanceDifference(input);input.focus();
    }
+   else if(action==='loadRates')await loadRates(node);
    else if(action==='saveMonth')await saveMonth();
   else if(action==='deleteMonth'){
    if(!state.monthData?.exists||!(await showConfirm({title:t('deleteMonth'),message:t('confirmDeleteMonth'),confirmLabel:t('delete'),cancelLabel:t('cancel'),danger:true})))return;
