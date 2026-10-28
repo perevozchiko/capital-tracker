@@ -18,6 +18,7 @@ type TransferDocument struct {
 	SchemaVersion  int               `json:"schema_version"`
 	ExportedAt     string            `json:"exported_at"`
 	Accounts       []Account         `json:"accounts"`
+	Groups         []AccountGroup    `json:"groups,omitempty"`
 	AccountPeriods []TransferPeriod  `json:"account_periods"`
 	Months         []Month           `json:"months"`
 	Balances       []TransferBalance `json:"balances"`
@@ -50,14 +51,32 @@ type TransferRate struct {
 func (s *Store) ExportData() (TransferDocument, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
-	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 1, ExportedAt: now(),
-		Accounts: []Account{}, AccountPeriods: []TransferPeriod{}, Months: []Month{},
+	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 2, ExportedAt: now(),
+		Accounts: []Account{}, Groups: []AccountGroup{}, AccountPeriods: []TransferPeriod{}, Months: []Month{},
 		Balances: []TransferBalance{}, Rates: []TransferRate{}, Settings: map[string]string{}}
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return d, err
 	}
 	defer tx.Rollback()
+
+	groupRows, err := tx.Query("SELECT id,name,sort_order,created_at,updated_at FROM account_groups ORDER BY sort_order,id")
+	if err != nil {
+		return d, err
+	}
+	for groupRows.Next() {
+		var g AccountGroup
+		if err = groupRows.Scan(&g.ID, &g.Name, &g.SortOrder, &g.CreatedAt, &g.UpdatedAt); err != nil {
+			groupRows.Close()
+			return d, err
+		}
+		d.Groups = append(d.Groups, g)
+	}
+	if err = groupRows.Err(); err != nil {
+		groupRows.Close()
+		return d, err
+	}
+	groupRows.Close()
 
 	rows, err := tx.Query("SELECT " + accountCols + " FROM accounts ORDER BY sort_order,id")
 	if err != nil {
@@ -197,13 +216,27 @@ func periodActive(periods []TransferPeriod, month string) bool {
 // snapshots before touching the database. It never fixes invalid input silently.
 func ValidateTransfer(d TransferDocument) error {
 	bad := func() error { return invalid("import") }
-	if d.Format != "capital-tracker" || d.SchemaVersion != 1 || !validTransferTime(d.ExportedAt) ||
-		d.Accounts == nil || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
+	if d.Format != "capital-tracker" || (d.SchemaVersion != 1 && d.SchemaVersion != 2) || !validTransferTime(d.ExportedAt) ||
+		d.Accounts == nil || (d.SchemaVersion == 2 && d.Groups == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
 		return bad()
 	}
 	if len(d.Settings) != 2 || (d.Settings["language"] != "en" && d.Settings["language"] != "ru") ||
 		(d.Settings["theme"] != "system" && d.Settings["theme"] != "light" && d.Settings["theme"] != "dark") {
 		return bad()
+	}
+	groups := make(map[int64]bool, len(d.Groups))
+	groupNames := make(map[string]bool, len(d.Groups))
+	if d.SchemaVersion == 1 && len(d.Groups) > 0 {
+		return bad()
+	}
+	for _, g := range d.Groups {
+		folded := strings.ToLower(g.Name)
+		if g.ID <= 0 || groups[g.ID] || !validGroupName(g.Name) ||
+			groupNames[folded] || g.SortOrder < 0 || !validTransferTime(g.CreatedAt) || !validTransferTime(g.UpdatedAt) {
+			return bad()
+		}
+		groups[g.ID] = true
+		groupNames[folded] = true
 	}
 	accounts := make(map[int64]Account, len(d.Accounts))
 	periods := make(map[int64][]TransferPeriod, len(d.Accounts))
@@ -211,7 +244,8 @@ func ValidateTransfer(d TransferDocument) error {
 		if a.ID <= 0 || accounts[a.ID].ID != 0 || strings.TrimSpace(a.Name) != a.Name || a.Name == "" ||
 			len([]rune(a.Name)) > 100 || !finance.ValidCurrency(a.Currency) || !finance.ValidMonth(a.StartMonth) ||
 			(a.ArchivedFromMonth != nil && !finance.ValidMonth(*a.ArchivedFromMonth)) ||
-			!validTransferTime(a.CreatedAt) || !validTransferTime(a.UpdatedAt) || a.SortOrder < 0 {
+			!validTransferTime(a.CreatedAt) || !validTransferTime(a.UpdatedAt) || a.SortOrder < 0 ||
+			(a.GroupID != nil && (d.SchemaVersion == 1 || !groups[*a.GroupID])) {
 			return bad()
 		}
 		accounts[a.ID] = a
@@ -341,13 +375,18 @@ func (s *Store) ImportData(d TransferDocument) error {
 		return err
 	}
 	defer tx.Rollback()
-	for _, table := range []string{"monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "app_settings"} {
+	for _, table := range []string{"monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
 		if _, err = tx.Exec("DELETE FROM " + table); err != nil {
 			return err
 		}
 	}
+	for _, g := range d.Groups {
+		if _, err = tx.Exec("INSERT INTO account_groups(id,name,sort_order,created_at,updated_at) VALUES(?,?,?,?,?)", g.ID, g.Name, g.SortOrder, g.CreatedAt, g.UpdatedAt); err != nil {
+			return invalid("import")
+		}
+	}
 	for _, a := range d.Accounts {
-		if _, err = tx.Exec("INSERT INTO accounts("+accountCols+") VALUES(?,?,?,?,?,?,?,?)", a.ID, a.Name, a.Currency, a.StartMonth, a.ArchivedFromMonth, a.SortOrder, a.CreatedAt, a.UpdatedAt); err != nil {
+		if _, err = tx.Exec("INSERT INTO accounts("+accountCols+") VALUES(?,?,?,?,?,?,?,?,?)", a.ID, a.Name, a.Currency, a.StartMonth, a.ArchivedFromMonth, a.SortOrder, a.CreatedAt, a.UpdatedAt, a.GroupID); err != nil {
 			return invalid("import")
 		}
 	}
