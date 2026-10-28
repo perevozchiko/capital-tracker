@@ -295,8 +295,12 @@ func (s *Store) UpdateAccount(id int64, name, currency *string) (Account, error)
 		}
 		if a.Currency != *currency {
 			protected, err := recordedAccountPeriod(tx, id)
-			if err != nil { return Account{}, err }
-			if protected { return Account{}, conflict("currency cannot change after a month has been recorded for this account") }
+			if err != nil {
+				return Account{}, err
+			}
+			if protected {
+				return Account{}, conflict("currency cannot change after a month has been recorded for this account")
+			}
 			a.Currency = *currency
 		}
 	}
@@ -328,8 +332,12 @@ func (s *Store) DeleteAccount(id int64) error {
 	}
 	defer tx.Rollback()
 	protected, e := recordedAccountPeriod(tx, id)
-	if e != nil { return e }
-	if protected { return conflict("account was active in a recorded month; deleting it would alter historical completeness") }
+	if e != nil {
+		return e
+	}
+	if protected {
+		return conflict("account was active in a recorded month; deleting it would alter historical completeness")
+	}
 	r, e := tx.Exec("DELETE FROM accounts WHERE id=?", id)
 	if e != nil {
 		return e
