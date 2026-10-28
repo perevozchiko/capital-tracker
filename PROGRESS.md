@@ -12,6 +12,7 @@
 - [x] README and usage/build/API/backup documentation
 - [x] Local financial unit tests (using offline compile stub)
 - [x] Local Go static compilation and JavaScript parsing checks (using offline compile stub)
-- [ ] SQLite-dependent tests on real `modernc.org/sqlite` (external module unavailable locally)
+- [x] SQLite-dependent tests on real `modernc.org/sqlite` (GitHub Actions macOS runners, October 28, 2026)
 - [ ] Cross-platform browser launch and UI smoke test (macOS browsers not available locally)
-- [ ] First GitHub Actions workflow outcome (must inspect after push)
+- [x] macOS arm64 + amd64 CI compile, unit tests and vet passed on commit `126e18c`
+- [ ] New five-currency HTTP acceptance test and native macOS/Linux/Windows CI (pending new workflow result)

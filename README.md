@@ -42,14 +42,16 @@ The executable is not Apple-signed/notarized; Gatekeeper may warn when launching
 
 ## Download macOS builds
 
-On each push to `master`, pull request and manual dispatch, GitHub Actions runs Go tests, `go vet`, and compiles two **CGO-free** executable files:
+On each push to `master`, pull request and manual dispatch, GitHub Actions runs Go tests and `go vet` natively on Apple Silicon and Intel macOS, and compiles four **CGO-free** executables:
 
 | Workflow artifact | Mac CPU | Executable |
 | --- | --- | --- |
 | `CapitalTracker-macos-arm64` | Apple Silicon (M1–M-series) | `CapitalTracker-darwin-arm64` |
 | `CapitalTracker-macos-amd64` | Intel | `CapitalTracker-darwin-amd64` |
+| `CapitalTracker-linux-amd64` | Linux x86-64 | `CapitalTracker-linux-amd64` |
+| `CapitalTracker-windows-amd64` | Windows x86-64 | `CapitalTracker-windows-amd64.exe` |
 
-Open the repository's **Actions → Build macOS → most recent successful run → Artifacts** and download the appropriate artifact. A SHA-256 checksum is included. Files are not signed or notarized. Release uploads are not automated.
+Open the repository's **Actions → Build Capital Tracker → most recent successful run → Artifacts** and download the appropriate artifact. A SHA-256 checksum is included. Files are not signed or notarized. Release uploads are not automated.
 
 ## Financial semantics
 
