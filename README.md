@@ -8,6 +8,45 @@ A simple, local-first personal net worth tracker. Record end-of-month balances i
 - Dashboard with adjustable 6–120 adjacent month columns (12 by default), monthly change and historical SVG chart.
 - English / Russian, System / Light / Dark appearance, responsive browser UI and PWA assets.
 - A single local HTTP server with embedded assets; no cloud, login, frontend build, Node.js or bank connection.
+- Optional isolated `--demo` mode with a realistic fictional year of data.
+
+## Demo mode — a year of example finances
+
+To explore the app with populated screens, start it with **`--demo`**:
+
+```sh
+go run ./cmd/capital-tracker --demo
+```
+
+If you have already built the executable, use `./CapitalTracker --demo` (or `CapitalTracker.exe --demo` on Windows). The browser opens at **http://127.0.0.1:8765**. If your normal instance is already using that port, choose another:
+
+```sh
+go run ./cmd/capital-tracker --demo --port 8766
+```
+
+**Demo mode never opens or changes your regular Capital Tracker database.** It uses a separate directory called `CapitalTrackerDemo` next to the regular `CapitalTracker` data directory. Normal `--data-dir` / `CAPITAL_TRACKER_DATA_DIR` overrides are deliberately ignored when `--demo` is selected. The sample is installed only if the demo database is completely empty, so edits made during a demo session remain in place when you restart it. To restore the original fixture, stop the demo and delete only the `CapitalTrackerDemo` folder, then launch with `--demo` again. Alternatively, use Settings → Danger zone → Delete all data while in demo mode, and restart.
+
+The included fictional example represents a typical euro-paid working household, **not actual financial records or official statistical averages**. It contains **12 complete end-of-month snapshots, October 2025 through September 2026**, with six accounts: EUR everyday checking, emergency savings, long-term investments, USD brokerage holdings, EUR cash, and a negative EUR car-loan balance. Fluctuating balances suggest a take-home pay around €2,800 per month, ordinary living expenses, savings, a summer holiday and gradual loan repayment; those earnings/expenses are *context only* and are not logged as transactions. Each month has its own example EUR/USD rate. Navigate between **Dashboard**, **Accounts** and **Monthly balances** to inspect the history and try editing a month.
+
+The example is also provided as a fully importable, versioned JSON snapshot in [`internal/demo/sample-2025-2026.json`](internal/demo/sample-2025-2026.json). You can import it via **Settings → JSON import and export** if desired, but **import replaces the currently open database**. For safe exploration, prefer `--demo`.
+
+## Application previews
+
+The following vector previews use the example dataset and the app's light-theme layout. They illustrate the dashboard and balance-entry screen; they are not captured browser screenshots.
+
+![Dashboard preview populated with twelve months of demo financial data](docs/screenshots/demo-dashboard.svg)
+
+![Monthly balances editor preview showing previous balances and changes](docs/screenshots/demo-monthly.svg)
+
+To capture **real PNG screenshots from the running application** (dashboard, monthly editor, and account list), use the optional developer tool. It builds the actual Go server, uses a temporary isolated demo profile, and drives Chromium through Playwright. Python/Playwright is needed only for capturing screenshots, not to use the app:
+
+```sh
+python3 -m pip install playwright
+python3 -m playwright install chromium
+python3 scripts/capture-demo-screenshots.py
+```
+
+The images are saved to `docs/screenshots/dashboard.png`, `monthly-balances.png`, and `accounts.png`; review and commit them when updating the README screenshots. This screenshot tool does not start GitHub Actions or modify the normal/demo user profile.
 
 ## Build and run
 
@@ -130,10 +169,13 @@ Example full monthly replacement:
 
 ```
 cmd/capital-tracker/   Startup, CLI flags, signals and browser opening
+internal/demo/          Embedded JSON fixture and safe demo-mode initialization
 internal/finance/     Exact conversions, validation and rounding
 internal/storage/     SQLite schema, migrations and data operations
 internal/httpapi/     Secure local REST endpoints, static file routing
 web/                  Embedded HTML, CSS, JS, dictionaries, SVG and PWA assets
+docs/screenshots/     Demo preview images (plus optionally captured PNG screenshots)
+scripts/              Local source checks and optional screenshot capture
 .github/workflows/    Go checks and macOS binary artifacts
 ```
 
