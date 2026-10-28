@@ -41,6 +41,28 @@ jobs:
           file "dist/CapitalTracker-darwin-${GOARCH}"
           cd dist
           shasum -a 256 "CapitalTracker-darwin-${GOARCH}" > "CapitalTracker-darwin-${GOARCH}.sha256"
+      - name: Smoke test actual macOS binary and home page
+        run: |
+          test_data="$(mktemp -d)"
+          ./dist/CapitalTracker-darwin-arm64 --no-browser --data-dir "$test_data" --port 18765 > "$RUNNER_TEMP/capital-tracker.log" 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true; wait "$app_pid" 2>/dev/null || true; rm -rf "$test_data"' EXIT
+          ready=0
+          for i in {1..40}; do
+            if curl --silent --fail --max-time 2 http://127.0.0.1:18765/api/meta > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 0.25
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat "$RUNNER_TEMP/capital-tracker.log"
+            exit 1
+          fi
+          status="$(curl --silent --max-time 5 --output "$RUNNER_TEMP/capital-home.html" --write-out '%{http_code}' http://127.0.0.1:18765/)"
+          test "$status" = "200" || { echo "Expected HTTP 200 for /, got $status"; exit 1; }
+          grep -q '<html lang="en">' "$RUNNER_TEMP/capital-home.html"
+          curl --silent --fail --max-time 5 http://127.0.0.1:18765/js/app.js | grep -q 'import'
       - uses: actions/upload-artifact@v7
         with:
           name: CapitalTracker-macos-arm64
