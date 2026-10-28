@@ -19,6 +19,9 @@ func TestFixtureIsValidPortableJSON(t *testing.T) {
 	if err := storage.ValidateTransfer(d); err != nil {
 		t.Fatalf("invalid demo fixture: %v", err)
 	}
+	if d.Settings["theme"] != "dark" {
+		t.Fatalf("demo must use dark theme, got %q", d.Settings["theme"])
+	}
 	if got := len(d.Accounts); got != 6 {
 		t.Fatalf("accounts = %d, want 6", got)
 	}

@@ -41,5 +41,5 @@ CREATE TABLE app_settings (
  key TEXT PRIMARY KEY,
  value TEXT NOT NULL
 );
-INSERT INTO app_settings(key,value) VALUES ('language','en'),('theme','system');
+INSERT INTO app_settings(key,value) VALUES ('language','en'),('theme','dark');
 PRAGMA application_id = 1128354379;

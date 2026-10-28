@@ -31,7 +31,7 @@ func (s *Store) ClearData() error {
 	if _, err := tx.Exec("DELETE FROM sqlite_sequence WHERE name IN ('accounts','account_periods')"); err != nil {
 		return err
 	}
-	if _, err := tx.Exec("INSERT INTO app_settings(key,value) VALUES ('language','en'),('theme','system')"); err != nil {
+	if _, err := tx.Exec("INSERT INTO app_settings(key,value) VALUES ('language','en'),('theme','dark')"); err != nil {
 		return err
 	}
 	return tx.Commit()

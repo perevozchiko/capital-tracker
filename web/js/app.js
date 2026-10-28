@@ -4,7 +4,7 @@ import { parseRateDecimal, differenceMinor } from './numbers.js';
 import { showConfirm, showTypedConfirm } from './dialogs.js';
 
 const $ = selector => document.querySelector(selector);
-const state = {page:'dashboard',month:new Date().toLocaleDateString('sv-SE').slice(0,7),accounts:[],months:[],history:[],settings:{language:'en',theme:'system',version:'0.1.3'},currencies:[],columnCount:12,monthData:null,dashboard:null,dirty:false,selectedAccount:null};
+const state = {page:'dashboard',month:new Date().toLocaleDateString('sv-SE').slice(0,7),accounts:[],months:[],history:[],settings:{language:'en',theme:'dark',version:'0.1.3'},currencies:[],columnCount:12,monthData:null,dashboard:null,dirty:false,selectedAccount:null};
 const icons = {
  dashboard:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
  accounts:'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/>',

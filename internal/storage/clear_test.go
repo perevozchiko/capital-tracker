@@ -30,7 +30,7 @@ func TestClearDataRemovesEverythingAndResetsPreferences(t *testing.T) {
 	if err = s.RestoreAccount(usd.ID, "2026-04"); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.UpdateSettings("ru", "dark"); err != nil {
+	if err = s.UpdateSettings("ru", "light"); err != nil {
 		t.Fatal(err)
 	}
 	if err = s.ClearData(); err != nil {
@@ -45,7 +45,7 @@ func TestClearDataRemovesEverythingAndResetsPreferences(t *testing.T) {
 		len(cleared.Months) != 0 || len(cleared.Balances) != 0 || len(cleared.Rates) != 0 {
 		t.Fatalf("some records survived clearing: %+v", cleared)
 	}
-	if !reflect.DeepEqual(cleared.Settings, map[string]string{"language": "en", "theme": "system"}) {
+	if !reflect.DeepEqual(cleared.Settings, map[string]string{"language": "en", "theme": "dark"}) {
 		t.Fatalf("unexpected settings: %+v", cleared.Settings)
 	}
 	var schema int
@@ -101,5 +101,14 @@ func TestClearDataFailureRollsBackAllTables(t *testing.T) {
 	before.ExportedAt, after.ExportedAt = "", ""
 	if !reflect.DeepEqual(before, after) {
 		t.Fatalf("clear failure partially deleted records: before=%+v after=%+v", before, after)
+	}
+}
+
+func TestFreshInstallDefaultsToDark(t *testing.T) {
+	s := openTest(t)
+	settings, err := s.Settings("test")
+	if err != nil { t.Fatal(err) }
+	if settings.Language != "en" || settings.Theme != "dark" {
+		t.Fatalf("unexpected default settings: %+v", settings)
 	}
 }

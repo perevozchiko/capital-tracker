@@ -1,7 +1,12 @@
-// Apply the cached appearance before painting; the server remains the source of truth.
+// Use the saved preference before painting; default to dark for new users.
 try {
   const saved = localStorage.getItem('capital-appearance');
-  const appearance = saved === 'dark' || saved === 'light'
-    ? saved : (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+  const appearance = saved === 'light' || saved === 'dark'
+    ? saved
+    : saved === 'system'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : 'dark';
   document.documentElement.dataset.theme = appearance;
-} catch { /* Storage may be disabled. The system theme is used. */ }
+} catch {
+  document.documentElement.dataset.theme = 'dark';
+}
