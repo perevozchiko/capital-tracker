@@ -14,7 +14,18 @@ const RateScale int64 = 100000000
 const MaxAbsMinor int64 = 9000000000000000
 const MaxRateScaled int64 = 10000000000000000
 
-var currencySet = map[string]bool{"EUR": true, "USD": true, "RSD": true, "RUB": true, "TRY": true}
+// Supported currencies are published through /api/currencies so the frontend
+// never maintains a separate currency list.
+var supportedCurrencies = []string{"EUR", "USD", "RSD", "RUB", "TRY"}
+var currencySet = func() map[string]bool {
+	m := make(map[string]bool, len(supportedCurrencies))
+	for _, c := range supportedCurrencies {
+		m[c] = true
+	}
+	return m
+}()
+
+func Currencies() []string { return append([]string(nil), supportedCurrencies...) }
 var ratePattern = regexp.MustCompile(`^[0-9]+(?:\.[0-9]{1,8})?$`)
 var monthPattern = regexp.MustCompile(`^(\d{4})-(0[1-9]|1[0-2])$`)
 
