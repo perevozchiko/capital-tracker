@@ -490,7 +490,7 @@ document.addEventListener('click',async e=>{
   else if(action==='monthNext')await setMonth(nextMonth(state.month,1));
   else if(action==='selectColumn')await setMonth(node.dataset.month);
   else if(action==='focusAdd'){$('#accountName')?.focus()}
-  else if(action?.startsWith('group'))await groupAction(action,Number(node.dataset.groupId),node.dataset.groupKey);
+  else if(action==='toggleGroup'||action?.startsWith('group'))await groupAction(action,Number(node.dataset.groupId),node.dataset.groupKey);
   else if(action==='exportJSON')await exportJSON();
   else if(action==='importJSON')$('#jsonFileInput')?.click();
   else if(action==='clearAllData')await clearAllData();
