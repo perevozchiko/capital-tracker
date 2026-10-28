@@ -22,7 +22,7 @@ import (
 	"github.com/perevozchiko/capital-tracker/web"
 )
 
-var version = "0.1.1"
+var version = "0.1.2"
 
 func envOr(name, fallback string) string {
 	if v := os.Getenv(name); v != "" {
