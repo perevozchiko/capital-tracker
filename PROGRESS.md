@@ -8,14 +8,14 @@
 - [x] English and Russian dictionaries, preferences and Light/Dark/System theme
 - [x] Accounts, monthly entry, dashboard, six-month table and history SVG chart
 - [x] PWA manifest, icons and network-first static-assets service worker
-- [x] macOS Apple Silicon-only GitHub Actions build workflow
+- [x] Manual GitHub Actions workflow with a platform selector (macOS Apple Silicon, Linux AMD64, Windows AMD64, or all)
 - [x] README and usage/build/API/backup documentation
 - [x] Local financial unit tests (using offline compile stub)
 - [x] Local Go static compilation and JavaScript parsing checks (using offline compile stub)
 - [x] SQLite-dependent tests on real `modernc.org/sqlite` (GitHub Actions macOS runners, October 28, 2026)
 - [ ] Cross-platform browser launch and UI smoke test (macOS browsers not available locally)
 - [x] macOS arm64 + amd64 CI compile (prior to removal of Intel), unit tests and vet passed on commit `126e18c`
-- [ ] Confirm latest Apple Silicon-only macOS and Linux/Windows workflow results
+- [ ] Verify manual build artifacts for macOS Apple Silicon, Linux AMD64 and Windows AMD64 in a new workflow_dispatch run
 
 - [x] Serialized multi-step financial writes and added regression tests for incomplete historical months
 - [x] Correct large percentage changes using exact integer strings
