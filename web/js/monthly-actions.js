@@ -17,6 +17,7 @@ async function loadRates(button) {
   try {
     const result = await api(
       '/exchange-rates?month=' + encodeURIComponent(month),
+      { cache: 'no-store' },
     );
     if (
       state.page !== 'monthly' ||
