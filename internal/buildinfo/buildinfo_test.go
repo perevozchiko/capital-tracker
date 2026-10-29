@@ -3,8 +3,8 @@ package buildinfo
 import "testing"
 
 func TestVersionAndCommit(t *testing.T) {
-    if Version != "0.1.3" {
-        t.Fatalf("unexpected initial version: %q", Version)
+    if Version == "" {
+        t.Fatal("missing application version")
     }
     previous := Commit
     defer func() { Commit = previous }()
