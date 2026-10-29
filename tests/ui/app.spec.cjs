@@ -135,7 +135,7 @@ test('account groups, menus, reordering, archive and restore', async ({
   // option still present in the ungrouped account's move dropdown.
   const savingsRows = accountGroup(page, 'Savings').locator('.account-row');
   await expect(savingsRows).toContainText('Cash');
-  const ungroupedRows = accountGroup(page, 'Ungrouped').locator('.account-row');
+  const ungroupedRows = page.locator('[data-group-id=""] .account-row');
   await expect(ungroupedRows).toHaveCount(0);
   await action(page, 'Cash', 'currency');
   await page.locator('#editValue').selectOption('USD');
