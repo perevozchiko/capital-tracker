@@ -20,6 +20,7 @@ import (
 type Server struct {
 	Store   *storage.Store
 	Version string
+	Commit  string
 	Assets  fs.FS
 }
 type apiError struct {
@@ -97,7 +98,7 @@ func (s *Server) Handler() http.Handler {
 			fail(w, 405, "method_not_allowed", "")
 			return
 		}
-		writeJSON(w, 200, map[string]string{"app": "capital-tracker", "version": s.Version})
+		writeJSON(w, 200, map[string]string{"app": "capital-tracker", "version": s.Version, "commit": s.Commit})
 	})
 	mux.HandleFunc("/api/currencies", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
