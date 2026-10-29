@@ -34,6 +34,18 @@ Data location: macOS `~/Library/Application Support/CapitalTracker/capital.db`; 
 
 The executable is not Apple-signed/notarized; Gatekeeper may warn when launching a downloaded binary. Build locally or follow Apple's standard security confirmation procedure for software you trust.
 
+## Screenshot capture
+
+The README displays actual screenshots from the **fictional demo database**, not generated graphics or private account data. To regenerate them from the repository root:
+
+```sh
+python3 -m pip install playwright
+python3 -m playwright install chromium
+python3 scripts/capture-demo-screenshots.py
+```
+
+This launches the real Go app with isolated sample data, captures Chromium in Dark mode, and writes `docs/screenshots/dashboard.png`, `monthly-balances.png` and `accounts.png`. You can also run **Actions → Capture demo screenshots → Run workflow** on `master`: the workflow commits changed PNG files only and does not rewrite the hand-maintained README gallery.
+
 ## Download builds from GitHub Actions
 
 Run all local source checks before committing (requires Go 1.23+ and Node.js 22+):
@@ -64,7 +76,7 @@ To request a binary, open **Actions → Build Capital Tracker → Run workflow**
 | `windows` | Windows x86-64 (AMD64) | `CapitalTracker-windows-amd64` | `CapitalTracker-windows-amd64.exe` |
 | `all` | All three | All three artifacts | One per platform |
 
-Each selected job runs unit tests, JavaScript checks, `go vet`, and a native build. The macOS job additionally smoke-tests the server, the home page, backup, and restart. After a successful run, download your artifact from that run's **Artifacts** section. Each artifact includes a SHA-256 checksum. macOS Intel is not built; downloaded binaries are unsigned/unnotarized, and GitHub Releases are not published automatically.
+Each selected job runs unit tests, JavaScript checks, `go vet`, and a native build. The macOS job additionally smoke-tests the server, the home page, backup, and restart. After a successful run, download your artifact from that run's **Artifacts** section. Each artifact includes a SHA-256 checksum. The manual development workflow does not build macOS Intel (the Release workflow does); downloaded binaries are unsigned/unnotarized, and GitHub Releases are not published automatically.
 
 ## Release Process
 

@@ -264,7 +264,9 @@ test('group controls reorder, collapse, rename and delete without deleting accou
   await row.locator('summary').click();
   await row.locator('[data-move-account]').selectOption({ label: 'First' });
   const first = accountGroup(page, 'First');
-  await expect(first.locator('.account-row').filter({ hasText: 'Wallet' })).toBeVisible();
+  await expect(
+    first.locator('.account-row').filter({ hasText: 'Wallet' }),
+  ).toBeVisible();
   await first.locator('[data-action="toggleGroup"]').click();
   await expect(first.locator('.account-row')).not.toBeVisible();
   await first.locator('[data-action="toggleGroup"]').click();
