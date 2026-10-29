@@ -10,9 +10,16 @@ on:
 permissions:
   contents: read
 
+# A newer push supersedes obsolete runs on the same branch or PR.
+concurrency:
+  group: checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   checks:
+    name: Go, JavaScript and browser tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v7
@@ -21,9 +28,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: npm ci
-      - run: npm run check
-      - run: python -m unittest discover -s tests -p '*release*test.py'
+      - name: Go, JavaScript, formatting and unit tests
+        run: npm run check
+      - name: Release version and archive tests
+        run: python -m unittest discover -s tests -p '*release*test.py'
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Playwright end-to-end tests
+        run: npm run test:ui
+      - name: Upload browser traces when tests fail
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: test-results/
+          if-no-files-found: ignore
