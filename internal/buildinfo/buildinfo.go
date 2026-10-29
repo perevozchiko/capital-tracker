@@ -7,7 +7,11 @@ const Version = "0.1.3"
 var Commit = "unknown"
 
 func ShortCommit() string {
-	if len(Commit) >= 8 { return Commit[:8] }
-	if Commit == "" { return "unknown" }
+	if len(Commit) >= 8 {
+		return Commit[:8]
+	}
+	if Commit == "" {
+		return "unknown"
+	}
 	return Commit
 }
