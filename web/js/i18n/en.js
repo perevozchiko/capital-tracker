@@ -22,7 +22,7 @@ export default {
  enterBalance:'Enter balance',enterRate:'Enter rate',noActiveAccounts:'There are no active accounts for this month.',status:'Month status',
  editMonth:'Edit month',goToMonth:'Go to month',currentSelection:'Selected',
  preferences:'Preferences',language:'Language',theme:'Appearance',english:'English',russian:'Русский',system:'System',light:'Light',dark:'Dark',
- version:'Version',about:'All information stays on this device in a local SQLite database. No online accounts, transactions, or automatic rate downloads.',
+ version:'Version',commit:'Commit',about:'All information stays on this device in a local SQLite database. No online accounts, transactions, or automatic rate downloads.',
  exactTotal:'Only complete months have a reliable EUR total.',changeUnavailable:'Change is available when both consecutive months are complete.',
  invalidAmount:'Enter an amount with up to two decimal places. Use spaces for thousands and . or , for decimals.',
  invalidRate:'Enter a positive exchange rate with up to eight decimal places.',ambiguous:'Ambiguous number. Use a space for thousands or add another decimal digit.',

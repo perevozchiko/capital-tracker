@@ -52,6 +52,17 @@ The script builds and starts Capital Tracker with a temporary isolated demo data
 
 On GitHub, open **Actions → Capture demo screenshots → Run workflow**, choosing `master`. This manual-only workflow captures the images and commits the three PNGs and README update to the repository. Regular pushes and commits do **not** trigger it.
 
+
+## Release Process
+
+Versioned releases are deliberately manual. Open **Actions → Release → Run workflow**, choose `master`, select the **Version increment** (`current`, `patch`, `minor` or `major`) and **Release stage** (`alpha`, `beta`, `rc` or `stable`), then click **Run workflow**. After success, find the archives under [GitHub Releases](https://github.com/perevozchiko/capital-tracker/releases). Regular commits and merges run CI checks but never create version tags or publish releases. The separate **Build Capital Tracker** workflow remains manually runnable on development branches and can build macOS, Linux, Windows or all platforms.
+
+The authoritative application version is the Go constant in `internal/buildinfo/buildinfo.go`. The workflow fetches Git tags to prevent collisions, prepares the next version commit (only if needed), validates and builds a **pinned commit**, verifies four release archives and their SHA256 checksums, and only after all required jobs pass creates the immutable version tag and GitHub Release. A failed test or build prevents publishing. If a version preparation commit succeeded but no tag was published, rerun **Current** with the same release stage to retry that exact version.
+
+**Current** continues the MAJOR.MINOR.PATCH series: the selected prerelease stage increments automatically (`alpha.2 → alpha.3`), and advancing `alpha → beta → rc → stable` keeps the base version and resets numbering to `.1` for the new prerelease stage. Downgrading to an earlier stage of the same series is rejected. **Patch** increments PATCH; **Minor** increments MINOR and resets PATCH; **Major** increments MAJOR and resets MINOR and PATCH. For a new series, select any stage. For example, starting at `v0.1.3`, choose **Patch + Alpha** for `v0.1.4-alpha.1`. With no existing release tag, **Current + Stable** can publish the existing `v0.1.3`; **Current + Alpha** is correctly rejected because it would downgrade an already stable version.
+
+Each release includes `CapitalTracker-vX.Y.Z[-stage.N]-macos-arm64.zip`, `...-macos-amd64.zip`, `...-linux-amd64.tar.gz` and `...-windows-amd64.zip`, plus individual `.sha256` files. GitHub automatically generates release notes using `.github/release.yml` (categorized merged PRs, contributors and comparison link); Alpha, Beta and RC are prereleases while Stable is not. **Settings → About** displays the authoritative version and 8-character build commit; `CapitalTracker --version` reports the same information without opening a server or requiring Git. Release packages are not code-signed.
+
 ## Build and run
 
 Install Go and build (Go 1.23 or later; GitHub Actions uses Go 1.27.3):
@@ -207,14 +218,14 @@ internal/httpapi/     Secure local REST endpoints, static file routing
 web/                  Embedded HTML, CSS, JS, dictionaries, SVG and PWA assets
 docs/screenshots/     Real full-page screenshots captured in Chromium
 scripts/              Local source checks and optional screenshot capture
-.github/workflows/    Go checks and macOS binary artifacts
+.github/workflows/    CI, manual builds and controlled releases
 ```
 
 Migration scripts are embedded under `internal/storage/migrations/`. Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1 and 2 are defined; migration 2 adds account groups and account membership. `PROGRESS.md` documents verification status.
 
 ## Limitations
 
-- No native macOS Intel binary in CI; no remote/mobile access over the LAN; no server-independent offline editing; no automatic FX updates.
+- No remote/mobile access over the LAN; no server-independent offline editing; no automatic FX updates.
 - There are no automatic backups, transactions or cloud sync. JSON exports/imports are manual-only.
 - Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. Windows uses the native LockFileEx advisory lock, which is also released by the OS after a crash; all platforms can leave the lock file on disk safely.
 - Built-in browser checks such as responsive layout, theme switching and browser launch need visual/manual verification on the target OS.

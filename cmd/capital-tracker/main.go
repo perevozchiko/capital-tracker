@@ -17,13 +17,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/perevozchiko/capital-tracker/internal/buildinfo"
 	"github.com/perevozchiko/capital-tracker/internal/demo"
 	"github.com/perevozchiko/capital-tracker/internal/httpapi"
 	"github.com/perevozchiko/capital-tracker/internal/storage"
 	"github.com/perevozchiko/capital-tracker/web"
 )
 
-var version = "0.1.3"
+var version = buildinfo.Version
 
 func envOr(name, fallback string) string {
 	if v := os.Getenv(name); v != "" {
@@ -50,6 +51,10 @@ func main() {
 	}
 }
 func run() error {
+	if len(os.Args) == 2 && (os.Args[1] == "--version" || os.Args[1] == "-version") {
+		fmt.Printf("Capital Tracker v%s (%s)\n", buildinfo.Version, buildinfo.ShortCommit())
+		return nil
+	}
 	dir, err := storage.DefaultDataDir()
 	if err != nil {
 		return err
@@ -127,7 +132,7 @@ func run() error {
 			return fmt.Errorf("initialize demo data: %w", e)
 		}
 	}
-	handler := (&httpapi.Server{Store: s, Version: version, Assets: web.Assets}).Handler()
+	handler := (&httpapi.Server{Store: s, Version: version, Commit: buildinfo.ShortCommit(), Assets: web.Assets}).Handler()
 	srv := httpapi.NewHTTPServer(net.JoinHostPort("127.0.0.1", *port), handler)
 	listener, e := net.Listen("tcp", srv.Addr)
 	if e != nil {

@@ -4,7 +4,7 @@ import { parseRateDecimal, differenceMinor } from './numbers.js';
 import { showConfirm, showTypedConfirm } from './dialogs.js';
 
 const $ = selector => document.querySelector(selector);
-const state = {page:'dashboard',month:new Date().toLocaleDateString('sv-SE').slice(0,7),accounts:[],months:[],history:[],settings:{language:'en',theme:'dark',version:'0.1.3'},currencies:[],columnCount:12,monthData:null,dashboard:null,dirty:false,selectedAccount:null};
+const state = {page:'dashboard',month:new Date().toLocaleDateString('sv-SE').slice(0,7),accounts:[],months:[],history:[],settings:{language:'en',theme:'dark',version:''},buildCommit:'unknown',currencies:[],columnCount:12,monthData:null,dashboard:null,dirty:false,selectedAccount:null};
 const icons = {
  dashboard:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
  accounts:'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/>',
@@ -298,7 +298,7 @@ function renderSettings(){
  <p class="caption">${t('clearDataWarning')}</p>
  <button type="button" class="btn btn-danger" data-action="clearAllData">${t('clearAllData')}</button></section>
  <section class="card panel"><h2>${t('appName')}</h2><p class="caption">${t('appDescription')}</p>
- <p>${t('about')}</p><p class="caption">${t('version')}: ${escapeHTML(s.version)}</p></section>`;
+ <p>${t('about')}</p><p class="caption">${t('version')}: v${escapeHTML(s.version)} · ${t('commit')}: ${escapeHTML(state.buildCommit)}</p></section>`;
 }
 async function render(){renderNav();renderHeader();if(state.page==='dashboard')await renderDashboard();else if(state.page==='accounts')await renderAccounts();else if(state.page==='monthly')await renderMonthly();else renderSettings();}
 async function refresh(){const [accounts,months,history,currencies]=await Promise.all([api('/accounts'),api('/months'),api('/capital/history'),api('/currencies')]);state.accounts=accounts;state.months=months;state.history=history.points;state.currencies=currencies.currencies;}
@@ -617,7 +617,7 @@ document.addEventListener('pointerout',e=>{if(e.target.closest('[data-chart-inde
 document.addEventListener('focusin',e=>{if(e.target.matches('[data-chart-index]'))pointTooltip(e.target)});
 document.addEventListener('focusout',e=>{if(e.target.matches('[data-chart-index]'))$('#chartTooltip').hidden=true});
 async function boot(){try{
- state.settings=await api('/settings');themeApply();await refresh();
+ const [settings,metadata]=await Promise.all([api('/settings'),api('/meta')]);state.settings=settings;state.buildCommit=metadata.commit||'unknown';themeApply();await refresh();
  const lastComplete=state.history.filter(x=>x.complete).at(-1);
  if(lastComplete)state.month=lastComplete.month;else if(state.months.length)state.month=state.months[state.months.length-1].month;
  await render();
