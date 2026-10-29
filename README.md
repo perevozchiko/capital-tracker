@@ -36,7 +36,17 @@ The default appearance is **Dark**, including the included demo data and after c
 
 <!-- AUTO SCREENSHOTS START -->
 
-Genuine PNG screenshots of Dashboard, Monthly balances and Accounts will be inserted here by the manual **Capture demo screenshots** workflow. The screenshots are taken from the real Go application running in Chromium, not generated illustrations.
+### Dashboard
+
+![Dashboard — real dark theme screenshot](docs/screenshots/dashboard.png)
+
+### Monthly balances
+
+![Monthly balances — real dark theme screenshot](docs/screenshots/monthly-balances.png)
+
+### Accounts
+
+![Accounts — real dark theme screenshot](docs/screenshots/accounts.png)
 
 <!-- AUTO SCREENSHOTS END -->
 
