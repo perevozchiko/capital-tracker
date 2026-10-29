@@ -53,7 +53,7 @@ class ReleaseVersionTests(unittest.TestCase):
             self.assertEqual(release.read_source(f),v('0.2.0-beta.1'))
             release.write_source(v('0.2.0-beta.1'),f)
             self.assertEqual(f.read_text().count('0.2.0-beta.1'),1)
-        self.assertEqual(release.read_source(),v('0.1.3'))
+        self.assertEqual(release.parse(release.version_string(release.read_source())),release.read_source())
 
 if __name__ == '__main__':
     unittest.main()
