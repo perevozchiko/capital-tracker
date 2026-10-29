@@ -2,4 +2,5 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 gofmt -w .
-echo "Go files formatted. Run scripts/check.sh before committing."
+npx --no-install prettier --write web tests package.json playwright.config.cjs
+echo "Source files formatted. Run npm run check before committing."

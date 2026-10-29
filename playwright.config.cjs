@@ -5,5 +5,10 @@ module.exports = defineConfig({
   expect: { timeout: 5000 },
   fullyParallel: true,
   reporter: 'list',
-  use: { browserName: 'chromium', headless: true, trace: 'retain-on-failure', serviceWorkers: 'block' },
+  use: {
+    browserName: 'chromium',
+    headless: true,
+    trace: 'retain-on-failure',
+    serviceWorkers: 'block',
+  },
 });

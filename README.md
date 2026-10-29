@@ -6,7 +6,7 @@ A simple, local-first personal net worth tracker. Record end-of-month balances i
 - Multiple independent accounts, **collapsible and reorderable groups**, drag-and-drop account organization, archived history, monthly balances and monthly FX rates entered manually or loaded on request.
 - Exact arithmetic, no binary floating point in stored balances or exchange rates.
 - Dashboard with adjustable 6–120 adjacent month columns (12 by default), monthly change and historical SVG chart.
-- English / Russian, **Dark theme by default**, with optional Light / System modes; responsive browser UI and PWA assets.
+- English interface, **Dark theme by default**, with optional Light / System modes; responsive browser UI and PWA assets.
 - A single local HTTP server with embedded assets; no cloud, login, frontend build, Node.js or bank connection.
 - Optional isolated `--demo` mode with a realistic fictional year of data.
 
@@ -97,9 +97,10 @@ The executable is not Apple-signed/notarized; Gatekeeper may warn when launching
 
 ## Download builds from GitHub Actions
 
-Run all local source checks before committing (requires Go 1.23+ and Node.js):
+Run all local source checks before committing (requires Go 1.23+ and Node.js 22+):
 ```sh
-bash scripts/check.sh
+npm ci
+npm run check
 ```
 Browser UI tests exercise the real application in headless Chromium with an isolated temporary database per test. Install Node.js 22 or newer, Go, and the browser once, then run:
 
@@ -111,7 +112,7 @@ npm run test:ui
 
 The suite covers navigation, settings, account and group management, monthly balances, exchange-rate loading (with deterministic mocked responses), import/export, deletion confirmations, and a mobile viewport. Test failures retain Playwright traces under `test-results/`; view one with `npx playwright show-trace <path-to-trace.zip>`. The tests do not use the normal application database. GitHub Actions runs them on pushes and pull requests.
 
-If it reports Go formatting differences, run `gofmt -w .` once and commit the formatted files. The script checks `gofmt`, `go mod tidy -diff`, `go mod verify`, `go vet`, Go tests, JavaScript syntax and parser tests. It never changes source files.
+If it reports Go formatting differences, run `gofmt -w .` once and commit the formatted files. The script checks `gofmt`, `go mod tidy -diff`, `go mod verify`, `go vet`, Go tests, syntax for every JavaScript module, JavaScript unit tests and Prettier formatting. The check command never changes source files. Use `npm run format` to format Go, JavaScript, CSS and HTML sources.
 
 **Builds are manual-only** during development: pushes, tags, and pull requests do not trigger compilation.
 
@@ -142,7 +143,7 @@ Group membership is **organizational and current**, not a historical dimension: 
 
 Open **Settings → JSON import and export** in the browser:
 
-- **Export JSON** downloads a readable, versioned snapshot of all saved accounts, group memberships and group order, their activity periods, monthly balances (including deliberately incomplete months), exchange rates, and appearance/language preferences.
+- **Export JSON** downloads a readable, versioned snapshot of all saved accounts, group memberships and group order, their activity periods, monthly balances (including deliberately incomplete months), exchange rates, and appearance preferences and the legacy language field.
 - **Import JSON** accepts a Capital Tracker JSON export (up to **8 MiB**) and **replaces all existing app data** after an in-app confirmation. Export the current data before importing; there is no merge and no undo.
 - Import validates the format/schema version, currencies, dates, relationships and financial precision before starting a SQLite transaction. Malformed or inconsistent input is rejected; the existing data is preserved on failure. Import does not modify database migrations.
 - This is a portable application-data snapshot, **not** a replacement for the SQLite `backup` command, which remains the preferred full-database backup. JSON exports contain personal financial information and should be stored securely.
@@ -151,7 +152,7 @@ JSON schema identifier for current exports: `{"format":"capital-tracker","schema
 
 ## Clearing all local data
 
-Go to **Settings → Danger zone → Delete all data**. A dedicated in-app dialog explains the permanent loss and requires typing **DELETE** in English or **УДАЛИТЬ** in Russian before the destructive button becomes available.
+Go to **Settings → Danger zone → Delete all data**. A dedicated in-app dialog explains the permanent loss and requires typing **DELETE** before the destructive button becomes available.
 
 After confirmation, the app removes **all** accounts, groups, account activity periods, recorded months, balances, exchange rates and saved preferences, restoring English and dark appearance. Account IDs start from 1 again. SQLite tables and migrations stay in place, so you can begin again without reinstalling the application. All deletions are atomic: any database error rolls back the entire clear. This cannot be undone inside the app.
 
@@ -188,7 +189,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET`, `PUT`, `DELETE` | `/api/months/{YYYY-MM}` | Read / replace / delete a month (DELETE requires `{"confirm":true}`) |
 | `GET` | `/api/dashboard?month=YYYY-MM&columns=12` | Summary, previous month and 1–120 monthly columns |
 | `GET` | `/api/capital/history` | Chronological complete/incomplete points |
-| `GET`, `PATCH` | `/api/settings` | Read / update language and appearance |
+| `GET`, `PATCH` | `/api/settings` | Read / update appearance (legacy language field retained) |
 | `GET` | `/api/meta` | App identity and version
 | `GET` | `/api/exchange-rates?month=YYYY-MM` | Fetch EUR rates for a past month-end or the latest available date for the current month; does not save them |
 | `GET` | `/api/currencies` | Supported ISO 4217 currency codes from Go |
@@ -209,17 +210,44 @@ Example full monthly replacement:
 
 ## Project structure
 
+```text
+cmd/capital-tracker/   Startup, CLI flags, signals and platform-specific locking
+internal/buildinfo/    Authoritative version and build commit metadata
+internal/demo/         Embedded fixture and isolated demo initialization
+internal/finance/      Exact conversions, validation and rounding
+internal/storage/      SQLite connection, migrations and domain operations
+  accounts.go          Accounts, activity periods and ordering
+  months.go            Monthly snapshots, balances and exchange rates
+  dashboard.go         Capital history and dashboard aggregation
+  settings.go          Persisted preferences
+  groups.go            Account groups, assignments and subtotals
+  transfer.go          Versioned JSON import and export
+internal/httpapi/      Domain routes, JSON helpers, security and static serving
+web/
+  js/app.js            Bootstrap and browser event wiring
+  js/router.js         Navigation, data refresh and page rendering
+  js/*-actions.js      Account, monthly and data-management actions
+  js/accounts.js       Accounts page
+  js/dashboard.js      Dashboard, table and chart
+  js/monthly.js        Monthly balance editor
+  js/settings.js       Settings page
+  js/state.js          Shared application state and collapsed groups
+  js/api.js            JSON API client and request headers
+  js/format.js         Exact amount parsing, display and month utilities
+  js/ui.js             Shared UI controls, notifications and appearance
+  js/messages.js       English message lookup
+  js/i18n/en.js        English message catalog
+  js/dialogs.js        Confirmation dialogs
+  js/numbers.js        Exact rate parsing and balance differences
+  css/app.css          Responsive layouts, components and themes
+  sw.js                Network-first static asset caching
+  embed.go             Assets embedded into the Go binary
+tests/                JavaScript unit tests and Playwright browser scenarios
+scripts/               Source checks, formatting and screenshot capture
+.github/workflows/     CI, browser tests, builds, releases and screenshots
 ```
-cmd/capital-tracker/   Startup, CLI flags, signals and browser opening
-internal/demo/          Embedded JSON fixture and safe demo-mode initialization
-internal/finance/     Exact conversions, validation and rounding
-internal/storage/     SQLite schema, migrations and data operations
-internal/httpapi/     Secure local REST endpoints, static file routing
-web/                  Embedded HTML, CSS, JS, dictionaries, SVG and PWA assets
-docs/screenshots/     Real full-page screenshots captured in Chromium
-scripts/              Local source checks and optional screenshot capture
-.github/workflows/    CI, manual builds and controlled releases
-```
+
+The interface always uses English, including dates, numbers and confirmations. Older databases and JSON snapshots with a Russian language preference remain compatible; that legacy field does not change the interface language. Account and group names entered by users are preserved.
 
 Migration scripts are embedded under `internal/storage/migrations/`. Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1 and 2 are defined; migration 2 adds account groups and account membership. `PROGRESS.md` documents verification status.
 

@@ -59,5 +59,7 @@ func TestPercentCannotOverflowForLargeNetWorthChanges(t *testing.T) {
 		t.Fatalf("unexpected large percent: %q", got)
 	}
 	small, ok := ChangePercentBasisPointsString(-1, 0)
-	if ok || small != "" { t.Fatal("zero previous month must not have percent") }
+	if ok || small != "" {
+		t.Fatal("zero previous month must not have percent")
+	}
 }

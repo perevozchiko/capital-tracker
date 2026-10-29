@@ -1,0 +1,29 @@
+const state = {
+  page: 'dashboard',
+  month: new Date().toLocaleDateString('sv-SE').slice(0, 7),
+  accounts: [],
+  months: [],
+  history: [],
+  settings: { language: 'en', theme: 'dark', version: '' },
+  buildCommit: 'unknown',
+  currencies: [],
+  columnCount: 12,
+  monthData: null,
+  dashboard: null,
+  dirty: false,
+  selectedAccount: null,
+};
+const collapsedGroups = new Set(
+  (() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem('capital-collapsed-groups') || '[]',
+      );
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  })(),
+);
+
+export { state, collapsedGroups };

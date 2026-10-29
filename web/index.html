@@ -1,66 +1,148 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0e1421">
-  <meta name="description" content="Capital Tracker — monthly net worth tracking without cloud services">
-  <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/css/app.css">
-  <title>Capital Tracker</title>
-  <script src="/js/boot.js"></script>
-  <script type="module" src="/js/app.js"></script>
-</head>
-<body>
-  <div class="shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand"><img src="/icons/favicon.svg" width="38" height="38" alt=""><div><strong>Capital Tracker</strong><small data-i18n="localOnly">Local-only · no cloud</small></div></div>
-      <nav aria-label="Main navigation" id="navigation"></nav>
-      <div class="sidebar-bottom" data-i18n="subtitle">A clear view of your capital</div>
-    </aside>
-    <div class="app-main">
-      <header class="topbar"><div class="topbar-heading"><button type="button" id="mobileMenu" class="mobile-menu" aria-label="Menu">☰</button><div><span class="eyebrow" id="sectionEyebrow"></span><h1 id="pageHeading">Dashboard</h1></div></div><div id="headerActions"></div></header>
-      <main id="pageContent" tabindex="-1"><div class="empty-loading">Loading…</div></main>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0e1421" />
+    <meta
+      name="description"
+      content="Capital Tracker — monthly net worth tracking without cloud services"
+    />
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <title>Capital Tracker</title>
+    <script src="/js/boot.js"></script>
+    <script type="module" src="/js/app.js"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <img src="/icons/favicon.svg" width="38" height="38" alt="" />
+          <div>
+            <strong>Capital Tracker</strong
+            ><small data-i18n="localOnly">Local-only · no cloud</small>
+          </div>
+        </div>
+        <nav aria-label="Main navigation" id="navigation"></nav>
+        <div class="sidebar-bottom" data-i18n="subtitle">
+          A clear view of your capital
+        </div>
+      </aside>
+      <div class="app-main">
+        <header class="topbar">
+          <div class="topbar-heading">
+            <button
+              type="button"
+              id="mobileMenu"
+              class="mobile-menu"
+              aria-label="Menu"
+            >
+              ☰
+            </button>
+            <div>
+              <span class="eyebrow" id="sectionEyebrow"></span>
+              <h1 id="pageHeading">Dashboard</h1>
+            </div>
+          </div>
+          <div id="headerActions"></div>
+        </header>
+        <main id="pageContent" tabindex="-1">
+          <div class="empty-loading">Loading…</div>
+        </main>
+      </div>
     </div>
-  </div>
-  <dialog id="accountDialog" class="app-dialog account-dialog" aria-labelledby="editTitle" aria-describedby="editHelp">
-    <form id="editAccountForm">
-      <div class="dialog-heading"><div class="dialog-emblem edit-emblem" aria-hidden="true">✎</div><h2 id="editTitle"></h2></div>
-      <p id="editHelp" class="caption"></p>
-      <div id="editFields" class="dialog-fields"></div>
-      <div class="dialog-actions">
-        <button type="button" id="cancelEdit" class="btn"></button>
-        <button type="submit" id="confirmEdit" class="btn btn-primary"></button>
-      </div>
-    </form>
-  </dialog>
-  <dialog id="confirmDialog" class="app-dialog confirmation-dialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
-    <form method="dialog">
-      <div class="dialog-emblem confirm-emblem" aria-hidden="true">!</div>
-      <h2 id="confirmTitle"></h2>
-      <p id="confirmMessage" class="dialog-description"></p>
-      <div class="dialog-actions">
-        <button type="submit" value="cancel" id="confirmCancel" class="btn" autofocus></button>
-        <button type="submit" value="confirm" id="confirmAccept" class="btn btn-primary"></button>
-      </div>
-    </form>
-  </dialog>
-  <dialog id="clearDataDialog" class="app-dialog confirmation-dialog clear-data-dialog" aria-labelledby="clearDataTitle" aria-describedby="clearDataDescription">
-    <form id="clearDataForm">
-      <div class="dialog-emblem confirm-emblem" aria-hidden="true">!</div>
-      <h2 id="clearDataTitle"></h2>
-      <p id="clearDataDescription" class="dialog-description"></p>
-      <label id="clearDataPrompt" for="clearDataPhrase" class="clear-data-label"></label>
-      <input id="clearDataPhrase" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="30" required>
-      <div class="dialog-actions">
-        <button type="button" id="clearDataCancel" class="btn"></button>
-        <button type="submit" id="clearDataAccept" class="btn btn-danger-solid" disabled></button>
-      </div>
-    </form>
-  </dialog>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div id="chartTooltip" class="chart-tooltip" hidden></div>
-</body>
+    <dialog
+      id="accountDialog"
+      class="app-dialog account-dialog"
+      aria-labelledby="editTitle"
+      aria-describedby="editHelp"
+    >
+      <form id="editAccountForm">
+        <div class="dialog-heading">
+          <div class="dialog-emblem edit-emblem" aria-hidden="true">✎</div>
+          <h2 id="editTitle"></h2>
+        </div>
+        <p id="editHelp" class="caption"></p>
+        <div id="editFields" class="dialog-fields"></div>
+        <div class="dialog-actions">
+          <button type="button" id="cancelEdit" class="btn"></button>
+          <button
+            type="submit"
+            id="confirmEdit"
+            class="btn btn-primary"
+          ></button>
+        </div>
+      </form>
+    </dialog>
+    <dialog
+      id="confirmDialog"
+      class="app-dialog confirmation-dialog"
+      aria-labelledby="confirmTitle"
+      aria-describedby="confirmMessage"
+    >
+      <form method="dialog">
+        <div class="dialog-emblem confirm-emblem" aria-hidden="true">!</div>
+        <h2 id="confirmTitle"></h2>
+        <p id="confirmMessage" class="dialog-description"></p>
+        <div class="dialog-actions">
+          <button
+            type="submit"
+            value="cancel"
+            id="confirmCancel"
+            class="btn"
+            autofocus
+          ></button>
+          <button
+            type="submit"
+            value="confirm"
+            id="confirmAccept"
+            class="btn btn-primary"
+          ></button>
+        </div>
+      </form>
+    </dialog>
+    <dialog
+      id="clearDataDialog"
+      class="app-dialog confirmation-dialog clear-data-dialog"
+      aria-labelledby="clearDataTitle"
+      aria-describedby="clearDataDescription"
+    >
+      <form id="clearDataForm">
+        <div class="dialog-emblem confirm-emblem" aria-hidden="true">!</div>
+        <h2 id="clearDataTitle"></h2>
+        <p id="clearDataDescription" class="dialog-description"></p>
+        <label
+          id="clearDataPrompt"
+          for="clearDataPhrase"
+          class="clear-data-label"
+        ></label>
+        <input
+          id="clearDataPhrase"
+          type="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="30"
+          required
+        />
+        <div class="dialog-actions">
+          <button type="button" id="clearDataCancel" class="btn"></button>
+          <button
+            type="submit"
+            id="clearDataAccept"
+            class="btn btn-danger-solid"
+            disabled
+          ></button>
+        </div>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="chartTooltip" class="chart-tooltip" hidden></div>
+  </body>
 </html>
