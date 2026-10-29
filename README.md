@@ -39,7 +39,7 @@ Capital Tracker is independently developed open-source software. It is not affil
   <img src="docs/screenshots/dashboard.png" alt="Capital Tracker dashboard: monthly net worth, history chart and balance table" width="940">
 </a>
 
-<sub>**Tap or click the screenshot** to view it at full resolution. Use your browser's image zoom to inspect the details.</sub>
+<sub><strong>Tap or click the screenshot</strong> to view it at full resolution. Use your browser's image zoom to inspect the details.</sub>
 
 </div>
 
