@@ -25,5 +25,9 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
+      - name: Diagnose test formatting
+        run: |
+          npx prettier tests/ui/app.spec.cjs --write
+          git diff -- tests/ui/app.spec.cjs
       - run: npm run check
       - run: python -m unittest discover -s tests -p '*release*test.py'
