@@ -15,9 +15,6 @@
 <a href="https://github.com/perevozchiko/capital-tracker/actions/workflows/ci.yml">
   <img src="https://github.com/perevozchiko/capital-tracker/actions/workflows/ci.yml/badge.svg" alt="CI status">
 </a>
-<a href="https://github.com/perevozchiko/capital-tracker/actions/workflows/ui-tests.yml">
-  <img src="https://github.com/perevozchiko/capital-tracker/actions/workflows/ui-tests.yml/badge.svg" alt="Browser UI tests status">
-</a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue" alt="MIT OR Apache-2.0 license"></a>
 <a href="https://github.com/perevozchiko/capital-tracker/releases"><img src="https://img.shields.io/github/v/release/perevozchiko/capital-tracker?include_prereleases&label=release" alt="Latest release, when available"></a>
 
