@@ -25,7 +25,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET` | `/api/capital/history` | Chronological complete/incomplete points |
 | `GET`, `PATCH` | `/api/settings` | Read / update appearance (legacy language field retained) |
 | `GET` | `/api/meta` | App identity, version, and build commit |
-| `GET` | `/api/exchange-rates?month=YYYY-MM` | Fetch EUR rates for a past month-end or the latest available date for the current month; does not save them |
+| `GET` | `/api/exchange-rates?month=YYYY-MM` | Fetch the latest available EUR rates on demand; optional month identifies the editor and does not select a historical date; does not save them |
 | `GET` | `/api/currencies` | Supported ISO 4217 currency codes from Go |
 | `GET` | `/api/data/export` | Download complete application JSON snapshot |
 | `POST` | `/api/data/import` | Atomically replace data with valid exported JSON (requires `X-Capital-Tracker-Import: replace` and the regular CSRF header) |

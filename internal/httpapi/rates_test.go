@@ -25,10 +25,10 @@ func TestFetchRatesFallbackAndRounding(t *testing.T) {
 	}
 }
 
-func TestExchangeRatesRejectsInvalidAndFutureMonths(t *testing.T) {
+func TestExchangeRatesRejectsInvalidMonths(t *testing.T) {
 	mux := http.NewServeMux()
 	registerRates(mux)
-	for _, month := range []string{"bad", "2200-12"} {
+	for _, month := range []string{"bad", "2026-13"} {
 		req := httptest.NewRequest("GET", "/api/exchange-rates?month="+month, nil)
 		res := httptest.NewRecorder()
 		mux.ServeHTTP(res, req)

@@ -816,3 +816,71 @@ test('account and group edits persist, cancellation preserves data and group del
   await nav(page, 'Dashboard');
   await expect(page.locator('.metric').first()).toContainText('€123.45');
 });
+
+test('exchange rates load only on demand and are persisted only by saving the month', async ({
+  page,
+  app,
+}) => {
+  let rateRequests = 0;
+  await page.route('**/api/exchange-rates*', (route) => {
+    rateRequests++;
+    return route.fulfill({
+      json: { date: '2026-10-29', rates: { USD: '1.1', RSD: '117.2' } },
+    });
+  });
+  await open(page, app);
+  await nav(page, 'Accounts');
+  await createAccount(page, 'Dollars', 'USD');
+  await nav(page, 'Monthly balances');
+  await setMonth(page, '2025-01');
+  await page.locator('[data-balance="1"]').fill('110');
+  await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('Incomplete');
+  expect(rateRequests).toBe(0);
+  await page.locator('[data-action="loadRates"]').click();
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.1');
+  await expect(page.locator('#rateLoadStatus')).toContainText('2026-10-29');
+  expect(rateRequests).toBe(1);
+  // Loading must not change the stored observation until Save month is pressed.
+  const stored = await page.request.get(app + '/api/months/2025-01');
+  expect((await stored.json()).rates).toEqual([]);
+  await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('Complete');
+  await page.reload();
+  await nav(page, 'Monthly balances');
+  await setMonth(page, '2025-01');
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.1');
+  expect(rateRequests).toBe(1);
+});
+
+test('a pending rate quote cannot change another month after navigation', async ({
+  page,
+  app,
+}) => {
+  await open(page, app);
+  await nav(page, 'Accounts');
+  await createAccount(page, 'Dollars', 'USD');
+  await nav(page, 'Monthly balances');
+  await setMonth(page, '2025-01');
+  let release;
+  const pending = new Promise((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/api/exchange-rates*', async (route) => {
+    await pending;
+    await route.fulfill({
+      json: { date: '2026-10-29', rates: { USD: '1.1' } },
+    });
+  });
+  const requested = page.waitForRequest('**/api/exchange-rates*');
+  await page.locator('[data-action="loadRates"]').click();
+  await requested;
+  await setMonth(page, '2025-02');
+  const response = page.waitForResponse('**/api/exchange-rates*');
+  release();
+  await response;
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('');
+  await expect(page.locator('#rateLoadStatus')).toHaveText('');
+  await expect(page.locator('[data-action="loadRates"]')).toBeEnabled();
+  await expect(page.locator('[data-action="saveMonth"]')).toBeEnabled();
+});

@@ -59,32 +59,28 @@ func fetchRates(client *http.Client, urls []string, date string) (map[string]str
 }
 
 func registerRates(mux *http.ServeMux) {
+	registerRatesWithClient(mux, rateClient)
+}
+
+func registerRatesWithClient(mux *http.ServeMux, client *http.Client) {
 	mux.HandleFunc("/api/exchange-rates", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			fail(w, 405, "method_not_allowed", "")
 			return
 		}
 		month := r.URL.Query().Get("month")
-		if !finance.ValidMonth(month) {
+		if month != "" && !finance.ValidMonth(month) {
 			fail(w, 422, "validation_error", "month")
 			return
 		}
-		start, _ := time.Parse("2006-01", month)
-		now := time.Now().UTC()
-		current := now.Format("2006-01")
-		if month > current {
-			fail(w, 422, "validation_error", "month")
-			return
-		}
-		date := start.AddDate(0, 1, -1).Format("2006-01-02")
-		if month == current {
-			date = "latest"
-		}
+		// The month identifies the editor only. Loading is an explicit request for
+		// the latest available quote, including when editing a past/future month.
+		date := "latest"
 		urls := []string{
 			fmt.Sprintf("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@%s/v1/currencies/eur.json", date),
 			fmt.Sprintf("https://%s.currency-api.pages.dev/v1/currencies/eur.json", date),
 		}
-		rates, actualDate, err := fetchRates(rateClient, urls, date)
+		rates, actualDate, err := fetchRates(client, urls, date)
 		if err != nil {
 			fail(w, 502, "rates_unavailable", "")
 			return
