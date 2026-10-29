@@ -24,34 +24,11 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Capture real dark screenshots
         run: python scripts/capture-demo-screenshots.py
-      - name: Insert screenshots into README
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          readme = Path("README.md")
-          s = readme.read_text()
-          start = "<!-- AUTO SCREENSHOTS START -->"
-          end = "<!-- AUTO SCREENSHOTS END -->"
-          assert s.count(start) == 1 and s.count(end) == 1
-          images = [
-              ("Dashboard", "dashboard.png"),
-              ("Monthly balances", "monthly-balances.png"),
-              ("Accounts", "accounts.png"),
-          ]
-          body = start + "\n\n" + "\n\n".join(
-              f"### {label}\n\n![{label} — real dark theme screenshot](docs/screenshots/{name})"
-              for label, name in images
-          ) + "\n\n" + end
-          before, rest = s.split(start, 1)
-          _, after = rest.split(end, 1)
-          readme.write_text(before + body + after)
-          PY
-      - name: Commit actual browser captures
+      - name: Commit updated browser captures
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md docs/screenshots/dashboard.png docs/screenshots/monthly-balances.png docs/screenshots/accounts.png
+          git add docs/screenshots/dashboard.png docs/screenshots/monthly-balances.png docs/screenshots/accounts.png
           if git diff --cached --quiet; then
             echo "Images are already up to date."
             exit 0
