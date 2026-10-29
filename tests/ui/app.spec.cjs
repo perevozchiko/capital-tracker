@@ -134,10 +134,14 @@ test('account groups, menus, reordering, archive and restore', async ({
   // Waiting on the heading avoids a false positive from the 'Savings'
   // option still present in the ungrouped account's move dropdown.
   await expect(
-    accountGroup(page, 'Savings').locator('.account-row').filter({ hasText: 'Cash' }),
+    accountGroup(page, 'Savings')
+      .locator('.account-row')
+      .filter({ hasText: 'Cash' }),
   ).toBeVisible();
   await expect(
-    accountGroup(page, 'Ungrouped').locator('.account-row').filter({ hasText: 'Cash' }),
+    accountGroup(page, 'Ungrouped')
+      .locator('.account-row')
+      .filter({ hasText: 'Cash' }),
   ).toHaveCount(0);
   await action(page, 'Cash', 'currency');
   await page.locator('#editValue').selectOption('USD');
