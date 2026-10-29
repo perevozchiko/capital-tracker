@@ -46,6 +46,19 @@ python3 scripts/capture-demo-screenshots.py
 
 This launches the real Go app with isolated sample data, captures Chromium in Dark mode, and writes `docs/screenshots/dashboard.png`, `monthly-balances.png` and `accounts.png`. You can also run **Actions → Capture demo screenshots → Run workflow** on `master`: the workflow commits changed PNG files only and does not rewrite the hand-maintained README gallery.
 
+## GitHub Actions (one automatic runner)
+
+The repository keeps **four workflows**:
+
+| Workflow | Trigger | Purpose |
+| --- | --- | --- |
+| **CI** | Pushes to `master`, PRs against `master`, or manual | One Ubuntu job runs Go tests/vet, JavaScript checks, formatting, release-planner tests and real Playwright/Chromium UI tests |
+| **Build Capital Tracker** | Manual only | Build development binaries on chosen platforms |
+| **Release** | Manual only | Validate, build, verify, tag and publish a versioned release |
+| **Capture demo screenshots** | Manual only | Capture the real demo UI into `docs/screenshots/` |
+
+The former separate `Browser UI tests` workflow was redundant: it ran much of the same suite as CI and allocated an additional runner on every push. It has been consolidated into **CI**, including failed-browser-test trace artifacts. Older in-flight CI runs on the same branch or pull request are cancelled when replaced by a newer commit; completed history is retained by GitHub according to repository retention settings. Deleting historical runs does not change the number of runners used by future commits.
+
 ## Download builds from GitHub Actions
 
 Run all local source checks before committing (requires Go 1.23+ and Node.js 22+):

@@ -1,20 +1,83 @@
-# Capital Tracker
+<div align="center">
 
-**A simple, local-first net-worth tracker.** Enter the balances of your accounts once a month, rather than recording every purchase. See how your capital changes over time, with monthly exchange rates and exact financial arithmetic.
+<a href="https://github.com/perevozchiko/capital-tracker">
+  <img src="web/icons/icon-192.png" alt="Capital Tracker application icon" width="78">
+</a>
 
-Capital Tracker is an independently developed open-source application. It is not affiliated with YNAB or any other commercial budgeting product. All financial data stays in a local SQLite database; no sign-up or cloud account is required.
+<h1>Capital Tracker</h1>
+
+<p><strong>Know what you own. Track how it grows.</strong></p>
+
+<p>A lightweight, local-first net-worth tracker.<br>Update your account balances once a month — without recording every purchase.</p>
+
+<p><a href="#screenshots">Explore screenshots</a> · <a href="#quick-start">Quick start</a> · <a href="#downloads">Downloads</a> · <a href="#documentation">Documentation</a></p>
+
+<a href="https://github.com/perevozchiko/capital-tracker/actions/workflows/ci.yml">
+  <img src="https://github.com/perevozchiko/capital-tracker/actions/workflows/ci.yml/badge.svg" alt="CI status">
+</a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue" alt="MIT OR Apache-2.0 license"></a>
+<a href="https://github.com/perevozchiko/capital-tracker/releases"><img src="https://img.shields.io/github/v/release/perevozchiko/capital-tracker?include_prereleases&label=release" alt="Latest release, when available"></a>
+
+<p><strong>Go + SQLite</strong> · <strong>No cloud or account required</strong> · <strong>Local data</strong> · <strong>macOS / Linux / Windows</strong></p>
+
+</div>
+
+Capital Tracker is independently developed open-source software. It is not affiliated with any commercial budgeting app. Your financial data stays in a SQLite database on your computer.
 
 ## Screenshots
 
-Real screenshots from Chromium, running the isolated fictional demo dataset in **Dark** mode (not mockups or personal financial records).
+<div align="center">
 
-![Capital Tracker — Dashboard](docs/screenshots/dashboard.png)
+<p><strong>Real browser screenshots, not mockups.</strong> Captured in Chromium with fictional demo data and the app's Dark theme.</p>
 
-| Monthly balances | Accounts and groups |
-| --- | --- |
-| ![Monthly balances — dark theme](docs/screenshots/monthly-balances.png) | ![Accounts and groups — dark theme](docs/screenshots/accounts.png) |
+<h3>Dashboard</h3>
 
-[See the screenshot sources and how to regenerate them](docs/screenshots/README.md).
+<a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png">
+  <img src="docs/screenshots/dashboard.png" alt="Capital Tracker dashboard: monthly net worth, history chart and balance table" width="940">
+</a>
+
+<sub><strong>Tap or click the screenshot</strong> to view it at full resolution. Use your browser's image zoom to inspect the details.</sub>
+
+</div>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Monthly balances</strong>
+    </td>
+    <td align="center" width="50%">
+      <strong>Accounts & groups</strong>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/monthly-balances.png">
+        <img src="docs/screenshots/monthly-balances.png" alt="Monthly balance editor with grouped account balances and exchange rates" width="455">
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/accounts.png">
+        <img src="docs/screenshots/accounts.png" alt="Account management showing groups and individual accounts" width="455">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <sub>Record balances for one or several accounts at a time.</sub>
+    </td>
+    <td align="center">
+      <sub>Organize accounts into collapsible groups.</sub>
+    </td>
+  </tr>
+</table>
+
+<div align="center">
+
+<p><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png">Dashboard full size</a> · <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/monthly-balances.png">Monthly balances full size</a> · <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/accounts.png">Accounts full size</a></p>
+
+<p><a href="docs/screenshots/README.md">About these screenshots and how to regenerate them</a></p>
+
+</div>
 
 ## What it does
 
@@ -26,7 +89,7 @@ Real screenshots from Chromium, running the isolated fictional demo dataset in *
 - **Offline-friendly UI:** desktop browser interface, responsive PWA assets, Dark/Light/System themes and English interface.
 - **Your data:** portable JSON exports, full SQLite backups, intentional deletion with confirmation, and a safe fictional demo mode.
 
-## Try it
+## Quick start
 
 Install [Go](https://go.dev/dl/) 1.23 or newer, then clone this repository and run:
 
@@ -52,6 +115,20 @@ go build -o CapitalTracker ./cmd/capital-tracker
 On Windows, use `-o CapitalTracker.exe` and run `CapitalTracker.exe`.
 
 The executable bundles the web interface and uses only a local HTTP server. It has no production Node.js dependency. The server binds loopback only; the browser UI is **not** accessible from your phone over the LAN.
+
+<details>
+<summary><strong>What is included in the demo?</strong></summary>
+
+The isolated sample contains 12 complete monthly snapshots (October 2025–September 2026), with fictional account balances, EUR/USD rates, savings, investments and a loan. Demo mode never opens or edits your regular database. See the [User Guide](docs/USER_GUIDE.md) for details.
+
+</details>
+
+<details>
+<summary><strong>How private is the app?</strong></summary>
+
+The app binds only to the local loopback interface, does not require an online account, and stores financial data in local SQLite. Optional exchange-rate lookups require an explicit user action and do not send your account balances to the provider. The SQLite database and exported JSON are not encrypted by the application; use full-disk encryption and backups for protection. See [Security](SECURITY.md).
+
+</details>
 
 ## Downloads
 
