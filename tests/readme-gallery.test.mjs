@@ -11,8 +11,9 @@ const gallery = readFileSync(
 const prefix =
   'https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/';
 
-test('README screenshots are linked to full-resolution originals', () => {
-  for (const name of ['dashboard.png', 'monthly-balances.png', 'accounts.png']) {
+test('README screenshots link to full-size originals', () => {
+  const images = ['dashboard.png', 'monthly-balances.png', 'accounts.png'];
+  for (const name of images) {
     const file = `docs/screenshots/${name}`;
     assert.ok(existsSync(new URL(file, root)), `Missing screenshot: ${file}`);
     assert.ok(readme.includes(`src="${file}"`), `Missing image: ${file}`);
@@ -25,8 +26,9 @@ test('README screenshots are linked to full-resolution originals', () => {
   }
 });
 
-test('README offers working GitHub navigation and collapsible explanations', () => {
-  for (const id of ['screenshots', 'quick-start', 'downloads', 'documentation']) {
+test('README offers navigation and collapsible explanations', () => {
+  const sections = ['screenshots', 'quick-start', 'downloads', 'documentation'];
+  for (const id of sections) {
     assert.ok(readme.includes(`href="#${id}"`), `Missing navigation: ${id}`);
   }
   assert.ok((readme.match(/<details>/g) || []).length >= 2);
