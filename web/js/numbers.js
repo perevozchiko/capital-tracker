@@ -15,7 +15,8 @@ export function parseRateDecimal(raw) {
   }
   const result = value.replace(',', '.');
   const [whole, fraction = ''] = result.split('.');
-  const fixed = BigInt(whole) * 100000000n + BigInt(fraction.padEnd(8, '0') || '0');
+  const fixed =
+    BigInt(whole) * 100000000n + BigInt(fraction.padEnd(8, '0') || '0');
   if (fixed <= 0n || fixed > 10000000000000000n) {
     throw new Error('rate outside supported range');
   }

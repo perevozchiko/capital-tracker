@@ -17,7 +17,7 @@ func TestClearDataRemovesEverythingAndResetsPreferences(t *testing.T) {
 	}
 	if err = s.PutMonth("2026-01", MonthInput{
 		Balances: []BalanceInput{{eur.ID, "12345"}, {usd.ID, "45678"}},
-		Rates: []RateInput{{"USD", "1.12345678"}},
+		Rates:    []RateInput{{"USD", "1.12345678"}},
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,9 @@ func TestClearDataFailureRollsBackAllTables(t *testing.T) {
 func TestFreshInstallDefaultsToDark(t *testing.T) {
 	s := openTest(t)
 	settings, err := s.Settings("test")
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if settings.Language != "en" || settings.Theme != "dark" {
 		t.Fatalf("unexpected default settings: %+v", settings)
 	}

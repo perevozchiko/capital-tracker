@@ -5,7 +5,7 @@
 - [x] Accounts, history-preserving archive/restore and atomic ordering API
 - [x] Monthly snapshots with transactional full replacement and completeness status
 - [x] Exact multi-currency arithmetic, EUR net worth and month-on-month change
-- [x] English and Russian dictionaries, preferences and Light/Dark/System theme
+- [x] English interface and message catalog, with Light/Dark/System appearance
 - [x] Accounts, monthly entry, dashboard, six-month table and history SVG chart
 - [x] PWA manifest, icons and network-first static-assets service worker
 - [x] Manual GitHub Actions workflow with a platform selector (macOS Apple Silicon, Linux AMD64, Windows AMD64, or all)
@@ -16,7 +16,7 @@
 - [ ] Cross-platform browser launch and UI smoke test (macOS browsers not available locally)
 - [x] macOS arm64 + amd64 CI compile (prior to removal of Intel), unit tests and vet passed on commit `126e18c`
 - [ ] Verify manual build artifacts for macOS Apple Silicon, Linux AMD64 and Windows AMD64 in a new workflow_dispatch run (including Linux restart and backup smoke test)
-- [ ] Run scripts/check.sh locally; review gofmt output and dependency consistency
+- [x] Run npm run check locally; verify Go formatting, dependencies, tests and frontend formatting
 - [ ] Verify native Windows LockFileEx on a Windows runner
 
 - [x] Serialized multi-step financial writes and added regression tests for incomplete historical months

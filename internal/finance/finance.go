@@ -26,6 +26,7 @@ var currencySet = func() map[string]bool {
 }()
 
 func Currencies() []string { return append([]string(nil), supportedCurrencies...) }
+
 var ratePattern = regexp.MustCompile(`^[0-9]+(?:\.[0-9]{1,8})?$`)
 var monthPattern = regexp.MustCompile(`^(\d{4})-(0[1-9]|1[0-2])$`)
 

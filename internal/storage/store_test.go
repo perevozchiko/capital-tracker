@@ -199,8 +199,12 @@ func TestAccountCurrencyCanChangeOnlyBeforeHistory(t *testing.T) {
 func TestEmptyBalanceDoesNotAllowHistoryRewriting(t *testing.T) {
 	s := openTest(t)
 	a, err := s.CreateAccount("Unfilled", "USD", "2026-03")
-	if err != nil { t.Fatal(err) }
-	if err = s.CreateMonth("2026-03"); err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.CreateMonth("2026-03"); err != nil {
+		t.Fatal(err)
+	}
 	if err = s.DeleteAccount(a.ID); !errors.Is(err, ErrConflict) {
 		t.Fatalf("history-affecting delete was allowed: %v", err)
 	}

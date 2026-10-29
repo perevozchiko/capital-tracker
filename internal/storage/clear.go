@@ -37,4 +37,3 @@ func (s *Store) ClearData() error {
 	}
 	return tx.Commit()
 }
-

@@ -93,11 +93,11 @@ jobs:
           RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           test "$(python scripts/release_version.py show)" = "$RELEASE_VERSION"
-          bash scripts/check.sh
+          npm ci
+          npm run check
           python -m unittest discover -s tests -p '*release*test.py'
       - name: Test browser UI
         run: |
-          npm ci
           npx playwright install --with-deps chromium
           npm run test:ui
 
