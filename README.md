@@ -4,13 +4,13 @@
   <img src="web/icons/icon-192.png" alt="Capital Tracker application icon" width="78">
 </a>
 
-# Capital Tracker
+<h1>Capital Tracker</h1>
 
-**Know what you own. Track how it grows.**
+<p><strong>Know what you own. Track how it grows.</strong></p>
 
-A lightweight, local-first net-worth tracker. Update your account balances once a month — without recording every purchase.
+<p>A lightweight, local-first net-worth tracker.<br>Update your account balances once a month — without recording every purchase.</p>
 
-[Explore screenshots](#screenshots) · [Quick start](#quick-start) · [Downloads](#downloads) · [Documentation](#documentation)
+<p><a href="#screenshots">Explore screenshots</a> · <a href="#quick-start">Quick start</a> · <a href="#downloads">Downloads</a> · <a href="#documentation">Documentation</a></p>
 
 <a href="https://github.com/perevozchiko/capital-tracker/actions/workflows/ci.yml">
   <img src="https://github.com/perevozchiko/capital-tracker/actions/workflows/ci.yml/badge.svg" alt="CI status">
@@ -21,7 +21,7 @@ A lightweight, local-first net-worth tracker. Update your account balances once 
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue" alt="MIT OR Apache-2.0 license"></a>
 <a href="https://github.com/perevozchiko/capital-tracker/releases"><img src="https://img.shields.io/github/v/release/perevozchiko/capital-tracker?include_prereleases&label=release" alt="Latest release, when available"></a>
 
-**Go + SQLite** · **No cloud or account required** · **Local data** · **macOS / Linux / Windows**
+<p><strong>Go + SQLite</strong> · <strong>No cloud or account required</strong> · <strong>Local data</strong> · <strong>macOS / Linux / Windows</strong></p>
 
 </div>
 
@@ -31,9 +31,9 @@ Capital Tracker is independently developed open-source software. It is not affil
 
 <div align="center">
 
-**Real browser screenshots, not mockups.** Captured in Chromium with fictional demo data and the app's Dark theme.
+<p><strong>Real browser screenshots, not mockups.</strong> Captured in Chromium with fictional demo data and the app's Dark theme.</p>
 
-### Dashboard
+<h3>Dashboard</h3>
 
 <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png">
   <img src="docs/screenshots/dashboard.png" alt="Capital Tracker dashboard: monthly net worth, history chart and balance table" width="940">
@@ -76,9 +76,9 @@ Capital Tracker is independently developed open-source software. It is not affil
 
 <div align="center">
 
-[Open Dashboard full size](https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png) · [Monthly balances full size](https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/monthly-balances.png) · [Accounts full size](https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/accounts.png)
+<p><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png">Dashboard full size</a> · <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/monthly-balances.png">Monthly balances full size</a> · <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/accounts.png">Accounts full size</a></p>
 
-[About these screenshots and how to regenerate them](docs/screenshots/README.md)
+<p><a href="docs/screenshots/README.md">About these screenshots and how to regenerate them</a></p>
 
 </div>
 
