@@ -745,3 +745,74 @@ test('monthly change handles zero, debt, unchanged totals and missing months', a
   await setMonth(page, '2025-05');
   await expect(change.locator('.metric-value')).toHaveText('+€50.00 (+50.00%)');
 });
+
+test('account and group edits persist, cancellation preserves data and group deletion preserves balances', async ({
+  page,
+  app,
+}) => {
+  await open(page, app);
+  await nav(page, 'Accounts');
+  await page.locator('[data-action="groupCreate"]').click();
+  await page.locator('#editValue').fill('Cancelled group');
+  await page.locator('#cancelEdit').click();
+  await expect(accountGroup(page, 'Cancelled group')).toHaveCount(0);
+  for (const name of ['Savings', 'Other']) {
+    await page.locator('[data-action="groupCreate"]').click();
+    await editDialog(page, name);
+  }
+  // A duplicate name is rejected while preserving the existing groups.
+  await page.locator('[data-action="groupCreate"]').click();
+  await page.locator('#editValue').fill('savings');
+  await page.locator('#confirmEdit').click();
+  await expect(page.locator('#toast')).toContainText('already exists');
+  await expect(page.locator('#accountDialog')).toBeVisible();
+  await page.locator('#cancelEdit').click();
+  await expect(page.locator('[data-action="groupRename"]')).toHaveCount(2);
+  await page.locator('#accountGroup').selectOption({ label: 'Savings' });
+  await createAccount(page, 'Bank');
+  await expect(
+    accountGroup(page, 'Savings').locator('.account-row'),
+  ).toContainText('Bank');
+  await action(page, 'Bank', 'rename');
+  await page.locator('#editValue').fill('Cancelled rename');
+  await page.locator('#cancelEdit').click();
+  await expect(page.locator('.account-row')).toContainText('Bank');
+  await action(page, 'Bank', 'rename');
+  await editDialog(page, 'Renamed bank');
+  await nav(page, 'Monthly balances');
+  await setMonth(page, '2025-01');
+  await page.locator('[data-balance="1"]').fill('123.45');
+  await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('Complete');
+  await nav(page, 'Accounts');
+  const savings = accountGroup(page, 'Savings');
+  await savings.locator('.group-controls summary').click();
+  await savings.locator('[data-action="groupRename"]').click();
+  await page.locator('#editValue').fill('Other');
+  await page.locator('#confirmEdit').click();
+  await expect(page.locator('#toast')).toContainText('already exists');
+  await page.locator('#editValue').fill('Emergency');
+  await page.locator('#confirmEdit').click();
+  await expect(page.locator('#accountDialog')).not.toBeVisible();
+  await page.reload();
+  await nav(page, 'Accounts');
+  const emergency = accountGroup(page, 'Emergency');
+  await expect(emergency.locator('.account-row')).toContainText('Renamed bank');
+  await emergency.locator('.group-controls summary').click();
+  await emergency.locator('[data-action="groupDelete"]').click();
+  await page.locator('#confirmCancel').click();
+  await expect(emergency).toBeVisible();
+  await emergency.locator('.group-controls summary').click();
+  await emergency.locator('[data-action="groupDelete"]').click();
+  await page.locator('#confirmAccept').click();
+  await expect(emergency).toHaveCount(0);
+  await expect(
+    accountGroup(page, 'Ungrouped').locator('.account-row'),
+  ).toContainText('Renamed bank');
+  await page.reload();
+  await nav(page, 'Monthly balances');
+  await setMonth(page, '2025-01');
+  await expect(page.locator('[data-balance="1"]')).toHaveValue('123.45');
+  await nav(page, 'Dashboard');
+  await expect(page.locator('.metric').first()).toContainText('€123.45');
+});
