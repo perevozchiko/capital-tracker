@@ -1,0 +1,202 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: Version increment
+        type: choice
+        required: true
+        default: patch
+        options: [current, patch, minor, major]
+      stage:
+        description: Release stage
+        type: choice
+        required: true
+        default: alpha
+        options: [alpha, beta, rc, stable]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: capital-tracker-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare version and pin source
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      sha: ${{ steps.version.outputs.sha }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test release version planner before modifications
+        run: python -m unittest discover -s tests -p '*release*test.py'
+      - name: Prepare and commit the next version
+        id: version
+        shell: bash
+        env:
+          RELEASE_INCREMENT: ${{ inputs.increment }}
+          RELEASE_STAGE: ${{ inputs.stage }}
+          RELEASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/$RELEASE_BRANCH"
+          git fetch --tags origin
+          version="$(python scripts/release_version.py plan --mode "$RELEASE_INCREMENT" --stage "$RELEASE_STAGE")"
+          python scripts/release_version.py apply "$version"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add internal/buildinfo/buildinfo.go
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): prepare $version"
+            git push origin "HEAD:refs/heads/$RELEASE_BRANCH"
+          fi
+          test "$(python scripts/release_version.py show)" = "$version"
+          sha="$(git rev-parse HEAD)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          if [[ "$RELEASE_STAGE" == stable ]]; then echo 'prerelease=false' >> "$GITHUB_OUTPUT"; else echo 'prerelease=true' >> "$GITHUB_OUTPUT"; fi
+
+  validate:
+    name: Validate exact release source
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.3'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check source version, Go, JS and release tests
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          test "$(python scripts/release_version.py show)" = "$RELEASE_VERSION"
+          bash scripts/check.sh
+          python -m unittest discover -s tests -p '*release*test.py'
+      - name: Test browser UI
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run test:ui
+
+  build:
+    name: ${{ matrix.name }}
+    needs: [prepare, validate]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: macOS Apple Silicon, runner: macos-15, os: darwin, arch: arm64, target: macos-arm64}
+          - {name: macOS Intel, runner: macos-15-intel, os: darwin, arch: amd64, target: macos-amd64}
+          - {name: Linux x64, runner: ubuntu-latest, os: linux, arch: amd64, target: linux-amd64}
+          - {name: Windows x64, runner: windows-latest, os: windows, arch: amd64, target: windows-amd64}
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.3'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build verified archive and smoke-test version
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.sha }}
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          python scripts/package_release.py --os "$GOOS" --arch "$GOARCH" --version "$RELEASE_VERSION" --sha "$RELEASE_SHA"
+          extension=""
+          if [[ "$GOOS" == windows ]]; then extension=".exe"; fi
+          go build -trimpath -ldflags="-X github.com/perevozchiko/capital-tracker/internal/buildinfo.Commit=$RELEASE_SHA" -o "version-smoke$extension" ./cmd/capital-tracker
+          "./version-smoke$extension" --version | grep -F "$RELEASE_VERSION"
+          "./version-smoke$extension" --version | grep -F "${RELEASE_SHA:0:8}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Verify, tag and publish
+    needs: [prepare, validate, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Verify all archives and release head
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.sha }}
+          RELEASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          python scripts/verify_release_artifacts.py --version "$RELEASE_VERSION" --sha "$RELEASE_SHA"
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          test "$(python scripts/release_version.py show)" = "$RELEASE_VERSION"
+          git fetch origin "$RELEASE_BRANCH" --tags
+          test "$(git rev-parse "origin/$RELEASE_BRANCH")" = "$RELEASE_SHA" || { echo 'Release branch moved; refusing publication'; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_VERSION" >/dev/null; then
+            echo 'Refusing to replace an existing tag'
+            exit 1
+          fi
+      - name: Create tag and publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.sha }}
+          RELEASE_PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$RELEASE_VERSION" "$RELEASE_SHA" -m "Capital Tracker $RELEASE_VERSION"
+          git push origin "refs/tags/$RELEASE_VERSION"
+          flags=(--verify-tag --generate-notes --title "Capital Tracker $RELEASE_VERSION")
+          if [[ "$RELEASE_PRERELEASE" == true ]]; then flags+=(--prerelease); fi
+          gh release create "$RELEASE_VERSION" dist/* "${flags[@]}"
