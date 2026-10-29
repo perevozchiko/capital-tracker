@@ -133,12 +133,10 @@ test('account groups, menus, reordering, archive and restore', async ({
   await row.locator('[data-move-account]').selectOption({ label: 'Savings' });
   // Waiting on the heading avoids a false positive from the 'Savings'
   // option still present in the ungrouped account's move dropdown.
-  await expect(
-    accountGroup(page, 'Savings').locator('.account-row').filter({ hasText: 'Cash' }),
-  ).toBeVisible();
-  await expect(
-    accountGroup(page, 'Ungrouped').locator('.account-row').filter({ hasText: 'Cash' }),
-  ).toHaveCount(0);
+  const savingsRows = accountGroup(page, 'Savings').locator('.account-row');
+  await expect(savingsRows).toContainText('Cash');
+  const ungroupedRows = page.locator('[data-group-id=""] .account-row');
+  await expect(ungroupedRows).toHaveCount(0);
   await action(page, 'Cash', 'currency');
   await page.locator('#editValue').selectOption('USD');
   await page.locator('#confirmEdit').click();
@@ -266,7 +264,9 @@ test('group controls reorder, collapse, rename and delete without deleting accou
   await row.locator('summary').click();
   await row.locator('[data-move-account]').selectOption({ label: 'First' });
   const first = accountGroup(page, 'First');
-  await expect(first.locator('.account-row').filter({ hasText: 'Wallet' })).toBeVisible();
+  await expect(
+    first.locator('.account-row').filter({ hasText: 'Wallet' }),
+  ).toBeVisible();
   await first.locator('[data-action="toggleGroup"]').click();
   await expect(first.locator('.account-row')).not.toBeVisible();
   await first.locator('[data-action="toggleGroup"]').click();
