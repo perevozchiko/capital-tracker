@@ -669,3 +669,79 @@ test('legacy language preferences still render an English interface', async ({
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
+
+test('monthly change compares each selected month with its immediate predecessor', async ({
+  page,
+  app,
+}) => {
+  await open(page, app);
+  await nav(page, 'Accounts');
+  await createAccount(page, 'Euro', 'EUR', '2026-10');
+  await nav(page, 'Monthly balances');
+  for (const [month, balance] of [
+    ['2026-10', '621.00'],
+    ['2026-11', '50000.00'],
+    ['2026-12', '51221.80'],
+    ['2027-01', '51000.00'],
+  ]) {
+    await setMonth(page, month);
+    await page.locator('[data-balance="1"]').fill(balance);
+    await page.locator('[data-action="saveMonth"]').click();
+    await expect(page.locator('.status-block')).toContainText('Complete');
+  }
+  await nav(page, 'Dashboard');
+  const change = page.locator('.metric').nth(1);
+  await expect(change).toContainText('-€221.80 (-0.43%)');
+  await expect(change).toContainText('December 2026 · €51,221.80');
+  await setMonth(page, '2026-12');
+  await expect(change).toContainText('+€1,221.80 (+2.44%)');
+  await expect(change).toContainText('November 2026 · €50,000.00');
+  await setMonth(page, '2026-11');
+  await expect(change).toContainText('+€49,379.00 (+7951.53%)');
+  await expect(change).toContainText('October 2026 · €621.00');
+  await setMonth(page, '2026-10');
+  await expect(change).toContainText('Previous month is incomplete or missing');
+  await expect(change.locator('.metric-value')).toHaveText('—');
+});
+
+test('monthly change handles zero, debt, unchanged totals and missing months', async ({
+  page,
+  app,
+}) => {
+  await open(page, app);
+  await nav(page, 'Accounts');
+  await createAccount(page, 'Euro', 'EUR', '2025-01');
+  await nav(page, 'Monthly balances');
+  for (const [month, balance] of [
+    ['2025-01', '0'],
+    ['2025-02', '100'],
+    ['2025-03', '100'],
+    ['2025-04', '-100'],
+    ['2025-05', '-50'],
+    ['2025-07', '200'],
+  ]) {
+    await setMonth(page, month);
+    await page.locator('[data-balance="1"]').fill(balance);
+    await page.locator('[data-action="saveMonth"]').click();
+    await expect(page.locator('.status-block')).toContainText('Complete');
+  }
+  await nav(page, 'Dashboard');
+  const change = page.locator('.metric').nth(1);
+  for (const [month, value, comparison] of [
+    ['2025-02', '+€100.00', 'January 2025 · €0.00'],
+    ['2025-03', '€0.00 (0.00%)', 'February 2025 · €100.00'],
+    ['2025-04', '-€200.00 (-200.00%)', 'March 2025 · €100.00'],
+    ['2025-05', '+€50.00 (+50.00%)', 'April 2025 · -€100.00'],
+    ['2025-06', '—', 'Previous month is incomplete or missing'],
+    ['2025-07', '—', 'Previous month is incomplete or missing'],
+  ]) {
+    await setMonth(page, month);
+    await expect(change.locator('.metric-value')).toHaveText(value);
+    await expect(change).toContainText(comparison);
+  }
+  await setMonth(page, '2025-05');
+  await page.reload();
+  await expect(page.locator('.month-picker')).toHaveValue('2025-07');
+  await setMonth(page, '2025-05');
+  await expect(change.locator('.metric-value')).toHaveText('+€50.00 (+50.00%)');
+});

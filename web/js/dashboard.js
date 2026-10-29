@@ -113,12 +113,16 @@ async function renderDashboard() {
     delta != null
       ? `${BigInt(delta) > 0n ? '+' : ''}${money(delta)}${d.change_percent_bp != null ? ` (${BigInt(d.change_percent_bp) > 0n ? '+' : ''}${percentBP(d.change_percent_bp)})` : ''}`
       : '—';
+  const comparison =
+    delta != null
+      ? `${t('comparedLastMonth')}: ${monthLabel(d.previous.month)} · ${money(d.previous.total_eur_minor)}`
+      : t('noPrevious');
   if (d.accounts.length === 0) {
     $('#pageContent').innerHTML = emptyStart();
     return;
   }
   $('#pageContent').innerHTML =
-    `<div class="grid-summary"><article class="card metric"><p class="overline">${t('totalNetWorth')}</p><div class="metric-value">${subtotal}</div>${statusPill(m)} <span class="subtle">${escapeHTML(monthLabel(state.month))}</span></article><article class="card metric"><p class="overline">${t('monthlyChange')}</p><div class="metric-value metric-secondary ${changeColor}">${change}</div><p class="subtle">${delta != null ? t('comparedLastMonth') : t('noPrevious')}</p></article></div><section class="card panel"><div class="panel-heading"><h2>${t('history')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.history)}</section><section class="card panel"><div class="panel-heading"><h2>${t('monthlyOverview')}</h2><div class="overview-actions"><label for="columnCount">${t('showMonths')}</label><select id="columnCount" class="btn"><option>6</option><option>12</option><option>24</option><option>60</option><option>120</option></select><button class="btn btn-small" data-page="monthly">${t('editMonth')}</button></div></div>${renderTable(d)}</section>`;
+    `<div class="grid-summary"><article class="card metric"><p class="overline">${t('totalNetWorth')}</p><div class="metric-value">${subtotal}</div>${statusPill(m)} <span class="subtle">${escapeHTML(monthLabel(state.month))}</span></article><article class="card metric"><p class="overline">${t('monthlyChange')}</p><div class="metric-value metric-secondary ${changeColor}">${change}</div><p class="subtle">${escapeHTML(comparison)}</p></article></div><section class="card panel"><div class="panel-heading"><h2>${t('history')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.history)}</section><section class="card panel"><div class="panel-heading"><h2>${t('monthlyOverview')}</h2><div class="overview-actions"><label for="columnCount">${t('showMonths')}</label><select id="columnCount" class="btn"><option>6</option><option>12</option><option>24</option><option>60</option><option>120</option></select><button class="btn btn-small" data-page="monthly">${t('editMonth')}</button></div></div>${renderTable(d)}</section>`;
   $('#columnCount').value = String(state.columnCount);
 }
 
