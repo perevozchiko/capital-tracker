@@ -61,7 +61,15 @@ npx playwright install chromium
 npm run test:ui
 ```
 
-The suite covers navigation, settings, account and group management, monthly balances, exchange-rate loading (with deterministic mocked responses), import/export, deletion confirmations, and a mobile viewport. Test failures retain Playwright traces under `test-results/`; view one with `npx playwright show-trace <path-to-trace.zip>`. The tests do not use the normal application database. GitHub Actions runs them on pushes and pull requests.
+The suite covers navigation, settings, account and group management, monthly balances, exchange-rate loading, import/export, deletion confirmations, and a mobile viewport. Deterministic FX scenarios change provider responses between loading and saving, verify independent monthly snapshots, preserve all four currencies across reload/export, and exercise partial responses, retries and save failures. A Go integration test also reopens the database and round-trips its export to verify that historical rates and totals remain unchanged.
+
+To also run the browser against the real external currency provider (internet required):
+
+```sh
+CAPITAL_TRACKER_LIVE_RATES=1 npm run test:ui
+```
+
+This enables an additional Playwright scenario with no quote interception: the browser loads real rates through the application, saves them into a past month, reloads the page and verifies the exact saved values and history. The live scenario is skipped by default so provider outages cannot make ordinary CI nondeterministic. Test failures retain Playwright traces under `test-results/`; view one with `npx playwright show-trace <path-to-trace.zip>`. The tests do not use the normal application database. GitHub Actions runs them on pushes and pull requests.
 
 If it reports Go formatting differences, run `gofmt -w .` once and commit the formatted files. The script checks `gofmt`, `go mod tidy -diff`, `go mod verify`, `go vet`, Go tests, syntax for every JavaScript module, JavaScript unit tests and Prettier formatting. The check command never changes source files. Use `npm run format` to format Go, JavaScript, CSS and HTML sources.
 
