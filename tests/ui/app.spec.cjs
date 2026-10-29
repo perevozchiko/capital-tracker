@@ -80,8 +80,20 @@ async function editDialog(page, value) {
 }
 async function action(page, name, actionName) {
   const row = page.locator('.account-row').filter({ hasText: name });
-  await row.locator('summary').click();
-  await row.locator(`[data-action="${actionName}"]`).click();
+  const menu = row.locator('details.account-actions-menu');
+  await expect(row).toBeVisible();
+  await menu.locator('summary').click();
+  await expect(menu).toHaveAttribute('open', '');
+  await menu.locator(`[data-action="${actionName}"]`).click();
+}
+
+// Find a group by its actual heading, not by text in its account move dropdowns.
+function accountGroup(page, name) {
+  return page.locator('.account-group').filter({
+    has: page
+      .locator('.account-group-head .group-caption > strong')
+      .getByText(name, { exact: true }),
+  });
 }
 async function setMonth(page, month) {
   await page.locator('.month-picker').fill(month);
@@ -119,12 +131,14 @@ test('account groups, menus, reordering, archive and restore', async ({
   const row = page.locator('.account-row').filter({ hasText: 'Cash' });
   await row.locator('summary').click();
   await row.locator('[data-move-account]').selectOption({ label: 'Savings' });
+  // Waiting on the heading avoids a false positive from the 'Savings'
+  // option still present in the ungrouped account's move dropdown.
   await expect(
-    page
-      .locator('.account-group')
-      .filter({ hasText: 'Savings' })
-      .locator('.account-row'),
-  ).toContainText('Cash');
+    accountGroup(page, 'Savings').locator('.account-row').filter({ hasText: 'Cash' }),
+  ).toBeVisible();
+  await expect(
+    accountGroup(page, 'Ungrouped').locator('.account-row').filter({ hasText: 'Cash' }),
+  ).toHaveCount(0);
   await action(page, 'Cash', 'currency');
   await page.locator('#editValue').selectOption('USD');
   await page.locator('#confirmEdit').click();
@@ -251,9 +265,8 @@ test('group controls reorder, collapse, rename and delete without deleting accou
   let row = page.locator('.account-row').filter({ hasText: 'Wallet' });
   await row.locator('summary').click();
   await row.locator('[data-move-account]').selectOption({ label: 'First' });
-  const first = page
-    .locator('.account-group')
-    .filter({ has: page.locator('.group-caption', { hasText: 'First' }) });
+  const first = accountGroup(page, 'First');
+  await expect(first.locator('.account-row').filter({ hasText: 'Wallet' })).toBeVisible();
   await first.locator('[data-action="toggleGroup"]').click();
   await expect(first.locator('.account-row')).not.toBeVisible();
   await first.locator('[data-action="toggleGroup"]').click();
