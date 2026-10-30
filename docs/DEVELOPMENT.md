@@ -74,7 +74,7 @@ npx playwright install chromium
 npm run test:ui
 ```
 
-The suite covers navigation, settings, account and group management, monthly balances, exchange-rate loading, import/export, deletion confirmations, and a mobile viewport. Deterministic FX scenarios change provider responses between loading and saving, verify independent monthly snapshots, preserve all four currencies across reload/export, and exercise partial responses, retries and save failures. A Go integration test also reopens the database and round-trips its export to verify that historical rates and totals remain unchanged.
+The suite covers navigation, settings, account and group management, monthly balances, exchange-rate loading, import/export, deletion confirmations, and mobile viewports. See the [browser coverage matrix](TEST_COVERAGE.md) for 174 scenarios, including native drag-and-drop, individual/bulk group collapse, exact input boundaries for all five currencies and long workflows across restart and data recovery, and mobile layout checks for 10-million balances in all five currencies. Deterministic FX scenarios change provider responses between loading and saving, verify independent monthly snapshots, preserve all four currencies across reload/export, and exercise partial responses, retries and save failures. A Go integration test also reopens the database and round-trips its export to verify that historical rates and totals remain unchanged.
 
 To also run the browser against the real external currency provider (internet required):
 
