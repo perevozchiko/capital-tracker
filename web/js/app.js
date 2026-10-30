@@ -50,7 +50,6 @@ document.addEventListener('click', async (e) => {
   try {
     if (action === 'monthPrev') await setMonth(nextMonth(state.month, -1));
     else if (action === 'monthNext') await setMonth(nextMonth(state.month, 1));
-    else if (action === 'selectColumn') await setMonth(node.dataset.month);
     else if (action === 'focusAdd') {
       $('#accountName')?.focus();
     } else if (action === 'toggleGroup' || action?.startsWith('group'))
@@ -146,11 +145,6 @@ document.addEventListener('change', async (e) => {
   if (e.target.classList.contains('month-picker')) {
     const changed = await setMonth(e.target.value);
     if (!changed && e.target.isConnected) e.target.value = state.month;
-    return;
-  }
-  if (e.target.id === 'columnCount') {
-    state.columnCount = Number(e.target.value);
-    await render();
     return;
   }
   if (e.target.id === 'themeSelect') {

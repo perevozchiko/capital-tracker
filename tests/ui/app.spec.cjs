@@ -89,6 +89,13 @@ test('monthly balances, rate loading, previous month and dashboard totals', asyn
   await expect(page.locator('.status-block')).toContainText('Complete');
   await nav(page, 'Dashboard');
   await expect(page.locator('.metric').first()).toContainText('200.00');
+  await expect(page.locator('.history-svg')).toBeVisible();
+  await expect(page.locator('.chart-dot')).toHaveAttribute(
+    'aria-label',
+    'January 2025: €200.00',
+  );
+  await expect(page.locator('#pageContent table')).toHaveCount(0);
+  await expect(page.locator('#columnCount')).toHaveCount(0);
   await nav(page, 'Monthly balances');
   await setMonth(page, '2025-02');
   await page.locator('[data-action="copyPrevious"][data-id="1"]').click();

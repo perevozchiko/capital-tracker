@@ -9,10 +9,10 @@ These are **real browser screenshots**, captured from Capital Tracker in Chromiu
 ## 1. Dashboard
 
 <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png">
-  <img src="dashboard.png" alt="Dashboard with monthly net worth history, chart and account table">
+  <img src="dashboard.png" alt="Dashboard with monthly net worth, monthly change and history chart">
 </a>
 
-A month-by-month overview of net worth, the account balance table, and capital changes. [View original image](https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png).
+Net worth for the selected month, its change from the previous calendar month, and the capital history chart. [View original image](https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png).
 
 ## 2. Monthly balances
 

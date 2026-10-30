@@ -33,7 +33,7 @@ Capital Tracker is independently developed open-source software. It is not affil
 <h3>Dashboard</h3>
 
 <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png">
-  <img src="docs/screenshots/dashboard.png" alt="Capital Tracker dashboard: monthly net worth, history chart and balance table" width="940">
+  <img src="docs/screenshots/dashboard.png" alt="Capital Tracker dashboard: monthly net worth, monthly change and history chart" width="940">
 </a>
 
 <sub><strong>Tap or click the screenshot</strong> to view it at full resolution. Use your browser's image zoom to inspect the details.</sub>
@@ -97,7 +97,7 @@ Capital Tracker is independently developed open-source software. It is not affil
 - **Accounts and groups:** drag to reorder groups, move accounts between groups or change their order within a group. Keep archived history and see group subtotals in EUR.
 - **Group visibility:** collapse or expand individual groups, or use **Collapse all / Expand all** on both Accounts and Monthly balances. The shared state survives reload and restart.
 - **Five currencies:** EUR (reporting base), USD, RSD, RUB and TRY. Enter rates manually or click **Load latest exchange rates** to fill empty fields with the latest available quotes. Saving keeps those exact values for the selected month; later quotes do not revalue history.
-- **Capital history:** a chart, multi-month balance table and change against the **previous calendar month**. Change is shown when both months are complete; the comparison month and its total are displayed.
+- **Capital history:** a chart and change against the **previous calendar month**. Change is shown when both months are complete; the comparison month and its total are displayed.
 - **Exact calculations:** integer minor units and fixed-point exchange rates; no floating-point rounding of stored money.
 - **Responsive interface:** desktop and narrow-screen layouts, Dark/Light/System themes and English interface. Large balances such as **10,000,000.99** remain readable in every supported currency, including on phones in portrait and landscape. Local data remains usable without a currency-provider connection.
 - **Your data:** portable JSON exports, full SQLite backups, intentional deletion with confirmation, and a safe fictional demo mode.
@@ -174,7 +174,7 @@ npx playwright install chromium
 npm run test:ui
 ```
 
-The browser suite contains **174 Playwright scenarios**, covering account/group management, native drag-and-drop, collapse/expand controls, financial input boundaries, rate snapshots and long workflows through restart, export, deletion and import. **40 mobile layout scenarios** check large values in all five currencies, clipping, overlap and table visibility; they also save screenshots.
+The browser suite contains **174 Playwright scenarios**, covering account/group management, native drag-and-drop, collapse/expand controls, financial input boundaries, rate snapshots and long workflows through restart, export, deletion and import. **40 mobile layout scenarios** check large values in all five currencies, clipping, overlap and account history table visibility; they also save screenshots.
 
 Browser tests use fresh isolated temporary databases, not your personal data. The external-provider scenario is skipped by default. To also exercise real quote loading through the browser and verify that the loaded rates are saved exactly:
 

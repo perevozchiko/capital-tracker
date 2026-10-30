@@ -348,20 +348,6 @@ th:first-child {
 tr:last-child td {
   border-bottom: 0;
 }
-.table-total td {
-  font-weight: 750;
-  background: var(--surface2);
-}
-.table-total td:first-child {
-  background: var(--surface2);
-}
-.selected-col {
-  background: var(--primarySoft) !important;
-  color: var(--text);
-}
-th.selected-col {
-  color: var(--primary);
-}
 th button {
   border: 0;
   background: transparent;

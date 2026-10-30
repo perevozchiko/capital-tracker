@@ -3,37 +3,6 @@ import { api } from './api.js';
 import { t } from './messages.js';
 import { escapeHTML, monthLabel, money, percentBP } from './format.js';
 import { $, emptyStart, statusPill } from './ui.js';
-function cellFor(d, account) {
-  const active = d.accounts.some((a) => a.id === account.id);
-  if (!active)
-    return `<span class="td-muted" title="${t('notActive')}">·</span>`;
-  const b = d.balances.find((x) => x.account_id === account.id);
-  return b
-    ? money(b.amount_minor, account.currency)
-    : `<span class="td-muted" title="${t('notEntered')}">—</span>`;
-}
-function renderTable(d) {
-  const cols = d.columns;
-  const headers = cols
-    .map(
-      (x) =>
-        `<th class="${x.month === state.month ? 'selected-col' : ''}"><button data-action="selectColumn" data-month="${x.month}">${escapeHTML(monthLabel(x.month, true))}</button></th>`,
-    )
-    .join('');
-  const rows = d.accounts
-    .map(
-      (account) =>
-        `<tr><td><span>${escapeHTML(account.name)}</span><span class="currency-tag">${account.currency}</span></td>${cols.map((c) => `<td class="${c.month === state.month ? 'selected-col' : ''}">${cellFor(c, account)}</td>`).join('')}</tr>`,
-    )
-    .join('');
-  const totals = cols
-    .map(
-      (c) =>
-        `<td class="${c.month === state.month ? 'selected-col' : ''}">${c.complete ? money(c.total_eur_minor) : `<span class="td-muted">${t('incomplete')}</span>`}</td>`,
-    )
-    .join('');
-  return `<div class="table-scroll"><table><thead><tr><th>${t('account')}</th>${headers}</tr></thead><tbody>${rows}<tr class="table-total"><td>${t('totalEUR')}</td>${totals}</tr></tbody></table></div><p class="footer-note">${t('displayedOriginal')} · ${t('exactTotal')}</p>`;
-}
 function monthIndex(s) {
   const [year, month] = s.split('-').map(Number);
   return year * 12 + month - 1;
@@ -91,12 +60,7 @@ function chart(history) {
   return `<div class="chart-wrap"><svg class="history-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('history')}">${lines}${paths}${dots}${xLabels}</svg></div><p class="footer-note">${t('chartNote')}</p>`;
 }
 async function renderDashboard() {
-  const d = await api(
-    '/dashboard?month=' +
-      encodeURIComponent(state.month) +
-      '&columns=' +
-      state.columnCount,
-  );
+  const d = await api('/dashboard?month=' + encodeURIComponent(state.month));
   state.dashboard = d;
   const m = d.month;
   const delta = d.change_minor;
@@ -122,8 +86,7 @@ async function renderDashboard() {
     return;
   }
   $('#pageContent').innerHTML =
-    `<div class="grid-summary"><article class="card metric"><p class="overline">${t('totalNetWorth')}</p><div class="metric-value">${subtotal}</div>${statusPill(m)} <span class="subtle">${escapeHTML(monthLabel(state.month))}</span></article><article class="card metric"><p class="overline">${t('monthlyChange')}</p><div class="metric-value metric-secondary ${changeColor}">${change}</div><p class="subtle">${escapeHTML(comparison)}</p></article></div><section class="card panel"><div class="panel-heading"><h2>${t('history')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.history)}</section><section class="card panel"><div class="panel-heading"><h2>${t('monthlyOverview')}</h2><div class="overview-actions"><label for="columnCount">${t('showMonths')}</label><select id="columnCount" class="btn"><option>6</option><option>12</option><option>24</option><option>60</option><option>120</option></select><button class="btn btn-small" data-page="monthly">${t('editMonth')}</button></div></div>${renderTable(d)}</section>`;
-  $('#columnCount').value = String(state.columnCount);
+    `<div class="grid-summary"><article class="card metric"><p class="overline">${t('totalNetWorth')}</p><div class="metric-value">${subtotal}</div>${statusPill(m)} <span class="subtle">${escapeHTML(monthLabel(state.month))}</span></article><article class="card metric"><p class="overline">${t('monthlyChange')}</p><div class="metric-value metric-secondary ${changeColor}">${change}</div><p class="subtle">${escapeHTML(comparison)}</p></article></div><section class="card panel"><div class="panel-heading"><h2>${t('history')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.history)}</section>`;
 }
 
 export { renderDashboard };

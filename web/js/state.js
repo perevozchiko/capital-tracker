@@ -7,7 +7,6 @@ const state = {
   settings: { language: 'en', theme: 'dark', version: '' },
   buildCommit: 'unknown',
   currencies: [],
-  columnCount: 12,
   monthData: null,
   dashboard: null,
   dirty: false,

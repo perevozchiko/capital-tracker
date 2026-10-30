@@ -168,19 +168,8 @@ for (const width of [320, 360, 390, 430, 844, 932]) {
         '+€9,999,999.00',
       );
       await assertLayout(page);
-      // Wide historical tables must scroll inside their own container.
-      const table = page.locator('.table-scroll');
-      expect(
-        await table.evaluate((el) => getComputedStyle(el).overflowX),
-      ).toMatch(/auto|scroll/);
-      await table.evaluate((el) => {
-        el.scrollLeft = el.scrollWidth;
-      });
-      await expect(page.locator('.selected-col').last()).toContainText(
-        '€10,000,000.00',
-      );
-      for (const cell of await page.locator('tbody td.selected-col').all())
-        await assertCellReadable(cell);
+      await expect(page.locator('.history-svg')).toBeVisible();
+      await expect(page.locator('#pageContent table')).toHaveCount(0);
       await page.screenshot({
         path: testInfo.outputPath('dashboard-10-million.png'),
         fullPage: true,
