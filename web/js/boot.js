@@ -13,3 +13,10 @@ try {
 } catch {
   document.documentElement.dataset.theme = 'dark';
 }
+
+try {
+  document.documentElement.dataset.hideAmounts =
+    localStorage.getItem('capital-hide-amounts') === 'true' ? 'true' : 'false';
+} catch {
+  document.documentElement.dataset.hideAmounts = 'false';
+}

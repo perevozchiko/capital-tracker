@@ -1,7 +1,13 @@
 import { state } from './state.js';
 import { api } from './api.js';
 import { t } from './messages.js';
-import { escapeHTML, monthLabel, money, percentBP } from './format.js';
+import {
+  escapeHTML,
+  monthLabel,
+  money,
+  moneyHTML,
+  percentBP,
+} from './format.js';
 import { $, emptyStart, statusPill } from './ui.js';
 function monthIndex(s) {
   const [year, month] = s.split('-').map(Number);
@@ -29,7 +35,7 @@ function chart(history) {
   const xFor = (m) => pad.left + ((monthIndex(m) - first) / range) * innerW;
   const lines = Array.from({ length: 5 }, (_, i) => {
     const v = max - ((max - min) * i) / 4;
-    return `<line class="gridline" x1="${pad.left}" x2="${W - pad.right}" y1="${yFor(v)}" y2="${yFor(v)}"/><text x="${pad.left - 11}" y="${yFor(v) + 4}" text-anchor="end">${new Intl.NumberFormat('en-US', { style: 'decimal', notation: 'compact', maximumFractionDigits: 1 }).format(v)} €</text>`;
+    return `<line class="gridline" x1="${pad.left}" x2="${W - pad.right}" y1="${yFor(v)}" y2="${yFor(v)}"/><text class="money-axis" x="${pad.left - 11}" y="${yFor(v) + 4}" text-anchor="end">${new Intl.NumberFormat('en-US', { style: 'decimal', notation: 'compact', maximumFractionDigits: 1 }).format(v)} €</text>`;
   }).join('');
   let paths = '',
     previous = null;
@@ -54,7 +60,7 @@ function chart(history) {
   const dots = valid
     .map(
       (p, i) =>
-        `<circle class="chart-dot" cx="${xFor(p.month)}" cy="${yFor(Number(p.total_eur_minor) / 100)}" r="5" tabindex="0" role="img" aria-label="${escapeHTML(monthLabel(p.month))}: ${escapeHTML(money(p.total_eur_minor))}" data-chart-index="${history.indexOf(p)}"/>`,
+        `<circle class="chart-dot" cx="${xFor(p.month)}" cy="${yFor(Number(p.total_eur_minor) / 100)}" r="5" tabindex="0" role="img" aria-label="${escapeHTML(monthLabel(p.month))}${document.documentElement.dataset.hideAmounts === 'true' ? '' : ': ' + escapeHTML(money(p.total_eur_minor))}" data-chart-index="${history.indexOf(p)}"/>`,
     )
     .join('');
   return `<div class="chart-wrap"><svg class="history-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('history')}">${lines}${paths}${dots}${xLabels}</svg></div><p class="footer-note">${t('chartNote')}</p>`;
@@ -72,21 +78,21 @@ async function renderDashboard() {
         : BigInt(delta) > 0n
           ? 'positive'
           : 'neutral';
-  const subtotal = m.complete ? money(m.total_eur_minor) : '—';
+  const subtotal = m.complete ? moneyHTML(m.total_eur_minor) : '—';
   const change =
     delta != null
-      ? `${BigInt(delta) > 0n ? '+' : ''}${money(delta)}${d.change_percent_bp != null ? ` (${BigInt(d.change_percent_bp) > 0n ? '+' : ''}${percentBP(d.change_percent_bp)})` : ''}`
+      ? `${moneyHTML(delta, 'EUR', BigInt(delta) > 0n ? '+' : '')}${d.change_percent_bp != null ? ` (${BigInt(d.change_percent_bp) > 0n ? '+' : ''}${percentBP(d.change_percent_bp)})` : ''}`
       : '—';
   const comparison =
     delta != null
-      ? `${t('comparedLastMonth')}: ${monthLabel(d.previous.month)} · ${money(d.previous.total_eur_minor)}`
+      ? `${t('comparedLastMonth')}: ${escapeHTML(monthLabel(d.previous.month))} · ${moneyHTML(d.previous.total_eur_minor)}`
       : t('noPrevious');
   if (d.accounts.length === 0) {
     $('#pageContent').innerHTML = emptyStart();
     return;
   }
   $('#pageContent').innerHTML =
-    `<div class="grid-summary"><article class="card metric"><p class="overline">${t('totalNetWorth')}</p><div class="metric-value">${subtotal}</div>${statusPill(m)} <span class="subtle">${escapeHTML(monthLabel(state.month))}</span></article><article class="card metric"><p class="overline">${t('monthlyChange')}</p><div class="metric-value metric-secondary ${changeColor}">${change}</div><p class="subtle">${escapeHTML(comparison)}</p></article></div><section class="card panel"><div class="panel-heading"><h2>${t('history')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.history)}</section>`;
+    `<div class="grid-summary"><article class="card metric"><p class="overline">${t('totalNetWorth')}</p><div class="metric-value">${subtotal}</div>${statusPill(m)} <span class="subtle">${escapeHTML(monthLabel(state.month))}</span></article><article class="card metric"><p class="overline">${t('monthlyChange')}</p><div class="metric-value metric-secondary ${changeColor}">${change}</div><p class="subtle">${comparison}</p></article></div><section class="card panel"><div class="panel-heading"><h2>${t('history')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.history)}</section>`;
 }
 
 export { renderDashboard };

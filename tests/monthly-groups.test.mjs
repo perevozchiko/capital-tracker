@@ -86,7 +86,7 @@ function setup(active) {
     'nextMonth',
     't',
     'monthLabel',
-    'money',
+    'moneyHTML',
     'escapeHTML',
     'minorToInput',
     'rateText',
@@ -112,7 +112,7 @@ function setup(active) {
     new Set(['g-2']),
     () => content,
     (d) => (d.complete ? 'Complete' : 'Incomplete'),
-    { querySelectorAll: () => [] },
+    { documentElement: { dataset: {} }, querySelectorAll: () => [] },
     () => {},
     () => '',
   );

@@ -4,7 +4,7 @@ import { t } from './messages.js';
 import {
   escapeHTML,
   monthLabel,
-  money,
+  moneyHTML,
   nextMonth,
   pluralAccounts,
 } from './format.js';
@@ -26,7 +26,7 @@ async function renderAccounts() {
       id === 'archive' ? 'archive' : id === null ? 'ungrouped' : 'g-' + id;
     const closed = collapsedGroups.has(key);
     const total =
-      group.total_eur_minor == null ? '—' : money(group.total_eur_minor);
+      group.total_eur_minor == null ? '—' : moneyHTML(group.total_eur_minor);
     const buttons =
       id === null || id === 'archive'
         ? ''

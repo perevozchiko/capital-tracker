@@ -54,6 +54,11 @@ function money(minor, currency = 'EUR') {
     )
     .join('');
 }
+// Keep the original text available for restoring visibility without a rerender.
+function moneyHTML(minor, currency = 'EUR', prefix = '') {
+  if (minor == null) return '—';
+  return `<span class="money-value"><span class="money-text">${escapeHTML(prefix + money(minor, currency))}</span></span>`;
+}
 function rateText(v) {
   return String(v ?? '');
 }
@@ -117,6 +122,7 @@ export {
   nextMonth,
   validMonth,
   money,
+  moneyHTML,
   rateText,
   minorToInput,
   parseMoney,

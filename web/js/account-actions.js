@@ -1,7 +1,7 @@
 import { state, collapsedGroups } from './state.js';
 import { api, request } from './api.js';
 import { t } from './messages.js';
-import { escapeHTML, monthLabel, nextMonth, money } from './format.js';
+import { escapeHTML, monthLabel, nextMonth, moneyHTML } from './format.js';
 import { $, notify } from './ui.js';
 import { showConfirm } from './dialogs.js';
 import { groupSelector } from './accounts.js';
@@ -372,7 +372,7 @@ async function accountAction(action, id) {
       ? hist
           .map(
             ([month, value]) =>
-              `<tr><td>${monthLabel(month)}</td><td>${money(value, account.currency)}</td></tr>`,
+              `<tr><td>${monthLabel(month)}</td><td>${moneyHTML(value, account.currency)}</td></tr>`,
           )
           .join('')
       : `<tr><td colspan="2">${t('historicalEmpty')}</td></tr>`;

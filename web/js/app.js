@@ -5,10 +5,10 @@ import {
   escapeHTML,
   monthLabel,
   nextMonth,
-  money,
+  moneyHTML,
   minorToInput,
 } from './format.js';
-import { $, notify, themeApply } from './ui.js';
+import { $, notify, themeApply, toggleAmountVisibility } from './ui.js';
 import { showConfirm } from './dialogs.js';
 import { navigate, setMonth, render, refresh, mutation } from './router.js';
 import { updateBalanceDifference } from './monthly.js';
@@ -48,7 +48,8 @@ document.addEventListener('click', async (e) => {
   const action = node.dataset.action,
     id = Number(node.dataset.id);
   try {
-    if (action === 'monthPrev') await setMonth(nextMonth(state.month, -1));
+    if (action === 'toggleAmounts') toggleAmountVisibility();
+    else if (action === 'monthPrev') await setMonth(nextMonth(state.month, -1));
     else if (action === 'monthNext') await setMonth(nextMonth(state.month, 1));
     else if (action === 'focusAdd') {
       $('#accountName')?.focus();
@@ -188,7 +189,7 @@ function pointTooltip(node, event) {
   const p = state.history[Number(node.dataset.chartIndex)];
   if (!p) return;
   const tooltip = $('#chartTooltip');
-  tooltip.textContent = `${monthLabel(p.month)} · ${money(p.total_eur_minor)}`;
+  tooltip.innerHTML = `${escapeHTML(monthLabel(p.month))} · ${moneyHTML(p.total_eur_minor)}`;
   tooltip.hidden = false;
   const rect = node.getBoundingClientRect();
   const clientX = event?.clientX || rect.left + rect.width / 2;

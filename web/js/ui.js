@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { t } from './messages.js';
-import { escapeHTML, monthLabel } from './format.js';
+import { escapeHTML, monthLabel, money } from './format.js';
 import { showConfirm } from './dialogs.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -67,7 +67,36 @@ function renderNav() {
     el.textContent = t(el.dataset.i18n);
   });
 }
+function applyAmountVisibility() {
+  const hidden = document.documentElement.dataset.hideAmounts === 'true';
+  const button = $('#amountVisibility');
+  button.setAttribute('aria-pressed', String(hidden));
+  button.setAttribute('aria-label', t(hidden ? 'showAmounts' : 'hideAmounts'));
+  button.title = t(hidden ? 'showAmounts' : 'hideAmounts');
+  document.querySelectorAll('[data-balance]').forEach((input) => {
+    input.type = hidden ? 'password' : 'text';
+  });
+  document.querySelectorAll('[data-chart-index]').forEach((node) => {
+    const point = state.history[Number(node.dataset.chartIndex)];
+    if (point)
+      node.setAttribute(
+        'aria-label',
+        monthLabel(point.month) +
+          (hidden ? '' : ': ' + money(point.total_eur_minor)),
+      );
+  });
+  $('#chartTooltip').hidden = true;
+}
+function toggleAmountVisibility() {
+  const hidden = document.documentElement.dataset.hideAmounts !== 'true';
+  document.documentElement.dataset.hideAmounts = String(hidden);
+  try {
+    localStorage.setItem('capital-hide-amounts', String(hidden));
+  } catch {}
+  applyAmountVisibility();
+}
 function renderHeader() {
+  applyAmountVisibility();
   const names = {
     dashboard: 'navDashboard',
     accounts: 'navAccounts',
@@ -95,6 +124,7 @@ export {
   $,
   notify,
   themeApply,
+  toggleAmountVisibility,
   confirmClean,
   statusPill,
   renderNav,

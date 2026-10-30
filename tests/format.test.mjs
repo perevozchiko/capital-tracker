@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   money,
+  moneyHTML,
   parseMoney,
   percentBP,
   minorToInput,
@@ -30,4 +31,21 @@ test('balance input preserves unknown, zero, decimal commas and exact boundaries
     assert.throws(() => parseMoney(value));
   }
   assert.equal(minorToInput('-9000000000000000'), '-90000000000000.00');
+});
+
+test('privacy markup preserves exact amounts, signs and unknown balances', () => {
+  const wrap = (text) =>
+    `<span class="money-value"><span class="money-text">${text}</span></span>`;
+  assert.equal(moneyHTML('9007199254740993'), wrap('€90,071,992,547,409.93'));
+  assert.equal(moneyHTML('-1', 'USD'), wrap('-$0.01'));
+  assert.equal(moneyHTML('0'), wrap('€0.00'));
+  assert.equal(moneyHTML('1200', 'EUR', '+'), wrap('+€12.00'));
+  assert.equal(moneyHTML(null), '—');
+});
+
+test('privacy markup escapes text before inserting it into the page', () => {
+  assert.equal(
+    moneyHTML('100', 'EUR', '<img src=x onerror=alert(1)>'),
+    '<span class="money-value"><span class="money-text">&lt;img src=x onerror=alert(1)&gt;€1.00</span></span>',
+  );
 });

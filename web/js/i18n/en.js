@@ -1,4 +1,6 @@
 export default {
+  hideAmounts: 'Hide amounts',
+  showAmounts: 'Show amounts',
   dangerZone: 'Danger zone',
   clearAllData: 'Delete all data',
   clearDataTitle: 'Permanently delete all data?',

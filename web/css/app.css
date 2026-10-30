@@ -1473,3 +1473,35 @@ th button:hover {
     overflow-wrap: anywhere;
   }
 }
+
+/* One privacy preference covers totals, history, charts and balance editors. */
+.amount-visibility {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.amount-visibility svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.eye-slash {
+  display: none;
+}
+[data-hide-amounts='true'] .eye-slash {
+  display: initial;
+}
+[data-hide-amounts='true'] .money-text,
+[data-hide-amounts='true'] .money-axis {
+  display: none;
+}
+[data-hide-amounts='true'] .money-value::after {
+  content: '••••';
+  white-space: nowrap;
+}

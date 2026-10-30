@@ -32,7 +32,9 @@ async function assertLayout(page) {
           `${el.className || el.tagName}: text overflows ${el.scrollWidth}/${el.clientWidth}`,
         );
       const range = document.createRange();
-      range.selectNodeContents(el);
+      // Measure the actual text: nested privacy spans add overlapping range
+      // rectangles on the same line and must not count as line wrapping.
+      range.selectNodeContents(el.querySelector('.money-text') || el);
       if (
         el.matches(
           '.group-total strong,.balance-previous strong,.balance-change',
