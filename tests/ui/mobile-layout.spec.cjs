@@ -24,7 +24,7 @@ async function assertLayout(page) {
     const issues = [];
     const visible = (el) => el.getClientRects().length > 0;
     for (const el of document.querySelectorAll(
-      '.metric-value,.group-total strong,.group-caption strong,.balance-previous strong,.balance-change,.account-main strong',
+      '.metric-value,.group-total strong,.group-caption strong,.balance-previous strong,.balance-change,.account-balance strong,.account-main strong',
     )) {
       if (!visible(el)) continue;
       if (el.scrollWidth > el.clientWidth + 1)
@@ -37,7 +37,7 @@ async function assertLayout(page) {
       range.selectNodeContents(el.querySelector('.money-text') || el);
       if (
         el.matches(
-          '.group-total strong,.balance-previous strong,.balance-change',
+          '.group-total strong,.balance-previous strong,.balance-change,.account-balance strong',
         ) &&
         range.getClientRects().length > 1
       ) {
@@ -146,6 +146,10 @@ for (const width of [320, 360, 390, 430, 844, 932]) {
           '.group-total strong',
         ),
       ).toHaveText('€10,000,000.00');
+      await expect(page.locator('.account-balance .money-text')).toBeVisible();
+      await expect(page.locator('.account-balance strong')).toContainText(
+        '10,000,000.00',
+      );
       await assertLayout(page);
       await page.screenshot({
         path: testInfo.outputPath('accounts-10-million.png'),

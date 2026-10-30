@@ -1505,3 +1505,40 @@ th button:hover {
   content: '••••';
   white-space: nowrap;
 }
+
+/* Account balances use the selected month and remain readable beside actions. */
+.account-group-body .account-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+.account-balance {
+  min-width: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.account-balance strong {
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  .account-group-body .account-row {
+    grid-template-columns: minmax(0, 1fr) 34px;
+    gap: 8px;
+  }
+  .account-group-body .account-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .account-main > div:last-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .account-balance {
+    grid-column: 1;
+    grid-row: 2;
+    text-align: left;
+  }
+  .account-group-body .account-row > .actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}

@@ -13,7 +13,14 @@ function groupSelector(selected, attribute) {
   return `<select ${attribute} aria-label="${t('moveToGroup')}"><option value="" ${selected === null ? 'selected' : ''}>${t('ungrouped')}</option>${state.groups.groups.map((g) => `<option value="${g.id}" ${selected === g.id ? 'selected' : ''}>${escapeHTML(g.name)}</option>`).join('')}</select>`;
 }
 async function renderAccounts() {
-  state.groups = await api('/groups?month=' + encodeURIComponent(state.month));
+  const [groupData, monthData] = await Promise.all([
+    api('/groups?month=' + encodeURIComponent(state.month)),
+    api('/months/' + encodeURIComponent(state.month)),
+  ]);
+  state.groups = groupData;
+  const balances = new Map(
+    monthData.balances.map((b) => [b.account_id, b.amount_minor]),
+  );
   const accounts = state.accounts;
   const groups = state.groups.groups;
   const groupRows = (group, id, index) => {
@@ -38,6 +45,7 @@ async function renderAccounts() {
           i,
         ) => `<div class="account-row" data-account-row="${a.id}" draggable="${id !== 'archive'}">
    <div class="account-main">${id === 'archive' ? '' : `<span class="drag-handle" title="${t('dragAccount')}" aria-hidden="true">⠿</span>`}<div class="account-mark">${a.currency === 'EUR' ? '€' : a.currency === 'USD' ? '$' : a.currency === 'RUB' ? '₽' : a.currency === 'TRY' ? '₺' : 'R'}</div><div><strong>${escapeHTML(a.name)} <span class="currency-tag">${a.currency}</span></strong><small>${t('startMonth')}: ${escapeHTML(monthLabel(a.start_month))} · ${a.archived_from_month ? t('archived') + ' ' + escapeHTML(monthLabel(a.archived_from_month)) : t('active')}</small></div></div>
+   <div class="account-balance"><strong>${moneyHTML(balances.get(a.id), a.currency)}</strong><small>${escapeHTML(monthLabel(state.month, true))}</small></div>
    <div class="actions"><details class="account-actions-menu" name="account-actions"><summary aria-label="${t('accountActions')}" title="${t('accountActions')}">⋮</summary><div class="action-menu-content"><button type="button" data-action="history" data-id="${a.id}">${t('historyAccount')}</button><button type="button" data-action="rename" data-id="${a.id}">${t('rename')}</button><button type="button" data-action="currency" data-id="${a.id}">${t('changeCurrency')}</button>${a.archived_from_month ? '' : `<label class="menu-move-label">${t('moveToGroup')}${groupSelector(a.group_id ?? null, 'data-move-account="' + a.id + '"')}</label><button type="button" data-action="up" data-id="${a.id}" ${i === 0 ? 'disabled' : ''}>${t('reorderUp')}</button><button type="button" data-action="down" data-id="${a.id}" ${i === members.length - 1 ? 'disabled' : ''}>${t('reorderDown')}</button>`}<button type="button" data-action="${a.archived_from_month ? 'restore' : 'archive'}" data-id="${a.id}">${t(a.archived_from_month ? 'restore' : 'archive')}</button><button type="button" class="menu-danger" data-action="delete" data-id="${a.id}">${t('delete')}</button></div></details></div>
   </div>`,
       )

@@ -43,6 +43,18 @@ for (const width of [320, 1280]) {
     await expect(page.locator('.group-total .money-text:visible')).toHaveCount(
       0,
     );
+    await expect(page.locator('.account-balance .money-text')).toHaveCount(1);
+    await expect(page.locator('.account-balance .money-text')).toBeHidden();
+    await page
+      .getByRole('button', { name: 'Show amounts', exact: true })
+      .click();
+    await expect(page.locator('.account-balance .money-text')).toBeVisible();
+    await expect(page.locator('.account-balance strong')).toHaveText(
+      '€1,200.00',
+    );
+    await page
+      .getByRole('button', { name: 'Hide amounts', exact: true })
+      .click();
     await action(page, 'Savings', 'history');
     await expect(page.locator('tbody .money-text')).toHaveCount(2);
     await expect(page.locator('tbody .money-text:visible')).toHaveCount(0);
