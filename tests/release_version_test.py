@@ -74,6 +74,23 @@ class ReleaseVersionTests(unittest.TestCase):
         self.assertIn('RELEASE_INCREMENT: ${{ inputs.version_bump }}', workflow)
         self.assertNotIn('inputs.increment', workflow)
 
+    def test_real_published_alpha_continues_without_patch_bump(self):
+        current = v('v0.1.5-alpha.1')
+        tags = {v('v0.1.4-alpha.1'), current}
+        candidate = release.next_version(current, tags, 'current', 'alpha')
+        self.assertEqual(release.version_string(candidate), 'v0.1.5-alpha.2')
+
+    def test_release_retries_transient_upload_without_new_version(self):
+        workflow = (PATH.parent.parent / '.github/workflows/release.yml').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn('id: upload_release', workflow)
+        self.assertIn('continue-on-error: true', workflow)
+        self.assertIn("if: steps.upload_release.outcome == 'failure'", workflow)
+        self.assertIn('overwrite: true', workflow)
+        self.assertIn('name: release-${{ matrix.target }}', workflow)
+        self.assertIn('needs: [prepare, validate, build]', workflow)
+
     def test_retry_after_untagged_preparation(self):
         tags={v('0.1.2')}
         self.assertEqual(release.next_version(v('0.1.3-alpha.1'),tags,'current','alpha'),v('0.1.3-alpha.1'))
