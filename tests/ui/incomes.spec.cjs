@@ -6,7 +6,7 @@ async function add(page, name, amount, currency = 'EUR', rate = '') {
   await row.locator('[data-income-name]').fill(name);
   await row.locator('[data-income]').fill(amount);
   await row.locator('[data-income-currency]').selectOption(currency);
-  if (rate) await row.locator('[data-income-rate]').fill(rate);
+  if (rate) await page.locator(`[data-income-rate="${currency}"]`).fill(rate);
   return row;
 }
 async function save(page) {
@@ -28,7 +28,7 @@ for (const width of [320, 1280]) {
     await expect(salary.locator('[data-income-eur]')).toHaveText('€853.24');
     const refund = await add(page, 'Возврат со страховой', '100');
     await expect(refund.locator('[data-income-eur]')).toHaveText('€100.00');
-    await expect(refund.locator('[data-income-rate]')).toBeHidden();
+    await expect(rows(page).locator('[data-income-rate]')).toHaveCount(0);
     await expect(page.locator('#incomeTotal')).toHaveText('€953.24');
     await add(page, 'Бонус', '200');
     await expect(page.locator('#incomeTotal')).toHaveText('€1,153.24');
@@ -127,7 +127,7 @@ test('income validates names, amounts and rates and protects unsaved edits', asy
   await nav(page, 'Dashboard');
   await page.locator('#confirmCancel').click();
   await expect(row.locator('[data-income]')).toHaveValue('100');
-  await row.locator('[data-income-rate]').fill('2');
+  await page.locator('[data-income-rate="USD"]').fill('2');
   await expect(page.locator('#incomeTotal')).toHaveText('€50.00');
   await row.locator('[data-income-currency]').selectOption('EUR');
   await expect(page.locator('#incomeTotal')).toHaveText('€100.00');
@@ -158,10 +158,10 @@ test('income rate loading protects concurrent edits and failed saves can retry',
     exact: true,
   });
   await expect(saveButton).toBeDisabled();
-  await row.locator('[data-income-rate]').fill('2.2');
+  await page.locator('[data-income-rate="USD"]').fill('2.2');
   release();
   await expect(saveButton).toBeEnabled();
-  await expect(row.locator('[data-income-rate]')).toHaveValue('2.2');
+  await expect(page.locator('[data-income-rate="USD"]')).toHaveValue('2.2');
   await expect(page.locator('#incomeTotal')).toHaveText('€50.00');
   await page.route('**/api/incomes/2026-01', (route) =>
     route.fulfill({ status: 500, json: { error: { code: 'internal_error' } } }),
@@ -191,3 +191,86 @@ test('loaded rates update each matching income and its EUR equivalent', async ({
   await expect(page.locator('#incomeTotal')).toHaveText('€1,000.00');
   await save(page);
 });
+
+for (const width of [320, 1280]) {
+  test(`one shared rate converts every income in its currency at ${width}px`, async ({
+    page,
+    app,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 });
+    await open(page, app);
+    await nav(page, 'Income');
+    await setMonth(page, '2026-10');
+    await add(page, 'Salary', '100000', 'RSD', '117.2');
+    await add(page, 'Bonus', '17200', 'RSD');
+    await add(page, 'Refund', '100', 'EUR');
+    await expect(rows(page).locator('[data-income-rate]')).toHaveCount(0);
+    await expect(page.locator('[data-income-rate]')).toHaveCount(1);
+    await expect(page.locator('#incomeRates')).toBeVisible();
+    await expect(page.locator('#incomeTotal')).toHaveText('€1,100.00');
+    await page.locator('[data-income-rate="RSD"]').fill('100');
+    await expect(rows(page).nth(0).locator('[data-income-eur]')).toHaveText(
+      '€1,000.00',
+    );
+    await expect(rows(page).nth(1).locator('[data-income-eur]')).toHaveText(
+      '€172.00',
+    );
+    await expect(page.locator('#incomeTotal')).toHaveText('€1,272.00');
+    // Changing another row's currency keeps the shared RSD rate intact.
+    await rows(page)
+      .nth(1)
+      .locator('[data-income-currency]')
+      .selectOption('USD');
+    await expect(page.locator('[data-income-rate]')).toHaveCount(2);
+    await expect(page.locator('[data-income-rate="RSD"]')).toHaveValue('100');
+    await page.locator('[data-income-rate="USD"]').fill('2');
+    await rows(page)
+      .nth(1)
+      .locator('[data-income-currency]')
+      .selectOption('RSD');
+    await expect(page.locator('[data-income-rate]')).toHaveCount(1);
+    await expect(page.locator('#incomeTotal')).toHaveText('€1,272.00');
+    await save(page);
+    const snapshot = await (
+      await page.request.get(app + '/api/data/export')
+    ).json();
+    expect(
+      snapshot.incomes
+        .filter((entry) => entry.currency === 'RSD')
+        .map((entry) => entry.rate),
+    ).toEqual(['100', '100']);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - innerWidth,
+      ),
+    ).toBeLessThanOrEqual(1);
+    await page.screenshot({
+      path: testInfo.outputPath('shared-income-rates.png'),
+      fullPage: true,
+    });
+    await page.reload();
+    await nav(page, 'Income');
+    await setMonth(page, '2026-10');
+    await expect(page.locator('[data-income-rate="RSD"]')).toHaveValue('100');
+    await expect(page.locator('#incomeTotal')).toHaveText('€1,272.00');
+    await setMonth(page, '2026-09');
+    await expect(page.locator('#incomeRates')).toBeHidden();
+    await add(page, 'Earlier salary', '100000', 'RSD', '200');
+    await save(page);
+    await setMonth(page, '2026-10');
+    await expect(page.locator('[data-income-rate="RSD"]')).toHaveValue('100');
+    await rows(page)
+      .first()
+      .getByRole('button', { name: 'Remove income' })
+      .click();
+    await expect(page.locator('[data-income-rate="RSD"]')).toHaveCount(1);
+    await rows(page)
+      .first()
+      .getByRole('button', { name: 'Remove income' })
+      .click();
+    await expect(page.locator('#incomeRates')).toBeHidden();
+    await expect(page.locator('[data-income-rate]')).toHaveCount(0);
+    await expect(page.locator('#incomeTotal')).toHaveText('€100.00');
+    await save(page);
+  });
+}

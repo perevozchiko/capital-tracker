@@ -14,6 +14,32 @@ import { showConfirm } from './dialogs.js';
 import { incomeTotal } from './income-math.js';
 
 let rowSequence = 0;
+let monthRates = new Map();
+
+function syncIncomeRates() {
+  const container = $('#incomeRateFields');
+  for (const input of container.querySelectorAll('[data-income-rate]')) {
+    monthRates.set(input.dataset.incomeRate, input.value);
+  }
+  const used = new Set(
+    [...document.querySelectorAll('[data-income-currency]')]
+      .map((input) => input.value)
+      .filter((currency) => currency !== 'EUR'),
+  );
+  for (const label of container.querySelectorAll('[data-income-rate-label]')) {
+    if (!used.has(label.dataset.incomeRateLabel)) label.remove();
+  }
+  for (const currency of state.currencies.filter((currency) =>
+    used.has(currency),
+  )) {
+    if (container.querySelector(`[data-income-rate="${currency}"]`)) continue;
+    container.insertAdjacentHTML(
+      'beforeend',
+      `<label data-income-rate-label="${currency}" for="income-rate-${currency}"><span>1 EUR = … ${currency}</span><input id="income-rate-${currency}" class="editor-input" data-income-rate="${currency}" inputmode="decimal" value="${escapeHTML(monthRates.get(currency) || '')}"></label>`,
+    );
+  }
+  $('#incomeRates').hidden = used.size === 0;
+}
 function incomeRow(entry = {}) {
   const id = ++rowSequence;
   const currency = entry.currency || 'EUR';
@@ -21,7 +47,6 @@ function incomeRow(entry = {}) {
     <label for="income-name-${id}">${t('incomeName')}<input id="income-name-${id}" class="editor-input" data-income-name maxlength="100" value="${escapeHTML(entry.name || '')}" placeholder="${t('incomeNamePlaceholder')}"></label>
     <label for="income-amount-${id}">${t('incomeAmount')}<input id="income-amount-${id}" class="editor-input" data-income type="text" inputmode="decimal" autocomplete="off" value="${escapeHTML(minorToInput(entry.amount_minor))}"></label>
     <label for="income-currency-${id}">${t('currency')}<select id="income-currency-${id}" class="editor-input" data-income-currency>${state.currencies.map((c) => `<option ${c === currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
-    <label for="income-rate-${id}" data-income-rate-label ${currency === 'EUR' ? 'hidden' : ''}><span>1 EUR = <span data-rate-currency>${currency}</span></span><input id="income-rate-${id}" class="editor-input" data-income-rate inputmode="decimal" value="${escapeHTML(currency === 'EUR' ? '1' : entry.rate || '')}"></label>
     <div class="income-equivalent"><span class="subtle">${t('totalEUR')}</span><strong data-income-eur>—</strong></div>
     <button class="btn btn-icon" type="button" data-action="removeIncomeRow" aria-label="${t('removeIncome')}">×</button>
   </div>`;
@@ -30,8 +55,17 @@ function incomeRow(entry = {}) {
 async function renderIncomes() {
   state.incomeHistory = await api('/incomes');
   const month = state.incomeHistory.find((m) => m.month === state.month);
+  monthRates = new Map();
+  for (const entry of month?.entries || []) {
+    const previous = monthRates.get(entry.currency);
+    monthRates.set(
+      entry.currency,
+      previous == null || previous === entry.rate ? entry.rate : '',
+    );
+  }
   $('#pageContent').innerHTML =
-    `<section class="card panel"><div class="panel-heading"><h2>${t('incomeEditor')}</h2></div><p class="subtle">${t('incomeHelp')}</p><form id="incomeForm"><div class="income-fields">${(month?.entries || []).map(incomeRow).join('')}</div><button class="btn" type="button" data-action="addIncomeRow"><span aria-hidden="true">+</span> ${t('addIncome')}</button><div class="income-total"><span>${t('monthlyIncomeTotal')}</span><strong id="incomeTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveIncome')}</button><button class="btn" type="button" data-action="loadIncomeRates">${t('loadRates')}</button><button class="btn btn-danger" type="button" data-action="deleteIncome" ${month ? '' : 'disabled'}>${t('deleteIncome')}</button></div><p id="incomeRateStatus" class="subtle" role="status"></p></form></section><section class="card panel"><div class="panel-heading"><h2>${t('incomeHistory')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.incomeHistory, 'income')}</section>`;
+    `<section class="card panel"><div class="panel-heading"><h2>${t('incomeEditor')}</h2></div><p class="subtle">${t('incomeHelp')}</p><form id="incomeForm"><div class="income-fields">${(month?.entries || []).map(incomeRow).join('')}</div><button class="btn" type="button" data-action="addIncomeRow"><span aria-hidden="true">+</span> ${t('addIncome')}</button><aside id="incomeRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('incomeSharedRatesHelp')}</p><div id="incomeRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadIncomeRates">${t('loadRates')}</button><p id="incomeRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyIncomeTotal')}</span><strong id="incomeTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveIncome')}</button><button class="btn btn-danger" type="button" data-action="deleteIncome" ${month ? '' : 'disabled'}>${t('deleteIncome')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('incomeHistory')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.incomeHistory, 'income')}</section>`;
+  syncIncomeRates();
   updateIncomeTotals();
   applyAmountVisibility();
 }
@@ -44,7 +78,7 @@ function readRow(row) {
   const rate =
     currency === 'EUR'
       ? '1'
-      : parseRate(row.querySelector('[data-income-rate]').value);
+      : parseRate($(`[data-income-rate="${currency}"]`).value);
   if (!rate) throw new Error(t('invalidRate'));
   return {
     month: state.month,
@@ -80,12 +114,14 @@ function updateIncomeTotals() {
 function addIncomeRow() {
   $('#incomeForm .income-fields').insertAdjacentHTML('beforeend', incomeRow());
   state.dirty = true;
+  syncIncomeRates();
   updateIncomeTotals();
   applyAmountVisibility();
   $('#incomeForm [data-income-row]:last-child [data-income-name]').focus();
 }
 function removeIncomeRow(button) {
   button.closest('[data-income-row]').remove();
+  syncIncomeRates();
   state.dirty = true;
   updateIncomeTotals();
 }
@@ -95,11 +131,7 @@ document.addEventListener('input', (event) => {
 });
 document.addEventListener('change', (event) => {
   if (!event.target.matches('[data-income-currency]')) return;
-  const row = event.target.closest('[data-income-row]');
-  const currency = event.target.value;
-  row.querySelector('[data-income-rate-label]').hidden = currency === 'EUR';
-  row.querySelector('[data-rate-currency]').textContent = currency;
-  row.querySelector('[data-income-rate]').value = currency === 'EUR' ? '1' : '';
+  syncIncomeRates();
   state.dirty = true;
   updateIncomeTotals();
 });
@@ -150,23 +182,9 @@ async function deleteIncome() {
 
 async function loadIncomeRates(button) {
   const month = state.month;
-  const inputs = [...document.querySelectorAll('[data-income-rate]')].filter(
-    (input) =>
-      input.closest('[data-income-row]').querySelector('[data-income-currency]')
-        .value !== 'EUR',
-  );
+  const inputs = [...document.querySelectorAll('[data-income-rate]')];
   if (!inputs.length) return;
-  const initial = new Map(
-    inputs.map((input) => [
-      input,
-      {
-        value: input.value,
-        currency: input
-          .closest('[data-income-row]')
-          .querySelector('[data-income-currency]').value,
-      },
-    ]),
-  );
+  const initial = new Map(inputs.map((input) => [input, input.value]));
   button.disabled = true;
   const saveButton = $('#incomeForm [type="submit"]');
   saveButton.disabled = true;
@@ -180,17 +198,8 @@ async function loadIncomeRates(button) {
     if (!button.isConnected || state.month !== month) return;
     let count = 0;
     for (const input of inputs) {
-      const previous = initial.get(input);
-      const currency = input
-        .closest('[data-income-row]')
-        .querySelector('[data-income-currency]').value;
-      const rate = result.rates[currency];
-      if (
-        input.isConnected &&
-        rate &&
-        currency === previous.currency &&
-        input.value === previous.value
-      ) {
+      const rate = result.rates[input.dataset.incomeRate];
+      if (input.isConnected && rate && input.value === initial.get(input)) {
         input.value = rate;
         count++;
       }

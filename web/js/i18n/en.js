@@ -1,4 +1,6 @@
 export default {
+  incomeSharedRatesHelp:
+    'One exchange rate per currency for all income entries in this month.',
   addIncome: 'Add income',
   removeIncome: 'Remove income',
   incomeName: 'Name',
@@ -10,7 +12,7 @@ export default {
   incomeHistory: 'Income history in EUR',
   incomeEmpty: 'Save monthly income to see how it changes in EUR.',
   incomeHelp:
-    'Add each income separately with a name, amount and currency. EUR equivalents and the monthly total update as you type. For other currencies, enter or load a rate: 1 EUR = …',
+    'Add each income separately with a name, amount and currency. EUR equivalents and the monthly total update as you type. Set exchange rates in the separate block below; each rate applies to all income in that currency.',
   saveIncome: 'Save income',
   deleteIncome: 'Delete income',
   confirmDeleteIncome:
