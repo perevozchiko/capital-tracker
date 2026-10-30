@@ -45,7 +45,7 @@ async function renderMonthly() {
     previousMonth >= '1900-01'
       ? api('/months/' + previousMonth)
       : Promise.resolve(null),
-    api('/groups?month=' + encodeURIComponent(state.month)),
+    api('/groups?month=' + encodeURIComponent(state.month) + '&view=monthly'),
   ]);
   state.monthData = d;
   const accounts = d.editable_accounts || d.accounts;
@@ -71,13 +71,8 @@ async function renderMonthly() {
   };
   // Organization and order are shared with Accounts. No drag, edit or action menu here.
   const groupSection = (group, id) => {
-    const members = accounts.filter((a) =>
-      id === 'archive'
-        ? !!a.archived_from_month
-        : !a.archived_from_month && (a.group_id ?? null) === id,
-    );
-    const key =
-      id === 'archive' ? 'archive' : id === null ? 'ungrouped' : 'g-' + id;
+    const members = accounts.filter((a) => (a.group_id ?? null) === id);
+    const key = id === null ? 'ungrouped' : 'g-' + id;
     const closed = collapsedGroups.has(key);
     const total =
       group.total_eur_minor == null ? '—' : moneyHTML(group.total_eur_minor);
@@ -88,7 +83,7 @@ async function renderMonthly() {
     return `<section class='account-group monthly-group ${closed ? 'is-collapsed' : ''}'>
    <div class='account-group-head'>
     <button type='button' class='group-toggle' data-action='toggleGroup' data-group-key='${key}' aria-expanded='${!closed}' aria-label='${t('toggleGroup')}'>${closed ? '▸' : '▾'}</button>
-    <div class='group-caption'><strong>${escapeHTML(id === 'archive' ? t('archiveGroup') : id === null ? t('ungrouped') : group.name)}</strong><small>${pluralAccounts(members.length)}</small></div>
+    <div class='group-caption'><strong>${escapeHTML(id === null ? t('ungrouped') : group.name)}</strong><small>${pluralAccounts(members.length)}</small></div>
     <div class='group-total'><strong>${total}</strong><small>${t('groupTotalEUR')} · ${escapeHTML(monthLabel(state.month, true))}${totalNote}</small></div>
    </div>
    <div class='account-group-body'>${members.length ? members.map(balanceRow).join('') : `<p class='group-empty'>${t('noActiveAccounts')}</p>`}</div>
@@ -96,8 +91,7 @@ async function renderMonthly() {
   };
   const rows =
     groupData.groups.map((g) => groupSection(g, g.id)).join('') +
-    groupSection(groupData.ungrouped, null) +
-    groupSection(groupData.archive, 'archive');
+    groupSection(groupData.ungrouped, null);
   const exchangeRows = currencies
     .map(
       (c) =>

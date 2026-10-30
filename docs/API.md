@@ -41,3 +41,5 @@ Example full monthly replacement:
 ```
 
 `PUT /api/months/{month}` creates the month when needed, and removes old balance/rate entries omitted from this request. `POST /api/months` creates a deliberately empty month and rejects duplicates. `DELETE /api/months/{month}` requires JSON `{"confirm":true}` with the CSRF header and permanently removes the month plus its balances and rates via one SQLite transaction; other months remain unchanged. Never call `PUT` with an empty payload unintentionally, as that means clear the month. Requests are limited to 1 MiB.
+
+For `GET /api/groups`, optional `view=monthly` keeps accounts active in the selected month in their assigned groups, including accounts archived later, instead of placing them in Archive. The default view retains the Accounts screen grouping.

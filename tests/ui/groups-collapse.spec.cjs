@@ -19,19 +19,26 @@ async function setup(page, app, screen) {
   await createAccount(page, 'Cash');
   if (screen !== 'Accounts') await nav(page, screen);
 }
-async function expectAll(page, closed) {
-  const buttons = page.locator('.group-toggle');
+async function expectAll(page, closed, sharedOnly = false) {
+  const groups = page.locator(
+    sharedOnly
+      ? '.account-group:not(:has([data-group-key="archive"]))'
+      : '.account-group',
+  );
+  const buttons = groups.locator('.group-toggle');
   await expect(buttons.first()).toBeVisible();
   const count = await buttons.count();
   expect(count).toBeGreaterThan(0);
-  await expect(page.locator('.account-group.is-collapsed')).toHaveCount(
+  await expect(groups.and(page.locator('.is-collapsed'))).toHaveCount(
     closed ? count : 0,
   );
   for (const button of await buttons.all())
     await expect(button).toHaveAttribute('aria-expanded', String(!closed));
 }
 for (const screen of ['Accounts', 'Monthly balances']) {
-  for (const group of ['Savings', 'Empty', 'Ungrouped', 'Archive']) {
+  const groups = ['Savings', 'Empty', 'Ungrouped'];
+  if (screen === 'Accounts') groups.push('Archive');
+  for (const group of groups) {
     test(`${screen}: collapse and expand ${group} persists across reload`, async ({
       page,
       app,
@@ -101,14 +108,20 @@ for (const source of ['Accounts', 'Monthly balances']) {
       .getByRole('button', { name: 'Collapse all', exact: true })
       .click();
     await nav(page, destination);
-    await expectAll(page, true);
+    await expectAll(page, true, true);
     await restartApp();
     await page.reload();
     await nav(page, destination);
-    await expectAll(page, true);
+    await expectAll(page, true, true);
     await page.getByRole('button', { name: 'Expand all', exact: true }).click();
     await nav(page, source);
-    await expectAll(page, false);
+    await expectAll(page, false, true);
+    if (source === 'Accounts') {
+      // Monthly controls do not change the Archive section on Accounts.
+      await expect(
+        accountGroup(page, 'Archive').locator('.group-toggle'),
+      ).toHaveAttribute('aria-expanded', 'false');
+    }
   });
 }
 test('bulk collapse preserves unsaved balances, rates and selected month', async ({
