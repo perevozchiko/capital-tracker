@@ -20,7 +20,7 @@ func TestTransferRoundTripAtomicAndPrecision(t *testing.T) {
 	if err := s.PutMonth("2026-01", MonthInput{Balances: []BalanceInput{{old.ID, "9000000000000000"}, {usd.ID, "0"}}, Rates: []RateInput{{"USD", "1.12345678"}}}); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.CreateMonth("2026-02"); err != nil {
+	if err := s.PutMonth("2026-02", MonthInput{Balances: []BalanceInput{{usd.ID, "0"}}}); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.ArchiveAccount(usd.ID, "2026-03"); err != nil {

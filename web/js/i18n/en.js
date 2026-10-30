@@ -98,7 +98,7 @@ export default {
   archiveFrom: 'First excluded month (YYYY-MM)',
   restoreFrom: 'First restored month (YYYY-MM)',
   archiveWarning:
-    'Archiving preserves all recorded balances. Enter the first month the account should be excluded from totals.',
+    'Archiving requires a saved zero balance in the latest recorded month and preserves all history. Enter the first month the account should be excluded from totals.',
   restoreWarning:
     'Restoration creates a new active period and never rewrites past months.',
   discardChanges: 'Discard unsaved changes?',
@@ -223,6 +223,8 @@ export default {
   reason_account_delete_changes_history:
     'This account was active in a saved month. Deleting it would change historical totals.',
   reason_account_already_archived: 'This account is already archived.',
+  reason_archive_requires_zero_balance:
+    'To archive this account, save a zero balance in the latest recorded month first.',
   reason_archive_after_last_balance:
     'Archive after the last month with a recorded balance.',
   reason_archive_after_history:

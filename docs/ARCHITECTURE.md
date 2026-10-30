@@ -41,7 +41,7 @@ The browser is an **untrusted client**. All persisted values and state transitio
 
 ## Model and invariants
 
-- Accounts each have a single currency and one or more active periods. Archiving does not destroy historical balances. Archive/restore must not silently alter past saved months.
+- Accounts each have a single currency and one or more active periods. Archiving requires an explicit zero balance in the latest saved month and does not destroy historical balances. Archive/restore must not silently alter past saved months.
 - Groups organize accounts and can be moved or renamed; group membership is **current**, not recorded per month. Moving an account can change historical *group subtotals* but never historical *net worth*.
 - Monthly balances use `(account_id, YYYY-MM, amount_minor)` with integer minor units; an absent row means *unknown*, not zero.
 - FX rates are per-month and stored as fixed-point integer values scaled by `10^8` (not IEEE floating point). EUR is the reporting base; rate interpretation is **1 EUR = X foreign units**.

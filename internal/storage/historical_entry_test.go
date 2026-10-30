@@ -84,6 +84,9 @@ func TestBackfillDoesNotReopenArchivedGap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err = s.PutMonth("2026-02", MonthInput{Balances: []BalanceInput{{a.ID, "0"}}}); err != nil {
+		t.Fatal(err)
+	}
 	if err = s.ArchiveAccount(a.ID, "2026-03"); err != nil {
 		t.Fatal(err)
 	}

@@ -8,6 +8,7 @@ const {
   action,
   accountGroup,
   setMonth,
+  saveBalances,
 } = require('./helpers.cjs');
 
 test('navigation and appearance persist across reload', async ({
@@ -55,6 +56,9 @@ test('account groups, menus, reordering, archive and restore', async ({
   await expect(
     page.locator('.account-row').filter({ hasText: 'Cash' }),
   ).toContainText('USD');
+  await nav(page, 'Monthly balances');
+  await saveBalances(page, '2025-01', { 1: '0' }, { USD: '1.1' });
+  await nav(page, 'Accounts');
   await action(page, 'Cash', 'archive');
   await editDialog(page, '2025-03');
   await expect(

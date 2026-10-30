@@ -99,9 +99,11 @@ test('archived accounts display recorded balances for the selected historical mo
   await createAccount(page, 'Archived savings');
   await nav(page, 'Monthly balances');
   await saveBalances(page, '2025-01', { 1: '42.25' });
+  await saveBalances(page, '2025-02', { 1: '0' });
   await nav(page, 'Accounts');
   await action(page, 'Archived savings', 'archive');
-  await editDialog(page, '2025-02');
+  await editDialog(page, '2025-03');
+  await setMonth(page, '2025-01');
   const balance = page.locator(
     '[data-group-id="archive"] .account-balance strong',
   );
@@ -109,6 +111,41 @@ test('archived accounts display recorded balances for the selected historical mo
   await expect(balance.locator('.money-text')).toBeVisible();
   await page.locator('#amountVisibility').click();
   await expect(balance.locator('.money-text')).toBeHidden();
-  await setMonth(page, '2025-02');
+  await setMonth(page, '2025-03');
   await expect(balance).toHaveText('—');
 });
+
+for (const value of ['', '1', '-1']) {
+  test(`archive rejects ${value === '' ? 'missing' : value} balance and succeeds after saving zero`, async ({
+    page,
+    app,
+  }) => {
+    await open(page, app);
+    await nav(page, 'Accounts');
+    await createAccount(page, 'Closing account');
+    await nav(page, 'Monthly balances');
+    if (value === '')
+      await savePartialBalances(page, '2025-01', { 1: value }, {});
+    else await saveBalances(page, '2025-01', { 1: value });
+    await nav(page, 'Accounts');
+    await action(page, 'Closing account', 'archive');
+    await page.locator('#editValue').fill('2025-02');
+    await page.locator('#confirmEdit').click();
+    await expect(page.locator('#toast')).toContainText(
+      'save a zero balance in the latest recorded month first',
+    );
+    await expect(page.locator('#accountDialog')).toBeVisible();
+    await expect(
+      page.locator('[data-group-id="archive"] .account-row'),
+    ).toHaveCount(0);
+    await page.locator('#cancelEdit').click();
+    await nav(page, 'Monthly balances');
+    await saveBalances(page, '2025-01', { 1: '0' });
+    await nav(page, 'Accounts');
+    await action(page, 'Closing account', 'archive');
+    await editDialog(page, '2025-02');
+    await expect(
+      page.locator('[data-group-id="archive"] .account-row'),
+    ).toContainText('Closing account');
+  });
+}

@@ -21,7 +21,7 @@ func TestClearDataRemovesEverythingAndResetsPreferences(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.CreateMonth("2026-02"); err != nil {
+	if err = s.PutMonth("2026-02", MonthInput{Balances: []BalanceInput{{usd.ID, "0"}}}); err != nil {
 		t.Fatal(err)
 	}
 	if err = s.ArchiveAccount(usd.ID, "2026-03"); err != nil {

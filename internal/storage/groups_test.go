@@ -175,7 +175,10 @@ func TestArchivedAccountsUseVirtualGroupWithoutLosingOriginalGroup(t *testing.T)
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.ArchiveAccount(a.ID, "2026-02"); err != nil {
+	if err = s.PutMonth("2026-02", MonthInput{Balances: []BalanceInput{{a.ID, "0"}}}); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.ArchiveAccount(a.ID, "2026-03"); err != nil {
 		t.Fatal(err)
 	}
 	summary, err := s.GroupsAt("2026-01")
@@ -187,7 +190,7 @@ func TestArchivedAccountsUseVirtualGroupWithoutLosingOriginalGroup(t *testing.T)
 		*summary.Archive.TotalEURMinor != "10000" {
 		t.Fatalf("unexpected archived group totals: %+v", summary)
 	}
-	if err = s.RestoreAccount(a.ID, "2026-02"); err != nil {
+	if err = s.RestoreAccount(a.ID, "2026-03"); err != nil {
 		t.Fatal(err)
 	}
 	restored, err := s.account(a.ID)

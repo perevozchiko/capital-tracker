@@ -245,6 +245,19 @@ func (s *Store) ArchiveAccount(id int64, month string) error {
 	if latest != "" && month <= latest {
 		return conflict("archive_after_history")
 	}
+	// Missing balances are unknown, so require an explicit zero in the latest
+	// saved month instead of falling back to an older balance.
+	var balance int64
+	e = s.DB.QueryRow("SELECT amount_minor FROM monthly_balances WHERE account_id=? AND month=?", id, latest).Scan(&balance)
+	if errors.Is(e, sql.ErrNoRows) {
+		return conflict("archive_requires_zero_balance")
+	}
+	if e != nil {
+		return e
+	}
+	if balance != 0 {
+		return conflict("archive_requires_zero_balance")
+	}
 	tx, e := s.DB.Begin()
 	if e != nil {
 		return e

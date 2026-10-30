@@ -12,7 +12,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | --- | --- | --- |
 | `GET`, `POST` | `/api/accounts` | List / create accounts (`name`, `currency`, `start_month`, optional `group_id`) |
 | `PATCH`, `DELETE` | `/api/accounts/{id}` | Change account name or currency (currency only before any recorded balance) / delete history-free account |
-| `POST` | `/api/accounts/{id}/archive` | `{"month":"2026-11"}` |
+| `POST` | `/api/accounts/{id}/archive` | `{"month":"2026-11"}`; requires an explicit zero balance in the latest saved month, otherwise returns `409` with reason `archive_requires_zero_balance` |
 | `POST` | `/api/accounts/{id}/restore` | `{"start_month":"2026-12"}` |
 | `PUT` | `/api/accounts/reorder` | `{"ids":[1,2,3]}` full atomic order (legacy) |
 | `PUT` | `/api/accounts/assignments` | Full atomic list `{"accounts":[{"id":1,"group_id":2},{"id":3,"group_id":null}]}`; includes **every** account in display order |

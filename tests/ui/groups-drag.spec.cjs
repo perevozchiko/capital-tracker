@@ -9,6 +9,7 @@ const {
   row,
   expectMembers,
   drag,
+  saveBalances,
 } = require('./helpers.cjs');
 
 async function setup(page, app) {
@@ -245,6 +246,16 @@ for (const approved of [false, true]) {
     app,
   }) => {
     await setup(page, app);
+    await nav(page, 'Monthly balances');
+    await saveBalances(page, '2025-01', {
+      1: '0',
+      2: '0',
+      3: '0',
+      4: '0',
+      5: '0',
+      6: '0',
+    });
+    await nav(page, 'Accounts');
     await row(page, 'A1').dragTo(header(page, 'Archive'), {
       sourcePosition: { x: 90, y: 20 },
       targetPosition: { x: 100, y: 20 },

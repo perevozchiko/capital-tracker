@@ -158,6 +158,9 @@ func TestHistoryAndRestrictions(t *testing.T) {
 	if e := s.ArchiveAccount(a.ID, "2026-01"); !errors.Is(e, ErrConflict) {
 		t.Fatalf("retroactive archive allowed: %v", e)
 	}
+	if e := s.PutMonth("2026-01", MonthInput{Balances: []BalanceInput{{a.ID, "0"}}}); e != nil {
+		t.Fatal(e)
+	}
 	if e := s.ArchiveAccount(a.ID, "2026-02"); e != nil {
 		t.Fatal(e)
 	}

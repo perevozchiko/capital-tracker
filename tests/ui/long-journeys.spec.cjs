@@ -133,7 +133,7 @@ test('long journey: archive, inactive months, restore, backdated protection and 
   await createAccount(page, 'Wallet');
   await nav(page, 'Monthly balances');
   await saveBalances(page, '2025-01', { 1: '100', 2: '20' });
-  await saveBalances(page, '2025-02', { 1: '200', 2: '30' });
+  await saveBalances(page, '2025-02', { 1: '0', 2: '30' });
   await nav(page, 'Accounts');
   await action(page, 'Bank', 'archive');
   await editDialog(page, '2025-03');
@@ -168,15 +168,15 @@ test('long journey: archive, inactive months, restore, backdated protection and 
   await action(page, 'Bank', 'history');
   await expect(page.locator('#pageContent table tbody tr')).toHaveCount(3);
   await expect(page.locator('#pageContent')).toContainText('€100.00');
-  await expect(page.locator('#pageContent')).toContainText('€200.00');
+  await expect(page.locator('#pageContent')).toContainText('€0.00');
   await expect(page.locator('#pageContent')).toContainText('€300.00');
   await nav(page, 'Dashboard');
   await setMonth(page, '2025-02');
-  await expect(page.locator('.metric').first()).toContainText('€230.00');
+  await expect(page.locator('.metric').first()).toContainText('€30.00');
   await setMonth(page, '2025-03');
   await expect(page.locator('.metric').first()).toContainText('€40.00');
   await expect(page.locator('.metric').nth(1)).toContainText(
-    '-€190.00 (-82.61%)',
+    '+€10.00 (+33.33%)',
   );
   await setMonth(page, '2025-04');
   await expect(page.locator('.metric').first()).toContainText('€350.00');
