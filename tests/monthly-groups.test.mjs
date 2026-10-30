@@ -63,7 +63,7 @@ function setup(active) {
   };
   const groups = {
     groups: [
-      { id: 2, name: 'Investments', total_eur_minor: '12000' },
+      { id: 2, name: 'Investments', total_eur_minor: '32000' },
       { id: 1, name: 'Savings & cash', total_eur_minor: '15000' },
       { id: 3, name: 'Empty', total_eur_minor: null },
     ],
@@ -75,7 +75,7 @@ function setup(active) {
     if (path === '/months/2026-09') return data;
     if (path === '/months/2026-08')
       return { balances: [{ account_id: 1, amount_minor: '10000' }] };
-    if (path === '/groups?month=2026-09') return groups;
+    if (path === '/groups?month=2026-09&view=monthly') return groups;
     throw Error('Unexpected API request ' + path);
   };
   const escapeHTML = (v) =>
@@ -116,8 +116,23 @@ function setup(active) {
     () => {},
     () => '',
   );
-  return { state, content, calls, render };
+  return { state, content, calls, render, data };
 }
+
+test('historically active archived accounts stay in their assigned group or Ungrouped', async () => {
+  for (const groupID of [2, null]) {
+    const ui = setup(true);
+    ui.data.accounts.find((a) => a.id === 3).group_id = groupID;
+    await ui.render();
+    const key = groupID === null ? 'ungrouped' : 'g-2';
+    const section = ui.content.innerHTML
+      .split("<section class='account-group")
+      .find((html) => html.includes(`data-group-key='${key}'`));
+    assert.match(section, /Former USD/);
+    assert.match(section, /data-balance='3'/);
+    assert.doesNotMatch(ui.content.innerHTML, /data-group-key='archive'/);
+  }
+});
 
 test('monthly balances display groups in Accounts order, without organizational controls', async () => {
   const ui = setup(true);
@@ -126,7 +141,7 @@ test('monthly balances display groups in Accounts order, without organizational 
   assert.deepEqual(ui.calls, [
     '/months/2026-09',
     '/months/2026-08',
-    '/groups?month=2026-09',
+    '/groups?month=2026-09&view=monthly',
   ]);
   assert.ok(
     html.indexOf('Investments</strong>') <
@@ -135,9 +150,9 @@ test('monthly balances display groups in Accounts order, without organizational 
   assert.match(html, /data-group-key='g-2' aria-expanded='false'/);
   assert.match(html, /monthly-group is-collapsed/);
   assert.match(html, /data-group-key='ungrouped'/);
-  assert.match(html, /data-group-key='archive'/);
+  assert.doesNotMatch(html, /data-group-key='archive'|archiveGroup/);
   assert.match(html, /Former USD/);
-  assert.match(html, /EUR 20000/);
+  assert.match(html, /EUR 32000/);
   assert.equal((html.match(/data-balance='\d+'/g) || []).length, 4);
   assert.doesNotMatch(
     html,
@@ -151,6 +166,7 @@ test('empty groups still render, while no active accounts have no balance inputs
   await ui.render();
   const html = ui.content.innerHTML;
   assert.match(html, /Empty/);
+  assert.doesNotMatch(html, /data-group-key='archive'|archiveGroup/);
   assert.match(html, /noActiveAccounts/);
   assert.doesNotMatch(html, /data-balance='\d+'/);
   assert.match(html, /data-action='saveMonth' disabled/);

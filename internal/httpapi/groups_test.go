@@ -80,3 +80,77 @@ func TestGroupAPICreateAssignReorderAndDelete(t *testing.T) {
 		t.Fatalf("account should survive deletion, ungrouped: %+v %v", accounts, err)
 	}
 }
+
+func TestMonthlyGroupsKeepHistoricalAccountsInAssignedGroups(t *testing.T) {
+	store, err := storage.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	group, err := store.CreateGroup("Savings")
+	if err != nil {
+		t.Fatal(err)
+	}
+	grouped, err := store.CreateAccountInGroup("Former bank", "USD", "2025-01", &group.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ungrouped, err := store.CreateAccount("Former wallet", "EUR", "2025-01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range []struct{ month, bank, wallet string }{
+		{"2025-01", "11000", "-2500"},
+		{"2025-02", "0", "0"},
+	} {
+		if err := store.PutMonth(entry.month, storage.MonthInput{
+			Balances: []storage.BalanceInput{{AccountID: grouped.ID, AmountMinor: entry.bank}, {AccountID: ungrouped.ID, AmountMinor: entry.wallet}},
+			Rates:    []storage.RateInput{{Currency: "USD", Rate: "1.1"}},
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, id := range []int64{grouped.ID, ungrouped.ID} {
+		if err := store.ArchiveAccount(id, "2025-03"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	handler := (&Server{Store: store, Version: "test"}).Handler()
+	for _, tc := range []struct{ query, group, ungrouped, archive string }{
+		{"month=2025-01&view=monthly", "10000", "-2500", ""},
+		{"month=2025-01", "", "", "7500"},
+		{"month=2025-03&view=monthly", "", "", ""},
+	} {
+		t.Run(tc.query, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "http://127.0.0.1:8765/api/groups?"+tc.query, nil)
+			resp := httptest.NewRecorder()
+			handler.ServeHTTP(resp, req)
+			if resp.Code != http.StatusOK {
+				t.Fatalf("status %d: %s", resp.Code, resp.Body.String())
+			}
+			var summary storage.GroupsForMonth
+			if err := json.Unmarshal(resp.Body.Bytes(), &summary); err != nil {
+				t.Fatal(err)
+			}
+			if len(summary.Groups) != 1 {
+				t.Fatalf("unexpected groups: %+v", summary)
+			}
+			for _, check := range []struct {
+				got  *string
+				want string
+			}{
+				{summary.Groups[0].TotalEURMinor, tc.group},
+				{summary.Ungrouped.TotalEURMinor, tc.ungrouped},
+				{summary.Archive.TotalEURMinor, tc.archive},
+			} {
+				if check.want == "" {
+					if check.got != nil {
+						t.Fatalf("unexpected subtotal: %s", *check.got)
+					}
+				} else if check.got == nil || *check.got != check.want {
+					t.Fatalf("subtotal = %v, want %s", check.got, check.want)
+				}
+			}
+		})
+	}
+}

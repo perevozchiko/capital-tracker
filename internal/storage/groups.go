@@ -258,6 +258,16 @@ func (s *Store) AssignAccounts(items []AccountAssignment) error {
 // GroupsAt uses the same exact conversion and rounding as the month total.
 // An incomplete group does not masquerade as a zero balance.
 func (s *Store) GroupsAt(month string) (GroupsForMonth, error) {
+	return s.groupsAt(month, true)
+}
+
+// MonthlyGroupsAt groups accounts active in the selected month by their current
+// group assignment, even if they have since been archived.
+func (s *Store) MonthlyGroupsAt(month string) (GroupsForMonth, error) {
+	return s.groupsAt(month, false)
+}
+
+func (s *Store) groupsAt(month string, separateArchive bool) (GroupsForMonth, error) {
 	out := GroupsForMonth{Groups: []GroupWithTotal{}, Month: month}
 	if !finance.ValidMonth(month) {
 		return out, invalid("month")
@@ -292,7 +302,7 @@ func (s *Store) GroupsAt(month string) (GroupsForMonth, error) {
 	}
 	for _, a := range data.Accounts {
 		gid := int64(0)
-		if a.ArchivedFromMonth != nil {
+		if separateArchive && a.ArchivedFromMonth != nil {
 			// Keep group_id for restoration but show archived accounts only in Archive.
 			gid = -1
 		} else if a.GroupID != nil {

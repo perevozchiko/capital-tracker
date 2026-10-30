@@ -18,7 +18,11 @@ func registerGroups(mux *http.ServeMux, s *Server) {
 			if month == "" {
 				month = time.Now().Format("2006-01")
 			}
-			summary, err := s.Store.GroupsAt(month)
+			groupsAt := s.Store.GroupsAt
+			if r.URL.Query().Get("view") == "monthly" {
+				groupsAt = s.Store.MonthlyGroupsAt
+			}
+			summary, err := groupsAt(month)
 			if err != nil {
 				handleError(w, err)
 				return

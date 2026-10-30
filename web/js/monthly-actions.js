@@ -8,7 +8,7 @@ import { render, refresh } from './router.js';
 async function loadRates(button) {
   const month = state.month;
   const inputs = [...document.querySelectorAll('[data-rate]')].filter(
-    (input) => !input.readOnly && !input.value.trim(),
+    (input) => !input.readOnly,
   );
   if (!inputs.length) return;
   const initial = new Map(inputs.map((input) => [input, input.value]));
@@ -31,12 +31,7 @@ async function loadRates(button) {
     let count = 0;
     for (const input of inputs) {
       const rate = result.rates[input.dataset.rate];
-      if (
-        input.isConnected &&
-        input.value === initial.get(input) &&
-        !input.value.trim() &&
-        rate
-      ) {
+      if (input.isConnected && input.value === initial.get(input) && rate) {
         input.value = rateText(rate);
         input.classList.remove('invalid');
         input.removeAttribute('aria-invalid');

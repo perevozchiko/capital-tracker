@@ -257,7 +257,7 @@ test('account history, delete confirmation and monthly deletion', async ({
   await expect(page.locator('[data-balance="1"]')).toHaveValue('');
 });
 
-test('rate loading preserves entered rates and reports network errors', async ({
+test('rate loading replaces unsaved manual rates and preserves values on network errors', async ({
   page,
   app,
 }) => {
@@ -274,7 +274,7 @@ test('rate loading preserves entered rates and reports network errors', async ({
     }),
   );
   await page.locator('[data-action="loadRates"]').click();
-  await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.25');
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.1');
   await expect(page.locator('[data-rate="RSD"]')).toHaveValue('117.2');
   await page.locator('[data-rate="RSD"]').fill('');
   await page.unroute('**/api/exchange-rates?*');
@@ -289,6 +289,57 @@ test('rate loading preserves entered rates and reports network errors', async ({
     'Could not load rates',
   );
   await expect(page.locator('[data-rate="RSD"]')).toHaveValue('');
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.1');
+});
+
+test('a single manually entered rate can be refreshed repeatedly until saved', async ({
+  page,
+  app,
+}) => {
+  await open(page, app);
+  await nav(page, 'Accounts');
+  await createAccount(page, 'Dollars', 'USD');
+  await nav(page, 'Monthly balances');
+  await setMonth(page, '2025-01');
+  await page.locator('[data-balance="1"]').fill('120');
+  const rate = page.locator('[data-rate="USD"]');
+  const load = page.locator('[data-action="loadRates"]');
+  await rate.fill('12');
+  let requests = 0;
+  await page.route('**/api/exchange-rates*', (route) => {
+    requests++;
+    return route.fulfill({
+      json: {
+        date: '2026-10-29',
+        rates: { USD: requests === 1 ? '1.1' : '1.2' },
+      },
+    });
+  });
+  await expect(load).toBeEnabled();
+  await load.click();
+  await expect(rate).toHaveValue('1.1');
+  await expect(page.locator('#rateLoadStatus')).toContainText('updated 1');
+  await expect(load).toBeEnabled();
+  await load.click();
+  await expect(rate).toHaveValue('1.2');
+  const unsaved = await (
+    await page.request.get(app + '/api/months/2025-01')
+  ).json();
+  expect(unsaved.rates).toEqual([]);
+  await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('Complete');
+  await expect(rate).toHaveAttribute('readonly', '');
+  await expect(load).toBeDisabled();
+  await page.locator('[data-balance="1"]').fill('240');
+  await expect(load).toBeDisabled();
+  await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('€200.00');
+  await page.reload();
+  await nav(page, 'Monthly balances');
+  await setMonth(page, '2025-01');
+  await expect(rate).toHaveValue('1.2');
+  await expect(load).toBeDisabled();
+  expect(requests).toBe(2);
 });
 
 test('invalid JSON import is rejected and current data remains', async ({
@@ -350,6 +401,7 @@ test('rate loading does not overwrite edits made while the request is pending', 
   await createAccount(page, 'Dollars', 'USD');
   await nav(page, 'Monthly balances');
   await setMonth(page, '2025-01');
+  await page.locator('[data-rate="USD"]').fill('1.2');
   let release;
   const wait = new Promise((resolve) => {
     release = resolve;
@@ -363,7 +415,7 @@ test('rate loading does not overwrite edits made while the request is pending', 
   await page.locator('[data-action="loadRates"]').click();
   await page.locator('[data-rate="USD"]').fill('1.25');
   release();
-  await expect(page.locator('#rateLoadStatus')).toContainText('filled 0');
+  await expect(page.locator('#rateLoadStatus')).toContainText('updated 0');
   await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.25');
 });
 
@@ -922,9 +974,12 @@ test('partial quotes and provider errors preserve entered values and allow retry
   await page.route('**/api/exchange-rates*', (route) =>
     route.fulfill(response),
   );
+  await page.locator('[data-rate="USD"]').fill('12');
+  await page.locator('[data-rate="RSD"]').fill('118');
   await page.locator('[data-action="loadRates"]').click();
   await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.1');
-  await expect(page.locator('[data-rate="RSD"]')).toHaveValue('');
+  await expect(page.locator('[data-rate="RSD"]')).toHaveValue('118');
+  await page.locator('[data-rate="RSD"]').fill('');
   await page.locator('[data-action="saveMonth"]').click();
   await expect(page.locator('.status-block')).toContainText('Incomplete');
   response = { status: 502, json: { error: { code: 'rates_unavailable' } } };

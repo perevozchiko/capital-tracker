@@ -67,7 +67,7 @@ test('long journey: organize, drag, collapse, restart, export, clear and restore
   await page.getByRole('button', { name: 'Expand all', exact: true }).click();
   await expect(
     page.locator('.monthly-group .group-caption > strong'),
-  ).toHaveText(['Empty', 'Cash', 'Investments', 'Ungrouped', 'Archive']);
+  ).toHaveText(['Empty', 'Cash', 'Investments', 'Ungrouped']);
   await expect(
     accountGroup(page, 'Investments').locator('[data-balance]'),
   ).toHaveCount(2);
@@ -145,6 +145,8 @@ test('long journey: archive, inactive months, restore, backdated protection and 
   await expect(page.locator('[data-balance="1"]')).toHaveCount(0);
   await saveBalances(page, '2025-03', { 2: '40' });
   await nav(page, 'Accounts');
+  await expect(accountGroup(page, 'Archive')).toHaveClass(/is-collapsed/);
+  await accountGroup(page, 'Archive').locator('.group-toggle').click();
   await action(page, 'Bank', 'restore');
   await editDialog(page, '2025-04');
   await expectMembers(page, 'Savings', ['Bank']);
