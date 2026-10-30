@@ -4,6 +4,7 @@ const state = {
   accounts: [],
   months: [],
   history: [],
+  incomeHistory: [],
   settings: { language: 'en', theme: 'dark', version: '' },
   buildCommit: 'unknown',
   currencies: [],

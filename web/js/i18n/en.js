@@ -1,17 +1,33 @@
 export default {
+  navIncomes: 'Income',
+  incomeEditor: 'Monthly income',
+  incomeAmount: 'Income',
+  incomeHistory: 'Income history in EUR',
+  incomeEmpty: 'Save monthly income to see how it changes in EUR.',
+  incomeHelp:
+    'Income notes do not affect accounts or net worth. Enter one total per currency. Empty means not entered; zero is recorded. Each rate is independent and can be edited: 1 EUR equals the entered amount of currency.',
+  saveIncome: 'Save income',
+  deleteIncome: 'Delete income',
+  confirmDeleteIncome:
+    'Delete all income notes and their rates for the selected month?',
+  incomeSaved: 'Income saved.',
+  incomeDeleted: 'Income deleted.',
+  incomeNonnegative: 'Income must be zero or positive.',
+  field_entries: 'Check the income entries.',
+
   hideAmounts: 'Hide amounts',
   showAmounts: 'Show amounts',
   dangerZone: 'Danger zone',
   clearAllData: 'Delete all data',
   clearDataTitle: 'Permanently delete all data?',
   clearDataWarning:
-    'This permanently deletes EVERY account, monthly balance, exchange rate and account history. Language and appearance settings will reset. This cannot be undone. Export a JSON backup before continuing. Previously saved backup files are not deleted.',
+    'This permanently deletes EVERY account, monthly balance, income note, exchange rate and account history. Language and appearance settings will reset. This cannot be undone. Export a JSON backup before continuing. Previously saved backup files are not deleted.',
   clearDataPrompt: 'Type {phrase} to confirm the permanent deletion:',
   clearDataPhrase: 'DELETE',
   dataCleared: 'All application data has been deleted.',
   jsonData: 'JSON import and export',
   jsonDataHelp:
-    'Download a portable JSON copy of your accounts, activity periods, monthly balances, exchange rates and settings.',
+    'Download a portable JSON copy of your accounts, activity periods, monthly balances, income notes, exchange rates and settings.',
   exportJSON: 'Export JSON',
   importJSON: 'Import JSON',
   jsonExported: 'JSON export downloaded.',
@@ -20,7 +36,7 @@ export default {
     'Import replaces your entire current data. Export your current records before importing another file.',
   confirmImportTitle: 'Replace all local data?',
   confirmImportMessage:
-    'The selected file contains {accounts} accounts and {months} months. Importing will permanently REPLACE all current accounts, history, rates and settings. Export a backup first. Continue?',
+    'The selected file contains {accounts} accounts and {months} months. Importing will permanently REPLACE all current accounts, history, income notes, rates and settings. Export a backup first. Continue?',
   invalidJSONFile: 'This is not a supported Capital Tracker JSON file.',
   json_too_large: 'The JSON file exceeds the 8 MiB limit.',
   field_import: 'The JSON file contains invalid or inconsistent data.',

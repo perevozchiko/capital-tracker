@@ -84,7 +84,7 @@ func TestGroupsTotalsMovementAndJSONRoundTrip(t *testing.T) {
 		t.Fatalf("group ordering: %+v %v", groups, err)
 	}
 	exported, err := s.ExportData()
-	if err != nil || exported.SchemaVersion != 2 || len(exported.Groups) != 3 {
+	if err != nil || exported.SchemaVersion != 3 || len(exported.Groups) != 3 {
 		t.Fatalf("groups missing from export: %+v %v", exported, err)
 	}
 	encoded, err := json.Marshal(exported)

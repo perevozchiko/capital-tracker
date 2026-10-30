@@ -7,7 +7,7 @@ import (
 
 func TestMigrationDiscoveryAndConnectionPragmas(t *testing.T) {
 	paths, err := migrationsList()
-	if err != nil || len(paths) != 2 || paths[0] != "migrations/001_init.sql" || paths[1] != "migrations/002_account_groups.sql" {
+	if err != nil || len(paths) != 3 || paths[0] != "migrations/001_init.sql" || paths[1] != "migrations/002_account_groups.sql" {
 		t.Fatalf("unexpected migration list: %v %v", paths, err)
 	}
 	dataDir := filepath.Join(t.TempDir(), "data # special")
@@ -37,7 +37,7 @@ func TestMigrationDiscoveryAndConnectionPragmas(t *testing.T) {
 	if err := s.DB.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&applied); err != nil {
 		t.Fatal(err)
 	}
-	if applied != 2 {
+	if applied != 3 {
 		t.Fatalf("migration re-applied: %d", applied)
 	}
 }

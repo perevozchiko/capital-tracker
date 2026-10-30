@@ -24,6 +24,8 @@ import {
   moveAccountIn,
 } from './account-actions.js';
 
+import { saveIncome, deleteIncome, loadIncomeRates } from './incomes.js';
+
 bindAccountDragAndDrop();
 
 window
@@ -75,6 +77,8 @@ document.addEventListener('click', async (e) => {
       updateBalanceDifference(input);
       input.focus();
     } else if (action === 'loadRates') await loadRates(node);
+    else if (action === 'deleteIncome') await deleteIncome();
+    else if (action === 'loadIncomeRates') await loadIncomeRates(node);
     else if (action === 'saveMonth') await saveMonth();
     else if (action === 'deleteMonth') {
       if (
@@ -99,6 +103,15 @@ document.addEventListener('click', async (e) => {
   }
 });
 document.addEventListener('submit', async (e) => {
+  if (e.target.id === 'incomeForm') {
+    e.preventDefault();
+    try {
+      await saveIncome(e.target);
+    } catch (error) {
+      notify(error.message, true);
+    }
+    return;
+  }
   if (e.target.id === 'editAccountForm') {
     e.preventDefault();
     await submitAccountEdit(e.target);
@@ -189,7 +202,9 @@ $('#mobileMenu').addEventListener('click', () =>
   $('#sidebar').classList.toggle('show'),
 );
 function pointTooltip(node, event) {
-  const p = state.history[Number(node.dataset.chartIndex)];
+  const p = (
+    node.dataset.chartSource === 'income' ? state.incomeHistory : state.history
+  )[Number(node.dataset.chartIndex)];
   if (!p) return;
   const tooltip = $('#chartTooltip');
   tooltip.innerHTML = `${escapeHTML(monthLabel(p.month))} · ${moneyHTML(p.total_eur_minor)}`;

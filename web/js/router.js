@@ -6,6 +6,7 @@ import { $, notify, confirmClean, renderNav, renderHeader } from './ui.js';
 import { renderDashboard } from './dashboard.js';
 import { renderAccounts } from './accounts.js';
 import { renderMonthly } from './monthly.js';
+import { renderIncomes } from './incomes.js';
 import { renderSettings } from './settings.js';
 
 async function navigate(page) {
@@ -31,6 +32,7 @@ async function render() {
   if (state.page === 'dashboard') await renderDashboard();
   else if (state.page === 'accounts') await renderAccounts();
   else if (state.page === 'monthly') await renderMonthly();
+  else if (state.page === 'incomes') await renderIncomes();
   else renderSettings();
 }
 async function refresh() {

@@ -43,3 +43,20 @@ Example full monthly replacement:
 `PUT /api/months/{month}` creates the month when needed, and removes old balance/rate entries omitted from this request. `POST /api/months` creates a deliberately empty month and rejects duplicates. `DELETE /api/months/{month}` requires JSON `{"confirm":true}` with the CSRF header and permanently removes the month plus its balances and rates via one SQLite transaction; other months remain unchanged. Never call `PUT` with an empty payload unintentionally, as that means clear the month. Requests are limited to 1 MiB.
 
 For `GET /api/groups`, optional `view=monthly` keeps accounts active in the selected month in their assigned groups, including accounts archived later, instead of placing them in Archive. The default view retains the Accounts screen grouping.
+
+## Income notes
+
+`GET /api/incomes` returns months in ascending order, each with `month`, `entries`, `total_eur_minor` (decimal string), and `complete: true`. `PUT /api/incomes/{month}` atomically replaces only that month's income notes:
+
+```json
+{
+  "entries": [
+    { "month": "2026-01", "currency": "USD", "amount_minor": "110000", "rate": "1.1" },
+    { "month": "2026-01", "currency": "EUR", "amount_minor": "50000", "rate": "1" }
+  ]
+}
+```
+
+Amounts must be nonnegative integer minor-unit strings; each currency appears at most once per month. Rates mean **1 EUR = rate units of currency**, must be positive, and use at most eight decimals. EUR requires rate `1`. The total sums exact conversions and rounds once. An empty `entries` array deletes the income month; a zero amount records it. Writes require the regular CSRF header and return HTTP 204. Income notes have independent rates and never create or alter capital months or accounts.
+
+JSON exports use `schema_version: 3` and include an `incomes` array with the same entry fields. Versions 1 and 2 remain importable and contain no income notes. Import replaces all data, including income notes.

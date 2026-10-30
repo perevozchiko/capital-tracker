@@ -81,3 +81,9 @@ The monthly editor loads the latest available rates into unsaved rate fields fro
 ## Currency definitions and schema constraints
 
 The canonical supported currency list is defined in `internal/finance/finance.go` and exposed to the browser by `/api/currencies`. The SQLite `CHECK` constraints intentionally repeat ISO codes as a defense against database corruption; adding a new currency requires a database migration and updating the canonical list. The MVP continues to support exactly EUR, USD, RSD, RUB and TRY.
+
+## Income
+
+Open **Income** and choose a month. Enter the monthly total for each currency you received, plus its exchange rate (**1 EUR = …**). Leave unused currencies empty; enter zero to record a month with no income. Rates can be entered manually or loaded with **Load latest exchange rates**, then saved with **Save income**. Saved income amounts and rates remain editable.
+
+The chart shows monthly income totals converted to EUR. Missing months break the line. **Delete income** removes only the selected month's income notes after confirmation. Income notes do not change accounts, capital snapshots, or their exchange rates; deleting a capital month does not remove income notes. JSON export/import and full data deletion include income notes.

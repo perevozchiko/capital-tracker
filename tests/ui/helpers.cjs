@@ -85,6 +85,7 @@ async function nav(page, name) {
     .getByRole('button', { name, exact: true })
     .click();
   const ready = {
+    Income: '#incomeForm',
     Accounts: '#addAccountForm',
     'Monthly balances': '.status-block',
     Settings: '#themeSelect',

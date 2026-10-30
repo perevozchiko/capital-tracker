@@ -23,6 +23,7 @@ type TransferDocument struct {
 	Months         []Month           `json:"months"`
 	Balances       []TransferBalance `json:"balances"`
 	Rates          []TransferRate    `json:"rates"`
+	Incomes        []Income          `json:"incomes"`
 	Settings       map[string]string `json:"settings"`
 }
 
@@ -51,9 +52,9 @@ type TransferRate struct {
 func (s *Store) ExportData() (TransferDocument, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
-	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 2, ExportedAt: now(),
+	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 3, ExportedAt: now(),
 		Accounts: []Account{}, Groups: []AccountGroup{}, AccountPeriods: []TransferPeriod{}, Months: []Month{},
-		Balances: []TransferBalance{}, Rates: []TransferRate{}, Settings: map[string]string{}}
+		Balances: []TransferBalance{}, Rates: []TransferRate{}, Incomes: []Income{}, Settings: map[string]string{}}
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return d, err
@@ -193,6 +194,10 @@ func (s *Store) ExportData() (TransferDocument, error) {
 		return d, err
 	}
 	rows.Close()
+	d.Incomes, err = readIncomes(tx)
+	if err != nil {
+		return d, err
+	}
 	return d, tx.Commit()
 }
 
@@ -216,13 +221,25 @@ func periodActive(periods []TransferPeriod, month string) bool {
 // snapshots before touching the database. It never fixes invalid input silently.
 func ValidateTransfer(d TransferDocument) error {
 	bad := func() error { return invalid("import") }
-	if d.Format != "capital-tracker" || (d.SchemaVersion != 1 && d.SchemaVersion != 2) || !validTransferTime(d.ExportedAt) ||
-		d.Accounts == nil || (d.SchemaVersion == 2 && d.Groups == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
+	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 3) || !validTransferTime(d.ExportedAt) ||
+		d.Accounts == nil || (d.SchemaVersion >= 2 && d.Groups == nil) || (d.SchemaVersion == 3 && d.Incomes == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
 		return bad()
 	}
 	if len(d.Settings) != 2 || (d.Settings["language"] != "en" && d.Settings["language"] != "ru") ||
 		(d.Settings["theme"] != "system" && d.Settings["theme"] != "light" && d.Settings["theme"] != "dark") {
 		return bad()
+	}
+	if d.SchemaVersion < 3 && len(d.Incomes) > 0 {
+		return bad()
+	}
+	incomeMonths := map[string][]Income{}
+	for _, entry := range d.Incomes {
+		incomeMonths[entry.Month] = append(incomeMonths[entry.Month], entry)
+	}
+	for month, entries := range incomeMonths {
+		if _, err := validateIncome(month, entries); err != nil {
+			return bad()
+		}
 	}
 	groups := make(map[int64]bool, len(d.Groups))
 	groupNames := make(map[string]bool, len(d.Groups))
@@ -375,7 +392,7 @@ func (s *Store) ImportData(d TransferDocument) error {
 		return err
 	}
 	defer tx.Rollback()
-	for _, table := range []string{"monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
+	for _, table := range []string{"incomes", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
 		if _, err = tx.Exec("DELETE FROM " + table); err != nil {
 			return err
 		}
@@ -409,6 +426,13 @@ func (s *Store) ImportData(d TransferDocument) error {
 	for _, r := range d.Rates {
 		v, _ := strconv.ParseInt(r.RateScaled, 10, 64)
 		if _, err = tx.Exec("INSERT INTO exchange_rates(month,currency,rate_scaled,updated_at) VALUES(?,?,?,?)", r.Month, r.Currency, v, r.UpdatedAt); err != nil {
+			return invalid("import")
+		}
+	}
+	for _, entry := range d.Incomes {
+		amount, _ := finance.ParseMinor(entry.AmountMinor)
+		rate, _ := finance.ParseRate(entry.Rate)
+		if _, err = tx.Exec("INSERT INTO incomes(month,currency,amount_minor,rate_scaled) VALUES(?,?,?,?)", entry.Month, entry.Currency, amount, rate); err != nil {
 			return invalid("import")
 		}
 	}
