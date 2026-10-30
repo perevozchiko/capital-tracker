@@ -28,7 +28,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/screenshots/dashboard.png docs/screenshots/monthly-balances.png docs/screenshots/accounts.png
+          git add docs/screenshots/dashboard.png docs/screenshots/monthly-balances.png docs/screenshots/accounts.png docs/screenshots/mobile-balances.png
           if git diff --cached --quiet; then
             echo "Images are already up to date."
             exit 0

@@ -30,6 +30,14 @@ Record balances for selected accounts, compare them with last month, and review 
 
 Create and organize accounts into groups, change account settings and archive accounts. [View original image](https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/accounts.png).
 
+## 4. Mobile balances
+
+<a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/mobile-balances.png">
+  <img src="mobile-balances.png" alt="Monthly balances in a 390-pixel mobile browser viewport" width="390">
+</a>
+
+The same fictional demo in a narrow browser viewport, with **Collapse all / Expand all** available above the grouped balances. This captures the visible phone screen; the editor continues below it. [View original image](https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/mobile-balances.png).
+
 ## Regenerate the screenshots
 
 Run the real app with its fictional demo dataset and capture it from Chromium:
@@ -40,7 +48,7 @@ python3 -m playwright install chromium
 python3 scripts/capture-demo-screenshots.py
 ```
 
-Run these commands from the repository root. No normal database is opened or modified. The capture script selects the Dark theme and writes the three PNG files to this folder.
+Run these commands from the repository root. No normal database is opened or modified. The capture script selects the Dark theme and writes the four PNG files to this folder.
 
 Or manually run **Actions → Capture demo screenshots** on `master`. The workflow updates the screenshot PNGs without rewriting the README layout.
 

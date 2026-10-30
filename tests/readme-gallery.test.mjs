@@ -12,7 +12,12 @@ const prefix =
   'https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/';
 
 test('README screenshots link to full-size originals', () => {
-  const images = ['dashboard.png', 'monthly-balances.png', 'accounts.png'];
+  const images = [
+    'dashboard.png',
+    'monthly-balances.png',
+    'accounts.png',
+    'mobile-balances.png',
+  ];
   for (const name of images) {
     const file = `docs/screenshots/${name}`;
     assert.ok(existsSync(new URL(file, root)), `Missing screenshot: ${file}`);

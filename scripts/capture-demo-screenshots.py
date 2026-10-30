@@ -100,6 +100,15 @@ def main() -> None:
                     page.locator(".account-row").first.wait_for()
                     page.locator("html[data-theme='dark']").wait_for()
                     page.screenshot(path=str(OUT / "accounts.png"), full_page=True)
+
+                    page.locator('#navigation [data-page="monthly"]').click()
+                    page.locator(".balance-row").first.wait_for()
+                    page.set_viewport_size({"width": 390, "height": 844})
+                    page.evaluate("window.scrollTo(0, 0)")
+                    page.screenshot(
+                        path=str(OUT / "mobile-balances.png"),
+                        full_page=False, animations="disabled",
+                    )
                 finally:
                     browser.close()
         finally:
@@ -109,7 +118,7 @@ def main() -> None:
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait()
-    print("Screenshots captured in docs/screenshots/: dashboard.png, monthly-balances.png, accounts.png")
+    print("Screenshots captured in docs/screenshots/: dashboard.png, monthly-balances.png, accounts.png, mobile-balances.png")
 
 
 if __name__ == "__main__":

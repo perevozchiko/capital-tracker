@@ -66,7 +66,7 @@ Capital Tracker is independently developed open-source software. It is not affil
       <sub>Record balances for one or several accounts at a time.</sub>
     </td>
     <td align="center">
-      <sub>Organize accounts into collapsible groups.</sub>
+      <sub>Reorder groups and accounts with drag-and-drop.</sub>
     </td>
   </tr>
 </table>
@@ -79,14 +79,27 @@ Capital Tracker is independently developed open-source software. It is not affil
 
 </div>
 
+<div align="center">
+
+<h3>Mobile balances</h3>
+
+<a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/mobile-balances.png">
+  <img src="docs/screenshots/mobile-balances.png" alt="Mobile monthly balances with shared collapse and expand controls and readable financial values" width="280">
+</a>
+
+<p><sub>Real 390-pixel browser viewport. Tap the screenshot to view the original.</sub></p>
+
+</div>
+
 ## What it does
 
 - **Monthly snapshots:** save balances for one or more accounts now and finish later; unknown is different from zero.
-- **Accounts and groups:** organize accounts by dragging them into collapsible groups, keep archived history, and see group subtotals in EUR.
-- **Five currencies:** EUR (reporting base), USD, RSD, RUB and TRY, with month-specific FX rates entered manually or explicitly loaded on request.
-- **Capital history:** a chart, multi-month balance table and change since the previous complete month.
+- **Accounts and groups:** drag to reorder groups, move accounts between groups or change their order within a group. Keep archived history and see group subtotals in EUR.
+- **Group visibility:** collapse or expand individual groups, or use **Collapse all / Expand all** on both Accounts and Monthly balances. The shared state survives reload and restart.
+- **Five currencies:** EUR (reporting base), USD, RSD, RUB and TRY. Enter rates manually or click **Load latest exchange rates** to fill empty fields with the latest available quotes. Saving keeps those exact values for the selected month; later quotes do not revalue history.
+- **Capital history:** a chart, multi-month balance table and change against the **previous calendar month**. Change is shown when both months are complete; the comparison month and its total are displayed.
 - **Exact calculations:** integer minor units and fixed-point exchange rates; no floating-point rounding of stored money.
-- **Offline-friendly UI:** desktop browser interface, responsive PWA assets, Dark/Light/System themes and English interface.
+- **Responsive interface:** desktop and narrow-screen layouts, Dark/Light/System themes and English interface. Large balances such as **10,000,000.99** remain readable in every supported currency, including on phones in portrait and landscape. Local data remains usable without a currency-provider connection.
 - **Your data:** portable JSON exports, full SQLite backups, intentional deletion with confirmation, and a safe fictional demo mode.
 
 ## Quick start
@@ -146,6 +159,7 @@ Downloaded binaries are currently unsigned/not notarized. Verify the attached SH
 | [Architecture](docs/ARCHITECTURE.md) | Go and browser modules, data flow, SQLite migrations, exact-money invariants, security |
 | [HTTP API](docs/API.md) | Endpoint list, JSON payloads, errors and same-origin requirements |
 | [Development and releases](docs/DEVELOPMENT.md) | Build/run options, formatting, unit and browser tests, GitHub Actions, release versions |
+| [Browser test coverage](docs/TEST_COVERAGE.md) | Scenario matrix, drag-and-drop, group visibility, large mobile balances, history persistence and live currency-provider checks |
 | [Contributing](CONTRIBUTING.md) | Project conventions, local checks and pull requests |
 | [Security](SECURITY.md) | Threat model, local data protection and vulnerability reporting |
 
@@ -160,7 +174,15 @@ npx playwright install chromium
 npm run test:ui
 ```
 
-All browser tests use isolated temporary demo databases, not your personal database. `npm run format` formats Go and frontend sources; see [Development guide](docs/DEVELOPMENT.md) for details.
+The browser suite contains **174 Playwright scenarios**, covering account/group management, native drag-and-drop, collapse/expand controls, financial input boundaries, rate snapshots and long workflows through restart, export, deletion and import. **40 mobile layout scenarios** check large values in all five currencies, clipping, overlap and table visibility; they also save screenshots.
+
+Browser tests use fresh isolated temporary databases, not your personal data. The external-provider scenario is skipped by default. To also exercise real quote loading through the browser and verify that the loaded rates are saved exactly:
+
+```sh
+CAPITAL_TRACKER_LIVE_RATES=1 npm run test:ui -- --workers=4
+```
+
+See the [coverage matrix](docs/TEST_COVERAGE.md) for the scenario breakdown. `npm run format` formats Go and frontend sources; see the [Development guide](docs/DEVELOPMENT.md) for details.
 
 ## License
 
