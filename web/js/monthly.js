@@ -48,6 +48,7 @@ async function renderMonthly() {
     api('/groups?month=' + encodeURIComponent(state.month)),
   ]);
   state.monthData = d;
+  const accounts = d.editable_accounts || d.accounts;
   const balances = new Map(
     d.balances.map((b) => [b.account_id, b.amount_minor]),
   );
@@ -55,7 +56,7 @@ async function renderMonthly() {
     (previous?.balances || []).map((b) => [b.account_id, b.amount_minor]),
   );
   const rates = new Map(d.rates.map((r) => [r.currency, r.rate]));
-  const currencies = [...new Set(d.accounts.map((a) => a.currency))]
+  const currencies = [...new Set(accounts.map((a) => a.currency))]
     .filter((c) => c !== 'EUR')
     .sort();
   const balanceRow = (a) => {
@@ -70,7 +71,7 @@ async function renderMonthly() {
   };
   // Organization and order are shared with Accounts. No drag, edit or action menu here.
   const groupSection = (group, id) => {
-    const members = d.accounts.filter((a) =>
+    const members = accounts.filter((a) =>
       id === 'archive'
         ? !!a.archived_from_month
         : !a.archived_from_month && (a.group_id ?? null) === id,
@@ -100,7 +101,7 @@ async function renderMonthly() {
   const exchangeRows = currencies
     .map(
       (c) =>
-        `<div class='editor-row'><label for='r-${c}'>EUR → ${c}<small>${t('rateMeaning')} ${c}</small></label><input class='editor-input' id='r-${c}' data-rate='${c}' inputmode='decimal' autocomplete='off' placeholder='${t('enterRate')}' value='${escapeHTML(rateText(rates.get(c) || ''))}'></div>`,
+        `<div class='editor-row'><label for='r-${c}'>EUR → ${c}<small>${t('rateMeaning')} ${c}</small></label><input class='editor-input' id='r-${c}' data-rate='${c}' ${rates.has(c) ? 'readonly' : ''} inputmode='decimal' autocomplete='off' placeholder='${t('enterRate')}' value='${escapeHTML(rateText(rates.get(c) || ''))}'></div>`,
     )
     .join('');
   const missing = d.complete
@@ -116,7 +117,7 @@ async function renderMonthly() {
         .filter(Boolean)
         .join(' · ') || t('totalProvisional');
   $('#pageContent').innerHTML =
-    `<div class='status-block'><div class='panel-heading status-heading'><strong>${t('status')}</strong>${statusPill(d)}</div><p class='inline-status'>${missing}</p>${d.complete ? `<div class='metric-value metric-secondary'>${moneyHTML(d.total_eur_minor)}</div>` : ''}</div><div class='editor-grid'><section class='card panel'><div class='panel-heading'><h2>${t('balance')}</h2><div class='overview-actions'><span class='subtle'>${escapeHTML(monthLabel(state.month))}</span>${groupVisibilityButtons()}</div></div><p class='caption'>${t('balancesNote')}</p>${rows}</section><section class='card panel'><div class='panel-heading'><h2>${t('rates')}</h2><span class='subtle'>EUR = 1</span></div><p class='caption'>${t('ratesNote')}</p>${currencies.length ? `<button type='button' class='btn btn-small' data-action='loadRates'>${t('loadRates')}</button><p class='caption' id='rateLoadStatus' aria-live='polite'></p>` : ''}<div class='editor-list'>${exchangeRows || `<p class='muted'>EUR = 1</p>`}</div><p class='footer-note'>${t('rateFormatHelp')}</p></section></div><div class='editor-footer'><p class='subtle'>${t('exactTotal')}</p><div class='overview-actions'><button class='btn btn-danger' data-action='deleteMonth' ${d.exists ? '' : 'disabled'}>${t('deleteMonth')}</button><button class='btn btn-primary' data-action='saveMonth' ${d.accounts.length ? '' : 'disabled'}>${t('saveMonth')}</button></div></div>`;
+    `<div class='status-block'><div class='panel-heading status-heading'><strong>${t('status')}</strong>${statusPill(d)}</div><p class='inline-status'>${missing}</p>${d.complete ? `<div class='metric-value metric-secondary'>${moneyHTML(d.total_eur_minor)}</div>` : ''}</div><div class='editor-grid'><section class='card panel'><div class='panel-heading'><h2>${t('balance')}</h2><div class='overview-actions'><span class='subtle'>${escapeHTML(monthLabel(state.month))}</span>${groupVisibilityButtons()}</div></div><p class='caption'>${t('balancesNote')}</p>${rows}</section><section class='card panel'><div class='panel-heading'><h2>${t('rates')}</h2><span class='subtle'>EUR = 1</span></div><p class='caption'>${t('ratesNote')}</p>${currencies.length ? `<button type='button' class='btn btn-small' data-action='loadRates' ${currencies.every((c) => rates.has(c)) ? 'disabled' : ''}>${t('loadRates')}</button><p class='caption' id='rateLoadStatus' aria-live='polite'></p>` : ''}<div class='editor-list'>${exchangeRows || `<p class='muted'>EUR = 1</p>`}</div><p class='footer-note'>${t('rateFormatHelp')}</p></section></div><div class='editor-footer'><p class='subtle'>${t('exactTotal')}</p><div class='overview-actions'><button class='btn btn-danger' data-action='deleteMonth' ${d.exists ? '' : 'disabled'}>${t('deleteMonth')}</button><button class='btn btn-primary' data-action='saveMonth' ${accounts.length ? '' : 'disabled'}>${t('saveMonth')}</button></div></div>`;
   document.querySelectorAll('[data-balance]').forEach(updateBalanceDifference);
   state.dirty = false;
 }

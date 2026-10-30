@@ -103,15 +103,16 @@ type Rate struct {
 	Rate     string `json:"rate"`
 }
 type MonthData struct {
-	Month           string    `json:"month"`
-	Exists          bool      `json:"exists"`
-	Accounts        []Account `json:"accounts"`
-	Balances        []Balance `json:"balances"`
-	Rates           []Rate    `json:"rates"`
-	Complete        bool      `json:"complete"`
-	TotalEURMinor   *string   `json:"total_eur_minor"`
-	MissingBalances []int64   `json:"missing_balances"`
-	MissingRates    []string  `json:"missing_rates"`
+	Month            string    `json:"month"`
+	Exists           bool      `json:"exists"`
+	Accounts         []Account `json:"accounts"`
+	EditableAccounts []Account `json:"editable_accounts"`
+	Balances         []Balance `json:"balances"`
+	Rates            []Rate    `json:"rates"`
+	Complete         bool      `json:"complete"`
+	TotalEURMinor    *string   `json:"total_eur_minor"`
+	MissingBalances  []int64   `json:"missing_balances"`
+	MissingRates     []string  `json:"missing_rates"`
 }
 
 func (s *Store) PutMonth(month string, input MonthInput) error {
@@ -124,6 +125,14 @@ func (s *Store) PutMonth(month string, input MonthInput) error {
 	if e != nil {
 		return e
 	}
+	eligible, e := s.AccountsForEntry(month)
+	if e != nil {
+		return e
+	}
+	allowed := map[int64]Account{}
+	for _, a := range eligible {
+		allowed[a.ID] = a
+	}
 	active := map[int64]bool{}
 	needed := map[string]bool{}
 	for _, a := range accounts {
@@ -135,7 +144,7 @@ func (s *Store) PutMonth(month string, input MonthInput) error {
 	seenB := map[int64]bool{}
 	bvals := map[int64]int64{}
 	for _, b := range input.Balances {
-		if !active[b.AccountID] || seenB[b.AccountID] {
+		if _, ok := allowed[b.AccountID]; !ok || seenB[b.AccountID] {
 			return invalid("balances")
 		}
 		v, e := finance.ParseMinor(b.AmountMinor)
@@ -144,6 +153,14 @@ func (s *Store) PutMonth(month string, input MonthInput) error {
 		}
 		bvals[b.AccountID] = v
 		seenB[b.AccountID] = true
+		if !active[b.AccountID] {
+			a := allowed[b.AccountID]
+			accounts = append(accounts, a)
+			active[a.ID] = true
+			if a.Currency != "EUR" {
+				needed[a.Currency] = true
+			}
+		}
 	}
 	seenR := map[string]bool{}
 	rvals := map[string]int64{}
@@ -157,6 +174,29 @@ func (s *Store) PutMonth(month string, input MonthInput) error {
 		}
 		rvals[r.Currency] = v
 		seenR[r.Currency] = true
+	}
+	// Saved quotes are immutable. Omitting them while editing balances retains them.
+	rows, e := s.DB.Query("SELECT currency,rate_scaled FROM exchange_rates WHERE month=?", month)
+	if e != nil {
+		return e
+	}
+	for rows.Next() {
+		var currency string
+		var rate int64
+		if e = rows.Scan(&currency, &rate); e != nil {
+			rows.Close()
+			return e
+		}
+		if replacement, ok := rvals[currency]; ok && replacement != rate {
+			rows.Close()
+			return conflict("rate_locked_by_history")
+		}
+		rvals[currency] = rate
+	}
+	e = rows.Err()
+	rows.Close()
+	if e != nil {
+		return e
 	}
 	// Reject totals outside int64 before writing, so the saved month is always readable.
 	if len(accounts) > 0 && len(bvals) == len(accounts) && len(rvals) == len(needed) {
@@ -184,8 +224,16 @@ func (s *Store) PutMonth(month string, input MonthInput) error {
 	if _, e = tx.Exec("DELETE FROM monthly_balances WHERE month=?", month); e != nil {
 		return e
 	}
-	if _, e = tx.Exec("DELETE FROM exchange_rates WHERE month=?", month); e != nil {
-		return e
+	// Backfilling explicitly extends only accounts with a submitted balance.
+	for id := range bvals {
+		if month < allowed[id].StartMonth {
+			if _, e = tx.Exec("UPDATE account_periods SET start_month=? WHERE account_id=? AND start_month=?", month, id, allowed[id].StartMonth); e != nil {
+				return e
+			}
+			if _, e = tx.Exec("UPDATE accounts SET start_month=?,updated_at=? WHERE id=?", month, timestamp, id); e != nil {
+				return e
+			}
+		}
 	}
 	for id, v := range bvals {
 		if _, e = tx.Exec("INSERT INTO monthly_balances(account_id,month,amount_minor,updated_at) VALUES(?,?,?,?)", id, month, v, timestamp); e != nil {
@@ -193,7 +241,7 @@ func (s *Store) PutMonth(month string, input MonthInput) error {
 		}
 	}
 	for c, v := range rvals {
-		if _, e = tx.Exec("INSERT INTO exchange_rates(month,currency,rate_scaled,updated_at) VALUES(?,?,?,?)", month, c, v, timestamp); e != nil {
+		if _, e = tx.Exec("INSERT INTO exchange_rates(month,currency,rate_scaled,updated_at) VALUES(?,?,?,?) ON CONFLICT(month,currency) DO NOTHING", month, c, v, timestamp); e != nil {
 			return e
 		}
 	}
@@ -210,6 +258,10 @@ func (s *Store) Month(month string) (MonthData, error) {
 		return d, e
 	}
 	d.Exists = count > 0
+	d.EditableAccounts, e = s.AccountsForEntry(month)
+	if e != nil {
+		return d, e
+	}
 	d.Accounts, e = s.ActiveAt(month)
 	if e != nil {
 		return d, e

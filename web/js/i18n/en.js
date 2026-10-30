@@ -113,9 +113,9 @@ export default {
   rates: 'Exchange rates',
   rateMeaning: '1 EUR equals…',
   ratesNote:
-    'Enter rates manually or load the latest available rates on request, even for a past month. Only empty fields are filled; save the month to keep them.',
+    'Enter rates manually or load the latest available rates on request, even for a past month. Only empty fields are filled. Saving fixes each rate for that month; editing balances keeps the saved rates.',
   balancesNote:
-    'You can save one balance now and fill in other accounts later. Empty means not entered; zero means exactly zero.',
+    'You can save one balance now and fill in other accounts later. Empty means not entered; zero means exactly zero. Saving an earlier balance moves that account’s start month back.',
   previousBalance: 'Last month',
   currentBalance: 'This month',
   balanceDifference: 'Change',
@@ -234,5 +234,7 @@ export default {
   reason_restore_after_history:
     'Restore after the latest saved month, or delete the accidental future month first.',
   reason_month_exists: 'This month has already been created.',
+  reason_rate_locked_by_history:
+    'Saved monthly exchange rates cannot be changed.',
   reason_unknown_conflict: 'The operation conflicts with saved history.',
 };

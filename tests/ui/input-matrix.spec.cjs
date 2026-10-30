@@ -131,6 +131,8 @@ for (const input of [
     await page.locator('[data-rate="USD"]').fill('1.1');
     await page.locator('[data-action="saveMonth"]').click();
     await expect(page.locator('.status-block')).toContainText('Complete');
+    await setMonth(page, '2025-02');
+    await page.locator('[data-balance="1"]').fill('110');
     await page.locator('[data-rate="USD"]').fill(input);
     await page.locator('[data-action="saveMonth"]').click();
     await expect(page.locator('[data-rate="USD"]')).toHaveAttribute(

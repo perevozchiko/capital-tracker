@@ -113,7 +113,15 @@ func TestDashboardUsesEachMonthsRatesAndRoundedTotals(t *testing.T) {
 	save("2026-10", "2")    // Two half-cents sum to one cent before rounding.
 	save("2026-11", "1.25") // 1.6 cents rounds to two cents.
 	assertDashboardChange(t, s, "2026-11", "2026-10", "2", "1", "10000", 12)
-	// Missing FX must suppress the comparison rather than use another month's rate.
+	// Omitting FX during a balance edit keeps the original month's quote.
+	if err := s.PutMonth("2026-10", MonthInput{Balances: []BalanceInput{{a.ID, "1"}, {b.ID, "1"}}}); err != nil {
+		t.Fatal(err)
+	}
+	assertDashboardChange(t, s, "2026-11", "2026-10", "2", "1", "10000", 12)
+	// A newly recreated snapshot without FX must suppress the comparison.
+	if err := s.DeleteMonth("2026-10"); err != nil {
+		t.Fatal(err)
+	}
 	if err := s.PutMonth("2026-10", MonthInput{Balances: []BalanceInput{{a.ID, "1"}, {b.ID, "1"}}}); err != nil {
 		t.Fatal(err)
 	}

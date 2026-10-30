@@ -7,7 +7,10 @@ import { render, refresh } from './router.js';
 
 async function loadRates(button) {
   const month = state.month;
-  const inputs = [...document.querySelectorAll('[data-rate]')];
+  const inputs = [...document.querySelectorAll('[data-rate]')].filter(
+    (input) => !input.readOnly && !input.value.trim(),
+  );
+  if (!inputs.length) return;
   const initial = new Map(inputs.map((input) => [input, input.value]));
   const saveButton = $('[data-action="saveMonth"]');
   button.disabled = true;
@@ -79,6 +82,16 @@ async function saveMonth() {
     }
   }
   if (bad) return;
+  const included = new Set(balances.map((b) => b.account_id));
+  const requiredCurrencies = new Set(
+    [
+      ...(state.monthData?.accounts || []),
+      ...(state.monthData?.editable_accounts || []).filter((a) =>
+        included.has(a.id),
+      ),
+    ].map((a) => a.currency),
+  );
+  const requiredRates = rates.filter((r) => requiredCurrencies.has(r.currency));
   const buttons = [
     ...document.querySelectorAll(
       '[data-action="saveMonth"],[data-action="loadRates"]',
@@ -86,7 +99,10 @@ async function saveMonth() {
   ];
   buttons.forEach((button) => (button.disabled = true));
   try {
-    await request('/months/' + state.month, 'PUT', { balances, rates });
+    await request('/months/' + state.month, 'PUT', {
+      balances,
+      rates: requiredRates,
+    });
     state.dirty = false;
     await refresh();
     await render();

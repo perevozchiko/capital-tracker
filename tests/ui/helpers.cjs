@@ -174,11 +174,16 @@ async function drag(
   return response;
 }
 async function saveBalances(page, month, values, rates = {}) {
-  await setMonth(page, month);
+  if ((await page.locator('.month-picker').inputValue()) !== month)
+    await setMonth(page, month);
   for (const [id, value] of Object.entries(values))
     await page.locator(`[data-balance="${id}"]`).fill(value);
-  for (const [currency, value] of Object.entries(rates))
-    await page.locator(`[data-rate="${currency}"]`).fill(value);
+  for (const [currency, value] of Object.entries(rates)) {
+    const input = page.locator(`[data-rate="${currency}"]`);
+    if ((await input.getAttribute('readonly')) === null)
+      await input.fill(value);
+    else await expect(input).toHaveValue(value);
+  }
   const saved = page.waitForResponse(
     (response) =>
       response.url().endsWith('/api/months/' + month) &&

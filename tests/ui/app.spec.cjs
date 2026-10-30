@@ -272,6 +272,7 @@ test('rate loading preserves entered rates and reports network errors', async ({
   await page.locator('[data-action="loadRates"]').click();
   await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.25');
   await expect(page.locator('[data-rate="RSD"]')).toHaveValue('117.2');
+  await page.locator('[data-rate="RSD"]').fill('');
   await page.unroute('**/api/exchange-rates?*');
   await page.route('**/api/exchange-rates?*', (route) =>
     route.fulfill({
@@ -283,7 +284,7 @@ test('rate loading preserves entered rates and reports network errors', async ({
   await expect(page.locator('#rateLoadStatus')).toContainText(
     'Could not load rates',
   );
-  await expect(page.locator('[data-rate="RSD"]')).toHaveValue('117.2');
+  await expect(page.locator('[data-rate="RSD"]')).toHaveValue('');
 });
 
 test('invalid JSON import is rejected and current data remains', async ({
@@ -413,16 +414,18 @@ test('partial months, zero balances and clearing saved fields update completenes
   await page.locator('[data-rate="USD"]').fill('1.1');
   await page.locator('[data-action="saveMonth"]').click();
   await expect(page.locator('.status-block')).toContainText('Complete');
-  await page.locator('[data-rate="USD"]').fill('');
-  await page.locator('[data-action="saveMonth"]').click();
-  await expect(page.locator('.status-block')).toContainText(
-    'Missing exchange rates',
+  await expect(page.locator('[data-rate="USD"]')).toHaveAttribute(
+    'readonly',
+    '',
   );
+  await page.locator('[data-balance="2"]').fill('');
+  await page.locator('[data-action="saveMonth"]').click();
+  await expect(page.locator('.status-block')).toContainText('Missing balances');
   await page.reload();
   await nav(page, 'Monthly balances');
   await setMonth(page, '2025-01');
-  await expect(page.locator('[data-rate="USD"]')).toHaveValue('');
-  await expect(page.locator('[data-balance="2"]')).toHaveValue('-110.00');
+  await expect(page.locator('[data-rate="USD"]')).toHaveValue('1.1');
+  await expect(page.locator('[data-balance="2"]')).toHaveValue('');
 });
 
 test('recorded history prevents currency changes, deletion and retroactive archive', async ({
@@ -863,9 +866,8 @@ test('loaded quotes remain frozen across later provider quotes, saves, reload an
   for (const [currency, rate] of Object.entries(original)) {
     await expect(page.locator(`[data-rate="${currency}"]`)).toHaveValue(rate);
   }
-  // Another explicit request fills no saved field; changing a balance preserves rates.
-  await page.locator('[data-action="loadRates"]').click();
-  await expect(page.locator('#rateLoadStatus')).toContainText('filled 0');
+  // Saved rates are fixed; changing a balance preserves the original quote.
+  await expect(page.locator('[data-action="loadRates"]')).toBeDisabled();
   await page.locator('[data-balance="1"]').fill('220');
   await page.locator('[data-action="saveMonth"]').click();
   await expect(page.locator('.status-block')).toContainText('€500.00');
@@ -897,7 +899,7 @@ test('loaded quotes remain frozen across later provider quotes, saves, reload an
     RUB: '10000000000',
     TRY: '4000000000',
   });
-  expect(requests).toBe(3);
+  expect(requests).toBe(2);
 });
 
 test('partial quotes and provider errors preserve entered values and allow retry', async ({

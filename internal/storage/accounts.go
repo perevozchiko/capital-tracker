@@ -186,9 +186,9 @@ func (s *Store) UpdateAccount(id int64, name, currency *string) (Account, error)
 // completion status for months where the account was active but has no balance.
 func recordedAccountPeriod(tx *sql.Tx, id int64) (bool, error) {
 	var exists int
-	err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM months m
+	err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM monthly_balances WHERE account_id=?) OR EXISTS(SELECT 1 FROM months m
         JOIN account_periods p ON p.account_id=? AND p.start_month<=m.month
-             AND (p.end_month IS NULL OR p.end_month>m.month))`, id).Scan(&exists)
+             AND (p.end_month IS NULL OR p.end_month>m.month))`, id, id).Scan(&exists)
 	return exists != 0, err
 }
 
@@ -334,7 +334,7 @@ func (s *Store) Reorder(ids []int64) error {
 }
 
 func (s *Store) ActiveAt(month string) ([]Account, error) {
-	rows, e := s.DB.Query("SELECT DISTINCT a."+strings.ReplaceAll(accountCols, ",", ",a.")+" FROM accounts a JOIN account_periods p ON p.account_id=a.id WHERE p.start_month<=? AND (p.end_month IS NULL OR p.end_month>?) ORDER BY a.sort_order,a.id", month, month)
+	rows, e := s.DB.Query("SELECT DISTINCT a."+strings.ReplaceAll(accountCols, ",", ",a.")+" FROM accounts a WHERE EXISTS (SELECT 1 FROM account_periods p WHERE p.account_id=a.id AND p.start_month<=? AND (p.end_month IS NULL OR p.end_month>?)) OR EXISTS (SELECT 1 FROM monthly_balances b WHERE b.account_id=a.id AND b.month=?) ORDER BY a.sort_order,a.id", month, month, month)
 	if e != nil {
 		return nil, e
 	}
@@ -348,4 +348,28 @@ func (s *Store) ActiveAt(month string) ([]Account, error) {
 		out = append(out, a)
 	}
 	return out, rows.Err()
+}
+
+// AccountsForEntry also offers accounts before their first activity period so
+// historical balances can be entered without reopening an archived period.
+func (s *Store) AccountsForEntry(month string) ([]Account, error) {
+	accounts, err := s.Accounts()
+	if err != nil {
+		return nil, err
+	}
+	active, err := s.ActiveAt(month)
+	if err != nil {
+		return nil, err
+	}
+	eligible := map[int64]bool{}
+	for _, a := range active {
+		eligible[a.ID] = true
+	}
+	out := []Account{}
+	for _, a := range accounts {
+		if eligible[a.ID] || month < a.StartMonth {
+			out = append(out, a)
+		}
+	}
+	return out, nil
 }
