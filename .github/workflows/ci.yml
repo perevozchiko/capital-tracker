@@ -48,3 +48,29 @@ jobs:
           name: ui-test-results
           path: test-results/
           if-no-files-found: ignore
+
+  windows-module-smoke:
+    name: Windows go.sum checkout and build (temporary PR check)
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.3'
+      - name: Verify LF checkout and dependencies
+        shell: bash
+        run: |
+          git check-attr eol -- go.mod go.sum
+          if grep -q $'\r' go.mod go.sum; then
+            echo 'Go module files contain CRLF'
+            exit 1
+          fi
+          go mod tidy -diff
+          go mod verify
+      - name: Build Windows app
+        shell: bash
+        run: |
+          go test -count=1 ./...
+          CGO_ENABLED=0 go build -trimpath -o CapitalTracker-windows-amd64.exe ./cmd/capital-tracker
