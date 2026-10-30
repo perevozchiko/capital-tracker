@@ -7,6 +7,7 @@ import { renderDashboard } from './dashboard.js';
 import { renderAccounts } from './accounts.js';
 import { renderMonthly } from './monthly.js';
 import { renderIncomes } from './incomes.js';
+import { renderExpenses } from './expenses.js';
 import { renderSettings } from './settings.js';
 
 async function navigate(page) {
@@ -33,6 +34,7 @@ async function render() {
   else if (state.page === 'accounts') await renderAccounts();
   else if (state.page === 'monthly') await renderMonthly();
   else if (state.page === 'incomes') await renderIncomes();
+  else if (state.page === 'expenses') await renderExpenses();
   else renderSettings();
 }
 async function refresh() {

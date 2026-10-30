@@ -86,6 +86,7 @@ async function nav(page, name) {
     .click();
   const ready = {
     Income: '#incomeForm',
+    'Major expenses': '#expenseForm',
     Accounts: '#addAccountForm',
     'Monthly balances': '.status-block',
     Settings: '#themeSelect',

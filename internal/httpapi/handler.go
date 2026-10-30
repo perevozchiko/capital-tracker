@@ -38,6 +38,7 @@ func (s *Server) Handler() http.Handler {
 	registerAccounts(mux, s)
 	registerMonths(mux, s)
 	registerIncomes(mux, s)
+	registerExpenses(mux, s)
 	registerDashboard(mux, s)
 	registerSettings(mux, s)
 	registerStatic(mux, s)

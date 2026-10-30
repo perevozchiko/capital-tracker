@@ -23,6 +23,7 @@ type TransferDocument struct {
 	Months         []Month           `json:"months"`
 	Balances       []TransferBalance `json:"balances"`
 	Rates          []TransferRate    `json:"rates"`
+	Expenses       []Expense         `json:"expenses"`
 	Incomes        []Income          `json:"incomes"`
 	Settings       map[string]string `json:"settings"`
 }
@@ -52,9 +53,9 @@ type TransferRate struct {
 func (s *Store) ExportData() (TransferDocument, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
-	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 4, ExportedAt: now(),
+	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 5, ExportedAt: now(),
 		Accounts: []Account{}, Groups: []AccountGroup{}, AccountPeriods: []TransferPeriod{}, Months: []Month{},
-		Balances: []TransferBalance{}, Rates: []TransferRate{}, Incomes: []Income{}, Settings: map[string]string{}}
+		Balances: []TransferBalance{}, Rates: []TransferRate{}, Incomes: []Income{}, Expenses: []Expense{}, Settings: map[string]string{}}
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return d, err
@@ -198,6 +199,10 @@ func (s *Store) ExportData() (TransferDocument, error) {
 	if err != nil {
 		return d, err
 	}
+	d.Expenses, err = readExpenses(tx)
+	if err != nil {
+		return d, err
+	}
 	return d, tx.Commit()
 }
 
@@ -221,8 +226,8 @@ func periodActive(periods []TransferPeriod, month string) bool {
 // snapshots before touching the database. It never fixes invalid input silently.
 func ValidateTransfer(d TransferDocument) error {
 	bad := func() error { return invalid("import") }
-	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 4) || !validTransferTime(d.ExportedAt) ||
-		d.Accounts == nil || (d.SchemaVersion >= 2 && d.Groups == nil) || (d.SchemaVersion >= 3 && d.Incomes == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
+	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 5) || !validTransferTime(d.ExportedAt) ||
+		d.Accounts == nil || (d.SchemaVersion >= 2 && d.Groups == nil) || (d.SchemaVersion >= 3 && d.Incomes == nil) || (d.SchemaVersion >= 5 && d.Expenses == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
 		return bad()
 	}
 	if len(d.Settings) != 2 || (d.Settings["language"] != "en" && d.Settings["language"] != "ru") ||
@@ -231,6 +236,18 @@ func ValidateTransfer(d TransferDocument) error {
 	}
 	if d.SchemaVersion < 3 && len(d.Incomes) > 0 {
 		return bad()
+	}
+	if d.SchemaVersion < 5 && len(d.Expenses) > 0 {
+		return bad()
+	}
+	expenseMonths := map[string][]Expense{}
+	for _, entry := range d.Expenses {
+		expenseMonths[entry.Month] = append(expenseMonths[entry.Month], entry)
+	}
+	for month, entries := range expenseMonths {
+		if _, err := validateExpense(month, entries); err != nil {
+			return bad()
+		}
 	}
 	incomeMonths := map[string][]Income{}
 	for _, entry := range d.Incomes {
@@ -395,7 +412,7 @@ func (s *Store) ImportData(d TransferDocument) error {
 		return err
 	}
 	defer tx.Rollback()
-	for _, table := range []string{"incomes", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
+	for _, table := range []string{"expenses", "incomes", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
 		if _, err = tx.Exec("DELETE FROM " + table); err != nil {
 			return err
 		}
@@ -439,6 +456,13 @@ func (s *Store) ImportData(d TransferDocument) error {
 		amount, _ := finance.ParseMinor(entry.AmountMinor)
 		rate, _ := finance.ParseRate(entry.Rate)
 		if _, err = tx.Exec("INSERT INTO incomes(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", entry.Month, index, entry.Name, entry.Currency, amount, rate); err != nil {
+			return invalid("import")
+		}
+	}
+	for index, entry := range d.Expenses {
+		amount, _ := finance.ParseMinor(entry.AmountMinor)
+		rate, _ := finance.ParseRate(entry.Rate)
+		if _, err = tx.Exec("INSERT INTO expenses(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", entry.Month, index, entry.Name, entry.Currency, amount, rate); err != nil {
 			return invalid("import")
 		}
 	}

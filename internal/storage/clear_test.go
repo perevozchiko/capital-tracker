@@ -49,7 +49,7 @@ func TestClearDataRemovesEverythingAndResetsPreferences(t *testing.T) {
 		t.Fatalf("unexpected settings: %+v", cleared.Settings)
 	}
 	var schema int
-	if err := s.DB.QueryRow("PRAGMA user_version").Scan(&schema); err != nil || schema != 4 {
+	if err := s.DB.QueryRow("PRAGMA user_version").Scan(&schema); err != nil || schema != 5 {
 		t.Fatalf("schema was removed: version %d, %v", schema, err)
 	}
 	created, err := s.CreateAccount("New account", "EUR", "2026-05")

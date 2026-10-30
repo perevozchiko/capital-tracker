@@ -32,6 +32,14 @@ import {
   removeIncomeRow,
 } from './incomes.js';
 
+import {
+  saveExpense,
+  deleteExpense,
+  loadExpenseRates,
+  addExpenseRow,
+  removeExpenseRow,
+} from './expenses.js';
+
 bindAccountDragAndDrop();
 
 window
@@ -83,6 +91,10 @@ document.addEventListener('click', async (e) => {
       updateBalanceDifference(input);
       input.focus();
     } else if (action === 'loadRates') await loadRates(node);
+    else if (action === 'addExpenseRow') addExpenseRow();
+    else if (action === 'removeExpenseRow') removeExpenseRow(node);
+    else if (action === 'deleteExpense') await deleteExpense();
+    else if (action === 'loadExpenseRates') await loadExpenseRates(node);
     else if (action === 'addIncomeRow') addIncomeRow();
     else if (action === 'removeIncomeRow') removeIncomeRow(node);
     else if (action === 'deleteIncome') await deleteIncome();
@@ -111,6 +123,15 @@ document.addEventListener('click', async (e) => {
   }
 });
 document.addEventListener('submit', async (e) => {
+  if (e.target.id === 'expenseForm') {
+    e.preventDefault();
+    try {
+      await saveExpense(e.target);
+    } catch (error) {
+      notify(error.message, true);
+    }
+    return;
+  }
   if (e.target.id === 'incomeForm') {
     e.preventDefault();
     try {
@@ -211,7 +232,11 @@ $('#mobileMenu').addEventListener('click', () =>
 );
 function pointTooltip(node, event) {
   const p = (
-    node.dataset.chartSource === 'income' ? state.incomeHistory : state.history
+    node.dataset.chartSource === 'income'
+      ? state.incomeHistory
+      : node.dataset.chartSource === 'expense'
+        ? state.expenseHistory
+        : state.history
   )[Number(node.dataset.chartIndex)];
   if (!p) return;
   const tooltip = $('#chartTooltip');

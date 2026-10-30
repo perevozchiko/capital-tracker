@@ -1,4 +1,26 @@
 export default {
+  expenseSharedRatesHelp:
+    'One exchange rate per currency for all expense entries in this month.',
+  addExpense: 'Add expense',
+  removeExpense: 'Remove expense',
+  expenseName: 'Name',
+  expenseNamePlaceholder: 'e.g. Car, holiday or home renovation',
+  monthlyExpenseTotal: 'Monthly total in EUR',
+  navExpenses: 'Major expenses',
+  expenseEditor: 'Major expenses for the month',
+  expenseAmount: 'Expense',
+  expenseHistory: 'Expense history in EUR',
+  expenseEmpty: 'Save monthly expenses to see how they change in EUR.',
+  expenseHelp:
+    'Add each expense separately with a name, amount and currency. EUR equivalents and the monthly total update as you type. Set exchange rates in the separate block below; each rate applies to all expenses in that currency.',
+  saveExpense: 'Save expense',
+  deleteExpense: 'Delete expense',
+  confirmDeleteExpense:
+    'Delete all expense notes and their rates for the selected month?',
+  expenseSaved: 'Expense saved.',
+  expenseDeleted: 'Expense deleted.',
+  expenseNonnegative: 'Expense must be zero or positive.',
+
   incomeSharedRatesHelp:
     'One exchange rate per currency for all income entries in this month.',
   addIncome: 'Add income',
@@ -20,7 +42,7 @@ export default {
   incomeSaved: 'Income saved.',
   incomeDeleted: 'Income deleted.',
   incomeNonnegative: 'Income must be zero or positive.',
-  field_entries: 'Check the income entries.',
+  field_entries: 'Check the entries.',
 
   hideAmounts: 'Hide amounts',
   showAmounts: 'Show amounts',
@@ -28,13 +50,13 @@ export default {
   clearAllData: 'Delete all data',
   clearDataTitle: 'Permanently delete all data?',
   clearDataWarning:
-    'This permanently deletes EVERY account, monthly balance, income note, exchange rate and account history. Language and appearance settings will reset. This cannot be undone. Export a JSON backup before continuing. Previously saved backup files are not deleted.',
+    'This permanently deletes EVERY account, monthly balance, income note, major expense, exchange rate and account history. Language and appearance settings will reset. This cannot be undone. Export a JSON backup before continuing. Previously saved backup files are not deleted.',
   clearDataPrompt: 'Type {phrase} to confirm the permanent deletion:',
   clearDataPhrase: 'DELETE',
   dataCleared: 'All application data has been deleted.',
   jsonData: 'JSON import and export',
   jsonDataHelp:
-    'Download a portable JSON copy of your accounts, activity periods, monthly balances, income notes, exchange rates and settings.',
+    'Download a portable JSON copy of your accounts, activity periods, monthly balances, income notes, major expenses, exchange rates and settings.',
   exportJSON: 'Export JSON',
   importJSON: 'Import JSON',
   jsonExported: 'JSON export downloaded.',
@@ -43,7 +65,7 @@ export default {
     'Import replaces your entire current data. Export your current records before importing another file.',
   confirmImportTitle: 'Replace all local data?',
   confirmImportMessage:
-    'The selected file contains {accounts} accounts and {months} months. Importing will permanently REPLACE all current accounts, history, income notes, rates and settings. Export a backup first. Continue?',
+    'The selected file contains {accounts} accounts and {months} months. Importing will permanently REPLACE all current accounts, history, income notes, major expenses, rates and settings. Export a backup first. Continue?',
   invalidJSONFile: 'This is not a supported Capital Tracker JSON file.',
   json_too_large: 'The JSON file exceeds the 8 MiB limit.',
   field_import: 'The JSON file contains invalid or inconsistent data.',

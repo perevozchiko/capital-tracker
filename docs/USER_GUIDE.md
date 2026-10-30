@@ -47,7 +47,7 @@ Open **Settings → JSON import and export** in the browser:
 - Import validates the format/schema version, currencies, dates, relationships and financial precision before starting a SQLite transaction. Malformed or inconsistent input is rejected; the existing data is preserved on failure. Import does not modify database migrations.
 - This is a portable application-data snapshot, **not** a replacement for the SQLite `backup` command, which remains the preferred full-database backup. JSON exports contain personal financial information and should be stored securely.
 
-JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":2}`. Older version 1 exports can still be imported; their accounts start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
+JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":5}`. Older versions 1–4 can still be imported; version 1 accounts start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
 
 ## Clearing all local data
 
@@ -87,3 +87,9 @@ The canonical supported currency list is defined in `internal/finance/finance.go
 Open **Income** and choose a month. Click **Add income** for each payment, enter a name (for example, Salary or Insurance refund), amount and currency. Multiple payments can use the same currency. Set one exchange rate per currency in the separate **Exchange rates** block below the income list (**1 EUR = …**). It applies to every payment in that currency for the selected month. The block shows only currencies currently used in the list and is hidden for EUR-only income. Each entry shows its EUR equivalent and the total at the bottom updates as you type. Use the × button to remove a row. Rates can be entered manually or loaded with **Load latest exchange rates**, then saved with **Save income**. Saved income amounts and rates remain editable.
 
 The chart shows monthly income totals converted to EUR. Missing months break the line. **Delete income** removes only the selected month's income notes after confirmation. Income notes do not change accounts, capital snapshots, or their exchange rates; deleting a capital month does not remove income notes. JSON export/import and full data deletion include income notes.
+
+## Major expenses
+
+Open **Major expenses** and choose a month. Use **Add expense** to enter a name (for example, Car, Holiday or Home renovation), amount and currency for each expense. Set one rate per currency in **Exchange rates**, or load rates automatically. Each row shows its EUR equivalent; the monthly total updates as you type. Click **Save expense** to save entries and rates. The chart shows saved monthly totals in EUR.
+
+Use × to remove a row, or **Delete expense** to delete the selected month after confirmation. Expenses are independent of income and capital snapshots. JSON export/import and full data deletion include expense notes. Importing a backup from versions 1–4 clears current expense notes because those backups contain none.

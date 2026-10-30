@@ -59,4 +59,8 @@ For `GET /api/groups`, optional `view=monthly` keeps accounts active in the sele
 
 Amounts must be nonnegative integer minor-unit strings; each entry requires a trimmed nonempty `name` of at most 100 characters. Multiple entries may share the same currency or name; their order is preserved. Rates mean **1 EUR = rate units of currency**, must be positive, and use at most eight decimals. EUR requires rate `1`. The total sums exact conversions and rounds once. An empty `entries` array deletes the income month; a zero amount records it. Writes require the regular CSRF header and return HTTP 204. Income notes have independent rates and never create or alter capital months or accounts.
 
-JSON exports use `schema_version: 4` and include an `incomes` array with the same entry fields. Versions 1–3 remain importable. Version 3 income totals are converted to entries named `Income · {currency}`; versions 1 and 2 contain no income notes. Import replaces all data, including income notes.
+JSON exports use `schema_version: 5` and include `incomes` and `expenses` arrays with the same entry fields. Versions 1–4 remain importable. Version 3 income totals are converted to entries named `Income · {currency}`; versions 1 and 2 contain no income notes. Import replaces all data, including income and expense notes. Versions 1–4 have no expense notes.
+
+## Major expenses
+
+`GET /api/expenses` and `PUT /api/expenses/{month}` use the same response shape, entry fields, validation, conversion rules and CSRF requirements as income notes. Each expense has a name, amount, currency and rate. An empty `entries` array deletes that month’s expenses. Expenses have independent monthly rates and do not alter income notes, accounts or capital snapshots. Exports include an `expenses` array; imports and full data deletion include expense notes.

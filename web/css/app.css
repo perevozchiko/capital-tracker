@@ -1568,7 +1568,7 @@ th button:hover {
   width: 100%;
   min-width: 0;
 }
-.income-row [data-income-name] {
+.income-row :is([data-income-name], [data-expense-name]) {
   text-align: left;
 }
 .income-row .btn-icon {

@@ -5,6 +5,7 @@ const state = {
   months: [],
   history: [],
   incomeHistory: [],
+  expenseHistory: [],
   settings: { language: 'en', theme: 'dark', version: '' },
   buildCommit: 'unknown',
   currencies: [],
