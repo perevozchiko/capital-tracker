@@ -3,12 +3,16 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      increment:
-        description: Version increment
+      version_bump:
+        description: "Version: Current, Patch, Minor or Major"
         type: choice
         required: true
-        default: patch
-        options: [current, patch, minor, major]
+        default: current
+        options:
+          - current
+          - patch
+          - minor
+          - major
       stage:
         description: Release stage
         type: choice
@@ -47,7 +51,7 @@ jobs:
         id: version
         shell: bash
         env:
-          RELEASE_INCREMENT: ${{ inputs.increment }}
+          RELEASE_INCREMENT: ${{ inputs.version_bump }}
           RELEASE_STAGE: ${{ inputs.stage }}
           RELEASE_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
@@ -140,12 +144,24 @@ jobs:
           go build -trimpath -ldflags="-X github.com/perevozchiko/capital-tracker/internal/buildinfo.Commit=$RELEASE_SHA" -o "version-smoke$extension" ./cmd/capital-tracker
           "./version-smoke$extension" --version | grep -F "$RELEASE_VERSION"
           "./version-smoke$extension" --version | grep -F "${RELEASE_SHA:0:8}"
-      - uses: actions/upload-artifact@v7
+      - name: Upload release archive
+        id: upload_release
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.target }}
           path: dist/*
           if-no-files-found: error
           retention-days: 30
+      - name: Retry upload if GitHub artifact storage times out
+        if: steps.upload_release.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
 
   publish:
     name: Verify, tag and publish
