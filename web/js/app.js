@@ -24,7 +24,13 @@ import {
   moveAccountIn,
 } from './account-actions.js';
 
-import { saveIncome, deleteIncome, loadIncomeRates } from './incomes.js';
+import {
+  saveIncome,
+  deleteIncome,
+  loadIncomeRates,
+  addIncomeRow,
+  removeIncomeRow,
+} from './incomes.js';
 
 bindAccountDragAndDrop();
 
@@ -77,6 +83,8 @@ document.addEventListener('click', async (e) => {
       updateBalanceDifference(input);
       input.focus();
     } else if (action === 'loadRates') await loadRates(node);
+    else if (action === 'addIncomeRow') addIncomeRow();
+    else if (action === 'removeIncomeRow') removeIncomeRow(node);
     else if (action === 'deleteIncome') await deleteIncome();
     else if (action === 'loadIncomeRates') await loadIncomeRates(node);
     else if (action === 'saveMonth') await saveMonth();

@@ -1550,28 +1550,68 @@ th button:hover {
 }
 .income-row {
   display: grid;
-  grid-template-columns: minmax(90px, 1fr) minmax(100px, 1fr) minmax(180px, 2fr);
+  grid-template-columns:
+    minmax(160px, 2fr) minmax(110px, 1fr) 90px minmax(130px, 1fr)
+    minmax(120px, 1fr) 40px;
   gap: 12px;
-  align-items: center;
+  align-items: end;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
 }
-.income-row > input,
-.income-row label input {
+.income-row label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.income-row [data-income-rate-label][hidden] {
+  display: grid;
+  visibility: hidden;
+}
+.income-row input,
+.income-row select {
   width: 100%;
   min-width: 0;
 }
-.income-row label input {
-  max-width: 160px;
+.income-row [data-income-name] {
+  text-align: left;
+}
+.income-row .btn-icon {
+  width: 40px;
+  justify-self: end;
+}
+.income-equivalent {
+  display: grid;
+  gap: 8px;
+  align-self: end;
+}
+.income-equivalent strong {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+.income-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+  font-size: 1.2rem;
 }
 .income-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
+@media (max-width: 1100px) {
+  .income-row [data-income-rate-label][hidden] {
+    display: none;
+  }
+  .income-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 600px) {
   .income-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
+    grid-template-columns: minmax(0, 1fr);
   }
 }

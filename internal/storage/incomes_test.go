@@ -24,11 +24,11 @@ func TestIncomeLifecycleAndIsolation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	entries := []Income{{"2026-01", "EUR", "10000", "1"}, {"2026-01", "USD", "11000", "1.1"}, {"2026-01", "RSD", "1172000", "117.2"}}
+	entries := []Income{{"2026-01", "EUR", "10000", "1", "Salary"}, {"2026-01", "USD", "11000", "1.1", "Salary"}, {"2026-01", "RSD", "1172000", "117.2", "Salary"}}
 	if err := s.PutIncome("2026-01", entries); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.PutIncome("2025-12", []Income{{"2025-12", "EUR", "0", "1"}}); err != nil {
+	if err := s.PutIncome("2025-12", []Income{{"2025-12", "EUR", "0", "1", "Salary"}}); err != nil {
 		t.Fatal(err)
 	}
 	months, err := s.Incomes()
@@ -102,7 +102,7 @@ func TestIncomeLifecycleAndIsolation(t *testing.T) {
 
 func TestIncomeValidationIsAtomic(t *testing.T) {
 	s := openTest(t)
-	good := []Income{{"2026-01", "USD", "1", "2"}, {"2026-01", "RSD", "1", "2"}}
+	good := []Income{{"2026-01", "USD", "1", "2", "Salary"}, {"2026-01", "RSD", "1", "2", "Salary"}}
 	if err := s.PutIncome("2026-01", good); err != nil {
 		t.Fatal(err)
 	}
@@ -111,16 +111,17 @@ func TestIncomeValidationIsAtomic(t *testing.T) {
 		t.Fatal("must sum before rounding")
 	}
 	cases := [][]Income{
-		{{"2026-01", "EUR", "-1", "1"}},
-		{{"2026-01", "EUR", "1", "2"}},
-		{{"2026-01", "USD", "1", "0"}},
-		{{"2026-01", "USD", "1", ""}},
-		{{"2026-01", "USD", "1.2", "1"}},
-		{{"2026-02", "USD", "1", "1"}},
-		{{"2026-01", "GBP", "1", "1"}},
-		{{"2026-01", "EUR", "9000000000000001", "1"}},
-		{{"2026-01", "USD", "9000000000000000", "0.00000001"}},
-		{good[0], good[0]},
+		{{"2026-01", "EUR", "-1", "1", "Salary"}},
+		{{"2026-01", "EUR", "1", "2", "Salary"}},
+		{{"2026-01", "USD", "1", "0", "Salary"}},
+		{{"2026-01", "USD", "1", "", "Salary"}},
+		{{"2026-01", "USD", "1.2", "1", "Salary"}},
+		{{"2026-02", "USD", "1", "1", "Salary"}},
+		{{"2026-01", "GBP", "1", "1", "Salary"}},
+		{{"2026-01", "EUR", "9000000000000001", "1", "Salary"}},
+		{{"2026-01", "USD", "9000000000000000", "0.00000001", "Salary"}},
+		{{"2026-01", "EUR", "1", "1", ""}},
+		{{"2026-01", "EUR", "1", "1", "  Salary"}},
 	}
 	for _, entries := range cases {
 		if err := s.PutIncome("2026-01", entries); err == nil {
@@ -158,7 +159,7 @@ func TestIncomeMigrationPreservesExistingData(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Recreate the version 2 schema as shipped before income notes existed.
-	if _, err := s.DB.Exec("DROP TABLE incomes; DELETE FROM schema_migrations WHERE version=3; PRAGMA user_version=2"); err != nil {
+	if _, err := s.DB.Exec("DROP TABLE incomes; DELETE FROM schema_migrations WHERE version>=3; PRAGMA user_version=2"); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Close(); err != nil {
@@ -180,5 +181,73 @@ func TestIncomeMigrationPreservesExistingData(t *testing.T) {
 	backups, err := filepath.Glob(s.Path + ".pre-migration-*")
 	if err != nil || len(backups) != 1 {
 		t.Fatalf("missing pre-migration backup: %v %v", backups, err)
+	}
+}
+
+func TestMultipleNamedIncomesInSameCurrency(t *testing.T) {
+	s := openTest(t)
+	entries := []Income{{"2026-10", "RSD", "10000000", "117.2", "Зарплата"}, {"2026-10", "EUR", "10000", "1", "Возврат со страховой"}, {"2026-10", "EUR", "20000", "1", "Бонус"}}
+	if err := s.PutIncome("2026-10", entries); err != nil {
+		t.Fatal(err)
+	}
+	months, err := s.Incomes()
+	if err != nil || len(months) != 1 || months[0].TotalEURMinor != "115324" || !reflect.DeepEqual(entries, months[0].Entries) {
+		t.Fatalf("named entries: %+v %v", months, err)
+	}
+	snapshot, err := s.ExportData()
+	if err != nil {
+		t.Fatal(err)
+	}
+	copy := openTest(t)
+	if err := copy.ImportData(snapshot); err != nil {
+		t.Fatal(err)
+	}
+	imported, err := copy.Incomes()
+	if err != nil || !reflect.DeepEqual(months, imported) {
+		t.Fatalf("roundtrip: %+v %v", imported, err)
+	}
+	entries = entries[:2]
+	entries[0].Name = "Salary updated"
+	if err := s.PutIncome("2026-10", entries); err != nil {
+		t.Fatal(err)
+	}
+	months, err = s.Incomes()
+	if err != nil || months[0].TotalEURMinor != "95324" || len(months[0].Entries) != 2 || months[0].Entries[0].Name != "Salary updated" {
+		t.Fatalf("edit/delete: %+v %v", months, err)
+	}
+}
+
+func TestNamedIncomeMigrationAndLegacyBackup(t *testing.T) {
+	dir := t.TempDir()
+	s, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Restore the shipped version 3 income schema with a recorded monthly total.
+	if _, err := s.DB.Exec(`DROP TABLE incomes; CREATE TABLE incomes(month TEXT,currency TEXT,amount_minor INTEGER,rate_scaled INTEGER,PRIMARY KEY(month,currency)); INSERT INTO incomes VALUES('2026-10','RSD',10000000,11720000000); DELETE FROM schema_migrations WHERE version=4; PRAGMA user_version=3;`); err != nil {
+		t.Fatal(err)
+	}
+	s.Close()
+	s, err = Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	months, err := s.Incomes()
+	if err != nil || len(months) != 1 || months[0].TotalEURMinor != "85324" || months[0].Entries[0].Name != "Income · RSD" {
+		t.Fatalf("migration: %+v %v", months, err)
+	}
+	snapshot, err := s.ExportData()
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot.SchemaVersion = 3
+	snapshot.Incomes[0].Name = ""
+	if err := s.ImportData(snapshot); err != nil {
+		t.Fatal(err)
+	}
+	restored, err := s.Incomes()
+	if err != nil || !reflect.DeepEqual(months, restored) {
+		t.Fatalf("legacy backup: %+v %v", restored, err)
 	}
 }

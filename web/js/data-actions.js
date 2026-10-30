@@ -40,7 +40,7 @@ async function importJSON(file) {
     }
     if (
       parsed?.format !== 'capital-tracker' ||
-      ![1, 2, 3].includes(parsed.schema_version) ||
+      ![1, 2, 3, 4].includes(parsed.schema_version) ||
       !Array.isArray(parsed.accounts) ||
       !Array.isArray(parsed.months)
     ) {

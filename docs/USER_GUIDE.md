@@ -84,6 +84,6 @@ The canonical supported currency list is defined in `internal/finance/finance.go
 
 ## Income
 
-Open **Income** and choose a month. Enter the monthly total for each currency you received, plus its exchange rate (**1 EUR = …**). Leave unused currencies empty; enter zero to record a month with no income. Rates can be entered manually or loaded with **Load latest exchange rates**, then saved with **Save income**. Saved income amounts and rates remain editable.
+Open **Income** and choose a month. Click **Add income** for each payment, enter a name (for example, Salary or Insurance refund), amount and currency. Multiple payments can use the same currency. For non-EUR payments, enter the exchange rate (**1 EUR = …**). Each entry shows its EUR equivalent and the total at the bottom updates as you type. Use the × button to remove a row. Rates can be entered manually or loaded with **Load latest exchange rates**, then saved with **Save income**. Saved income amounts and rates remain editable.
 
 The chart shows monthly income totals converted to EUR. Missing months break the line. **Delete income** removes only the selected month's income notes after confirmation. Income notes do not change accounts, capital snapshots, or their exchange rates; deleting a capital month does not remove income notes. JSON export/import and full data deletion include income notes.

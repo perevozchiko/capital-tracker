@@ -1,11 +1,16 @@
 export default {
+  addIncome: 'Add income',
+  removeIncome: 'Remove income',
+  incomeName: 'Name',
+  incomeNamePlaceholder: 'e.g. Salary or insurance refund',
+  monthlyIncomeTotal: 'Monthly total in EUR',
   navIncomes: 'Income',
   incomeEditor: 'Monthly income',
   incomeAmount: 'Income',
   incomeHistory: 'Income history in EUR',
   incomeEmpty: 'Save monthly income to see how it changes in EUR.',
   incomeHelp:
-    'Income notes do not affect accounts or net worth. Enter one total per currency. Empty means not entered; zero is recorded. Each rate is independent and can be edited: 1 EUR equals the entered amount of currency.',
+    'Add each income separately with a name, amount and currency. EUR equivalents and the monthly total update as you type. For other currencies, enter or load a rate: 1 EUR = …',
   saveIncome: 'Save income',
   deleteIncome: 'Delete income',
   confirmDeleteIncome:

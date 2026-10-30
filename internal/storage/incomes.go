@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"strconv"
+	"strings"
 
 	"github.com/perevozchiko/capital-tracker/internal/finance"
 )
@@ -12,6 +13,7 @@ type Income struct {
 	Currency    string `json:"currency"`
 	AmountMinor string `json:"amount_minor"`
 	Rate        string `json:"rate"`
+	Name        string `json:"name"`
 }
 
 type IncomeMonth struct {
@@ -25,16 +27,17 @@ func validateIncome(month string, entries []Income) ([]finance.Entry, error) {
 	if !finance.ValidMonth(month) {
 		return nil, invalid("month")
 	}
-	seen := map[string]bool{}
 	values := []finance.Entry{}
 	for _, entry := range entries {
 		if entry.Month != month {
 			return nil, invalid("month")
 		}
-		if !finance.ValidCurrency(entry.Currency) || seen[entry.Currency] {
+		if !finance.ValidCurrency(entry.Currency) {
 			return nil, invalid("currency")
 		}
-		seen[entry.Currency] = true
+		if strings.TrimSpace(entry.Name) != entry.Name || entry.Name == "" || len([]rune(entry.Name)) > 100 {
+			return nil, invalid("name")
+		}
 		amount, err := finance.ParseMinor(entry.AmountMinor)
 		if err != nil || amount < 0 {
 			return nil, invalid("amount_minor")
@@ -54,7 +57,7 @@ func validateIncome(month string, entries []Income) ([]finance.Entry, error) {
 func readIncomes(q interface {
 	Query(string, ...any) (*sql.Rows, error)
 }) ([]Income, error) {
-	rows, err := q.Query("SELECT month,currency,amount_minor,rate_scaled FROM incomes ORDER BY month,currency")
+	rows, err := q.Query("SELECT month,currency,amount_minor,rate_scaled,name FROM incomes ORDER BY month,position")
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +66,7 @@ func readIncomes(q interface {
 	for rows.Next() {
 		var entry Income
 		var amount, rate int64
-		if err := rows.Scan(&entry.Month, &entry.Currency, &amount, &rate); err != nil {
+		if err := rows.Scan(&entry.Month, &entry.Currency, &amount, &rate, &entry.Name); err != nil {
 			return nil, err
 		}
 		entry.AmountMinor = strconv.FormatInt(amount, 10)
@@ -117,7 +120,7 @@ func (s *Store) PutIncome(month string, entries []Income) error {
 		return err
 	}
 	for i, entry := range entries {
-		if _, err = tx.Exec("INSERT INTO incomes(month,currency,amount_minor,rate_scaled) VALUES(?,?,?,?)", month, entry.Currency, values[i].Amount, values[i].Rate); err != nil {
+		if _, err = tx.Exec("INSERT INTO incomes(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", month, i, entry.Name, entry.Currency, values[i].Amount, values[i].Rate); err != nil {
 			return err
 		}
 	}

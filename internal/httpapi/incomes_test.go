@@ -31,7 +31,7 @@ func TestIncomeAPI(t *testing.T) {
 		}
 		return out.Body.String()
 	}
-	payload := `{"entries":[{"month":"2026-01","currency":"USD","amount_minor":"11000","rate":"1.1"}]}`
+	payload := `{"entries":[{"month":"2026-01","name":"Salary","currency":"USD","amount_minor":"11000","rate":"1.1"}]}`
 	call("GET", "/incomes", "", false, 200)
 	call("PUT", "/incomes/2026-01", payload, false, 403)
 	call("PUT", "/incomes/2026-01", payload, true, 204)
