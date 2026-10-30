@@ -113,7 +113,7 @@ export default {
   rates: 'Exchange rates',
   rateMeaning: '1 EUR equals…',
   ratesNote:
-    'Enter rates manually or load the latest available rates on request, even for a past month. Only empty fields are filled. Saving fixes each rate for that month; editing balances keeps the saved rates.',
+    'Enter rates manually or load the latest available rates on request, even for a past month. Loading replaces unsaved rates, including manual entries. Saving fixes each rate for that month; editing balances keeps the saved rates.',
   balancesNote:
     'You can save one balance now and fill in other accounts later. Empty means not entered; zero means exactly zero. Saving an earlier balance moves that account’s start month back.',
   previousBalance: 'Last month',
@@ -188,7 +188,7 @@ export default {
   noData: 'No data',
   loadRates: 'Load latest exchange rates',
   ratesLoaded:
-    'Rates for {date}: filled {count} empty fields. Save the month to keep them.',
+    'Rates for {date}: updated {count} fields. Save the month to keep them.',
   ratesLoadFailed:
     'Could not load rates. Check your connection or enter them manually.',
   loading: 'Loading…',
