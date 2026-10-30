@@ -24,7 +24,7 @@ jobs:
     if: ${{ inputs.platform == 'macos' || inputs.platform == 'all' }}
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
@@ -104,9 +104,9 @@ jobs:
   linux:
     name: Linux (amd64)
     if: ${{ inputs.platform == 'linux' || inputs.platform == 'all' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
@@ -186,7 +186,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
