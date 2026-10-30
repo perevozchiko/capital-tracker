@@ -130,6 +130,7 @@ export default {
   status: 'Month status',
   editMonth: 'Edit month',
   goToMonth: 'Go to month',
+  currentMonth: 'Current month',
   currentSelection: 'Selected',
   preferences: 'Preferences',
   theme: 'Appearance',

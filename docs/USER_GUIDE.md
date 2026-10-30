@@ -24,6 +24,8 @@ The included fictional example represents a typical euro-paid working household,
 
 The example is also provided as a fully importable, versioned JSON snapshot in [`internal/demo/sample-2025-2026.json`](../internal/demo/sample-2025-2026.json). You can import it via **Settings → JSON import and export** if desired, but **import replaces the currently open database**. For safe exploration, prefer `--demo`.
 
+On **Dashboard**, **Accounts** and **Monthly balances**, click **Current month** beside the month picker to jump to the current month in your local time zone. Switching months prompts before discarding unsaved edits. Clicking it while already in the current month preserves your edits.
+
 ## Account groups
 
 On **Accounts**, choose **New group** to create named sections such as Cash and savings, Investments and Loans. The group name is unique (case-insensitive). Each group has a header that can be expanded/collapsed, renamed, moved up/down with buttons or reordered by dragging the header. The collapsed/expanded state persists in this browser.

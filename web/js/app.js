@@ -51,7 +51,10 @@ document.addEventListener('click', async (e) => {
     if (action === 'toggleAmounts') toggleAmountVisibility();
     else if (action === 'monthPrev') await setMonth(nextMonth(state.month, -1));
     else if (action === 'monthNext') await setMonth(nextMonth(state.month, 1));
-    else if (action === 'focusAdd') {
+    else if (action === 'monthCurrent') {
+      const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+      if (month !== state.month) await setMonth(month);
+    } else if (action === 'focusAdd') {
       $('#accountName')?.focus();
     } else if (action === 'toggleGroup' || action?.startsWith('group'))
       await groupAction(
