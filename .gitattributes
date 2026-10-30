@@ -1,0 +1,9 @@
+# Go's module files must be identical on all platforms.
+# Git for Windows otherwise converts LF to CRLF during checkout, causing
+# "go mod tidy -diff" to report every go.sum line as changed.
+go.mod text eol=lf
+go.sum text eol=lf
+
+# Keep source and executable shell scripts portable.
+*.go text eol=lf
+*.sh text eol=lf
