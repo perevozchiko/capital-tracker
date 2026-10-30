@@ -26,7 +26,7 @@ concurrency:
 jobs:
   prepare:
     name: Prepare version and pin source
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     outputs:
@@ -34,11 +34,11 @@ jobs:
       sha: ${{ steps.version.outputs.sha }}
       prerelease: ${{ steps.version.outputs.prerelease }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Test release version planner before modifications
@@ -72,20 +72,20 @@ jobs:
   validate:
     name: Validate exact release source
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Check source version, Go, JS and release tests
@@ -110,21 +110,21 @@ jobs:
         include:
           - {name: macOS Apple Silicon, runner: macos-15, os: darwin, arch: arm64, target: macos-arm64}
           - {name: macOS Intel, runner: macos-15-intel, os: darwin, arch: amd64, target: macos-amd64}
-          - {name: Linux x64, runner: ubuntu-latest, os: linux, arch: amd64, target: linux-amd64}
+          - {name: Linux x64, runner: ubuntu-24.04, os: linux, arch: amd64, target: linux-amd64}
           - {name: Windows x64, runner: windows-latest, os: windows, arch: amd64, target: windows-amd64}
     runs-on: ${{ matrix.runner }}
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Build verified archive and smoke-test version
@@ -150,15 +150,15 @@ jobs:
   publish:
     name: Verify, tag and publish
     needs: [prepare, validate, build]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.sha }}
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - uses: actions/download-artifact@v7
