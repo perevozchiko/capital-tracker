@@ -1,103 +1,14 @@
-const { test: base, expect } = require('@playwright/test');
-const { spawn } = require('node:child_process');
-const { mkdtemp, rm } = require('node:fs/promises');
-const net = require('node:net');
-const os = require('node:os');
-const path = require('node:path');
-
-const test = base.extend({
-  app: async ({}, use) => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), 'capital-tracker-ui-'));
-    const probe = net.createServer();
-    await new Promise((resolve) => probe.listen(0, '127.0.0.1', resolve));
-    const port = probe.address().port;
-    await new Promise((resolve) => probe.close(resolve));
-    const url = `http://127.0.0.1:${port}`;
-    const server = spawn(process.env.CAPITAL_TRACKER_TEST_BINARY, [
-      '--no-browser',
-      '--data-dir',
-      dir,
-      '--port',
-      String(port),
-    ]);
-    let log = '';
-    server.stdout.on('data', (data) => {
-      log += data;
-    });
-    server.stderr.on('data', (data) => {
-      log += data;
-    });
-    try {
-      let ready = false;
-      for (let i = 0; i < 100; i++) {
-        if (server.exitCode !== null) throw new Error(`Server exited: ${log}`);
-        try {
-          if ((await fetch(url + '/api/meta')).ok) {
-            ready = true;
-            break;
-          }
-        } catch {}
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-      if (!ready) throw new Error(`Server did not start: ${log}`);
-      await use(url);
-    } finally {
-      if (server.exitCode === null) {
-        const exited = new Promise((resolve) => server.once('exit', resolve));
-        server.kill('SIGTERM');
-        await exited;
-      }
-      await rm(dir, { recursive: true, force: true });
-    }
-  },
-});
-
-async function open(page, app) {
-  await page.goto(app);
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-}
-async function nav(page, name) {
-  await page
-    .locator('#navigation')
-    .getByRole('button', { name, exact: true })
-    .click();
-}
-async function createAccount(page, name, currency = 'EUR', start = '2025-01') {
-  await page.locator('#accountName').fill(name);
-  await page.locator('#accountCurrency').selectOption(currency);
-  await page.locator('#accountStart').fill(start);
-  await page
-    .getByRole('button', { name: 'Create account', exact: true })
-    .click();
-  await expect(
-    page.locator('.account-row').filter({ hasText: name }),
-  ).toBeVisible();
-}
-async function editDialog(page, value) {
-  await page.locator('#editValue').fill(value);
-  await page.locator('#confirmEdit').click();
-  await expect(page.locator('#accountDialog')).not.toBeVisible();
-}
-async function action(page, name, actionName) {
-  const row = page.locator('.account-row').filter({ hasText: name });
-  const menu = row.locator('details.account-actions-menu');
-  await expect(row).toBeVisible();
-  await menu.locator('summary').click();
-  await expect(menu).toHaveAttribute('open', '');
-  await menu.locator(`[data-action="${actionName}"]`).click();
-}
-
-// Find a group by its actual heading, not by text in its account move dropdowns.
-function accountGroup(page, name) {
-  return page.locator('.account-group').filter({
-    has: page
-      .locator('.account-group-head .group-caption > strong')
-      .getByText(name, { exact: true }),
-  });
-}
-async function setMonth(page, month) {
-  await page.locator('.month-picker').fill(month);
-}
+const {
+  test,
+  expect,
+  open,
+  nav,
+  createAccount,
+  editDialog,
+  action,
+  accountGroup,
+  setMonth,
+} = require('./helpers.cjs');
 
 test('navigation and appearance persist across reload', async ({
   page,

@@ -36,6 +36,8 @@ export default {
     'Give each group a distinct name (for example, Savings, Investments or Loans).',
   groupTotalEUR: 'Subtotal in EUR',
   toggleGroup: 'Collapse or expand group',
+  collapseAllGroups: 'Collapse all',
+  expandAllGroups: 'Expand all',
   dragAccount: 'Drag account to another group',
   moveToGroup: 'Move to group',
   dragGroupsHint:

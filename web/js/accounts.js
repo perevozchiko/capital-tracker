@@ -8,7 +8,7 @@ import {
   nextMonth,
   pluralAccounts,
 } from './format.js';
-import { $ } from './ui.js';
+import { $, groupVisibilityButtons } from './ui.js';
 function groupSelector(selected, attribute) {
   return `<select ${attribute} aria-label="${t('moveToGroup')}"><option value="" ${selected === null ? 'selected' : ''}>${t('ungrouped')}</option>${state.groups.groups.map((g) => `<option value="${g.id}" ${selected === g.id ? 'selected' : ''}>${escapeHTML(g.name)}</option>`).join('')}</select>`;
 }
@@ -67,7 +67,7 @@ async function renderAccounts() {
  <div class="field"><label for="accountGroup">${t('group')}</label>${groupSelector(null, 'id="accountGroup" name="group"')}</div>
  <div class="field"><label for="accountStart">${t('startMonth')}</label><input id="accountStart" name="start" type="month" min="1900-01" max="2200-12" required value="${state.months.length && state.month <= state.months.at(-1).month ? nextMonth(state.months.at(-1).month, 1) : state.month}"></div>
  <button class="btn btn-primary" type="submit">${t('createAccount')}</button></form></section>
- <section class="card panel"><div class="panel-heading"><div><h2>${t('accountList')}</h2><span class="subtle">${pluralAccounts(accounts.length)}</span></div><button class="btn btn-small btn-primary" data-action="groupCreate">+ ${t('createGroup')}</button></div>
+ <section class="card panel"><div class="panel-heading"><div><h2>${t('accountList')}</h2><span class="subtle">${pluralAccounts(accounts.length)}</span></div><div class="overview-actions">${groupVisibilityButtons()}<button class="btn btn-small btn-primary" data-action="groupCreate">+ ${t('createGroup')}</button></div></div>
  <p class="caption">${t('dragGroupsHint')}</p>${html}</section>`;
 }
 

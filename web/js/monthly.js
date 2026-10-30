@@ -12,7 +12,7 @@ import {
   pluralAccounts,
   parseMoney,
 } from './format.js';
-import { $, statusPill } from './ui.js';
+import { $, statusPill, groupVisibilityButtons } from './ui.js';
 function updateBalanceDifference(input) {
   const node = document.querySelector(
     `[data-balance-change="${input.dataset.balance}"]`,
@@ -116,7 +116,7 @@ async function renderMonthly() {
         .filter(Boolean)
         .join(' · ') || t('totalProvisional');
   $('#pageContent').innerHTML =
-    `<div class='status-block'><div class='panel-heading status-heading'><strong>${t('status')}</strong>${statusPill(d)}</div><p class='inline-status'>${missing}</p>${d.complete ? `<div class='metric-value metric-secondary'>${money(d.total_eur_minor)}</div>` : ''}</div><div class='editor-grid'><section class='card panel'><div class='panel-heading'><h2>${t('balance')}</h2><span class='subtle'>${escapeHTML(monthLabel(state.month))}</span></div><p class='caption'>${t('balancesNote')}</p>${rows}</section><section class='card panel'><div class='panel-heading'><h2>${t('rates')}</h2><span class='subtle'>EUR = 1</span></div><p class='caption'>${t('ratesNote')}</p>${currencies.length ? `<button type='button' class='btn btn-small' data-action='loadRates'>${t('loadRates')}</button><p class='caption' id='rateLoadStatus' aria-live='polite'></p>` : ''}<div class='editor-list'>${exchangeRows || `<p class='muted'>EUR = 1</p>`}</div><p class='footer-note'>${t('rateFormatHelp')}</p></section></div><div class='editor-footer'><p class='subtle'>${t('exactTotal')}</p><div class='overview-actions'><button class='btn btn-danger' data-action='deleteMonth' ${d.exists ? '' : 'disabled'}>${t('deleteMonth')}</button><button class='btn btn-primary' data-action='saveMonth' ${d.accounts.length ? '' : 'disabled'}>${t('saveMonth')}</button></div></div>`;
+    `<div class='status-block'><div class='panel-heading status-heading'><strong>${t('status')}</strong>${statusPill(d)}</div><p class='inline-status'>${missing}</p>${d.complete ? `<div class='metric-value metric-secondary'>${money(d.total_eur_minor)}</div>` : ''}</div><div class='editor-grid'><section class='card panel'><div class='panel-heading'><h2>${t('balance')}</h2><div class='overview-actions'><span class='subtle'>${escapeHTML(monthLabel(state.month))}</span>${groupVisibilityButtons()}</div></div><p class='caption'>${t('balancesNote')}</p>${rows}</section><section class='card panel'><div class='panel-heading'><h2>${t('rates')}</h2><span class='subtle'>EUR = 1</span></div><p class='caption'>${t('ratesNote')}</p>${currencies.length ? `<button type='button' class='btn btn-small' data-action='loadRates'>${t('loadRates')}</button><p class='caption' id='rateLoadStatus' aria-live='polite'></p>` : ''}<div class='editor-list'>${exchangeRows || `<p class='muted'>EUR = 1</p>`}</div><p class='footer-note'>${t('rateFormatHelp')}</p></section></div><div class='editor-footer'><p class='subtle'>${t('exactTotal')}</p><div class='overview-actions'><button class='btn btn-danger' data-action='deleteMonth' ${d.exists ? '' : 'disabled'}>${t('deleteMonth')}</button><button class='btn btn-primary' data-action='saveMonth' ${d.accounts.length ? '' : 'disabled'}>${t('saveMonth')}</button></div></div>`;
   document.querySelectorAll('[data-balance]').forEach(updateBalanceDifference);
   state.dirty = false;
 }

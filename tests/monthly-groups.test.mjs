@@ -96,6 +96,7 @@ function setup(active) {
     'statusPill',
     'document',
     'updateBalanceDifference',
+    'groupVisibilityButtons',
     fn + '\nreturn renderMonthly;',
   )(
     state,
@@ -113,6 +114,7 @@ function setup(active) {
     (d) => (d.complete ? 'Complete' : 'Incomplete'),
     { querySelectorAll: () => [] },
     () => {},
+    () => '',
   );
   return { state, content, calls, render };
 }

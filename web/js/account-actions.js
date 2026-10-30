@@ -103,25 +103,36 @@ function showGroupEditor(action, group = null) {
   $('#editValue').focus();
 }
 async function groupAction(action, id, key) {
-  if (action === 'toggleGroup') {
-    if (collapsedGroups.has(key)) collapsedGroups.delete(key);
-    else collapsedGroups.add(key);
+  if (['toggleGroup', 'groupCollapseAll', 'groupExpandAll'].includes(action)) {
+    const keys =
+      action === 'toggleGroup'
+        ? [key]
+        : [...document.querySelectorAll('.group-toggle[data-group-key]')].map(
+            (button) => button.dataset.groupKey,
+          );
+    for (const groupKey of keys) {
+      const closed =
+        action === 'toggleGroup'
+          ? !collapsedGroups.has(groupKey)
+          : action === 'groupCollapseAll';
+      if (closed) collapsedGroups.add(groupKey);
+      else collapsedGroups.delete(groupKey);
+      const button = document.querySelector(
+        `[data-action="toggleGroup"][data-group-key="${groupKey}"]`,
+      );
+      const panel = button?.closest('.account-group');
+      if (panel) {
+        panel.classList.toggle('is-collapsed', closed);
+        button.textContent = closed ? '▸' : '▾';
+        button.setAttribute('aria-expanded', String(!closed));
+      }
+    }
     try {
       localStorage.setItem(
         'capital-collapsed-groups',
         JSON.stringify([...collapsedGroups]),
       );
     } catch {}
-    const button = document.querySelector(
-      `[data-action="toggleGroup"][data-group-key="${key}"]`,
-    );
-    const panel = button?.closest('.account-group');
-    if (panel) {
-      const closed = collapsedGroups.has(key);
-      panel.classList.toggle('is-collapsed', closed);
-      button.textContent = closed ? '▸' : '▾';
-      button.setAttribute('aria-expanded', String(!closed));
-    }
     return;
   }
   if (action === 'groupCreate' || action === 'groupRename') {

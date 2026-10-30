@@ -84,6 +84,9 @@ function renderHeader() {
   document.documentElement.lang = 'en';
   document.title = `${t(names[state.page])} · Capital Tracker`;
 }
+function groupVisibilityButtons() {
+  return `<button type="button" class="btn btn-small" data-action="groupCollapseAll">${t('collapseAllGroups')}</button><button type="button" class="btn btn-small" data-action="groupExpandAll">${t('expandAllGroups')}</button>`;
+}
 function emptyStart() {
   return `<div class="card empty"><div class="welcome-symbol">◈</div><h2>${t('welcome')}</h2><p>${t('welcomeBody')}</p><button type="button" class="btn btn-primary" data-page="accounts">+ ${t('addAccount')}</button></div>`;
 }
@@ -97,4 +100,5 @@ export {
   renderNav,
   renderHeader,
   emptyStart,
+  groupVisibilityButtons,
 };
