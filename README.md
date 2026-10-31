@@ -97,7 +97,7 @@ Click any image to open the original full-size PNG.</p>
 - **Monthly net-worth snapshots:** update balances once a month, not every transaction. Add one account now and fill in the rest later; a missing balance is not zero.
 - **Accounts & groups:** keep bank, cash, investment and loan accounts in expandable groups with EUR subtotals. Drag accounts between groups, reorder them and archive without erasing history. Monthly balances use the same groups in a read-only arrangement.
 - **Five currencies:** EUR is the reporting base, with USD, RSD, RUB and TRY. Enter month-specific exchange rates manually or request the latest available quotes. Saved historical rates stay fixed.
-- **Capital dashboard:** a EUR net-worth total, comparison against the previous complete calendar month where available, and a history chart. Incomplete months are clearly marked.
+- **Capital dashboard:** a EUR net-worth total, comparison against the previous calendar month when both months are complete, and a history chart. Incomplete months are clearly marked.
 - **Income:** named sources such as salary and freelance work, each in its original currency. See EUR equivalents, shared rates for entries in the same currency/month, and monthly income history.
 - **Major expenses:** record occasional large purchases with names, currencies, EUR equivalents, totals and a separate history chart.
 - **Recurring expenses:** keep a monthly list of regular costs. An unsaved month inherits the latest earlier saved snapshot; saving the month freezes its own list. View EUR totals and historical trends.
