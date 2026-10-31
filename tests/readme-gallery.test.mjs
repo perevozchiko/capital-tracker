@@ -16,6 +16,10 @@ test('README screenshots link to full-size originals', () => {
     'dashboard.png',
     'monthly-balances.png',
     'accounts.png',
+    'income.png',
+    'major-expenses.png',
+    'recurring-expenses.png',
+    'mobile-dashboard.png',
     'mobile-balances.png',
   ];
   for (const name of images) {

@@ -44,7 +44,7 @@ python3 -m playwright install chromium
 python3 scripts/capture-demo-screenshots.py
 ```
 
-This launches the real Go app with isolated sample data, captures Chromium in Dark mode, and writes `docs/screenshots/dashboard.png`, `monthly-balances.png` and `accounts.png`. You can also run **Actions → Capture demo screenshots → Run workflow** on `master`: the workflow commits changed PNG files only and does not rewrite the hand-maintained README gallery.
+This launches the real Go app with isolated sample data, captures Chromium in Dark mode, and writes eight real browser screenshots to `docs/screenshots/`: dashboard, monthly balances, accounts, income, major expenses, recurring expenses, mobile dashboard and mobile balances. You can also run **Actions → Capture demo screenshots → Run workflow** on `master`: the workflow commits changed PNG files only and does not rewrite the hand-maintained README gallery.
 
 ## GitHub Actions (one automatic runner)
 

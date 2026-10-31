@@ -48,6 +48,7 @@ def wait_for_server(url: str, process: subprocess.Popen, deadline: float) -> Non
     raise RuntimeError("Capital Tracker did not become ready")
 
 
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="capital-tracker-screenshots-") as temp:
@@ -101,6 +102,26 @@ def main() -> None:
                     page.locator("html[data-theme='dark']").wait_for()
                     page.screenshot(path=str(OUT / "accounts.png"), full_page=True)
 
+                    for route, selector, filename in (
+                        ("incomes", "[data-income-row]", "income.png"),
+                        ("expenses", "[data-expense-row]", "major-expenses.png"),
+                        ("recurringExpenses", "[data-recurring-expense-row]", "recurring-expenses.png"),
+                    ):
+                        page.locator(f'#navigation [data-page="{route}"]').click()
+                        page.locator(selector).first.wait_for()
+                        page.locator("html[data-theme='dark']").wait_for()
+                        page.screenshot(path=str(OUT / filename), full_page=True, animations="disabled")
+
+                    page.locator('#navigation [data-page="dashboard"]').click()
+                    page.locator(".grid-summary").wait_for()
+                    page.set_viewport_size({"width": 390, "height": 844})
+                    page.evaluate("window.scrollTo(0, 0)")
+                    page.screenshot(
+                        path=str(OUT / "mobile-dashboard.png"),
+                        full_page=False, animations="disabled",
+                    )
+
+                    page.set_viewport_size({"width": 1440, "height": 960})
                     page.locator('#navigation [data-page="monthly"]').click()
                     page.locator(".balance-row").first.wait_for()
                     page.set_viewport_size({"width": 390, "height": 844})
@@ -118,7 +139,7 @@ def main() -> None:
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait()
-    print("Screenshots captured in docs/screenshots/: dashboard.png, monthly-balances.png, accounts.png, mobile-balances.png")
+    print("Captured eight real Chromium screenshots in docs/screenshots/ (desktop and mobile).")
 
 
 if __name__ == "__main__":

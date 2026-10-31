@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "==> Check Go formatting"
-unformatted="$(rg --files -0 -g '*.go' | xargs -0 gofmt -l)"
+unformatted="$(find . -type f -name '*.go' -print0 | xargs -0 gofmt -l)"
 if [[ -n "$unformatted" ]]; then
   printf 'Unformatted Go files:\n%s\n' "$unformatted" >&2
   echo "Run: gofmt -w ." >&2
