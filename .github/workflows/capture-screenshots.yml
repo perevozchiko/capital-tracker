@@ -2,21 +2,15 @@ name: Capture demo screenshots
 
 on:
   workflow_dispatch:
-  # Temporary one-shot request via a PR comment; remove after assets are captured.
-  issue_comment:
-    types: [created]
 
 permissions:
   contents: write
 
 jobs:
   screenshots:
-    if: github.event_name != 'issue_comment' || (github.event.issue.number == 12 && github.event.comment.body == '/capture-gallery' && github.event.issue.pull_request)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event_name == 'issue_comment' && 'docs/refresh-gallery-2026' || github.ref_name }}
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
