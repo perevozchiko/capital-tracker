@@ -1,5 +1,7 @@
 # Access through fin.anasko.net
 
+When authentication is configured, every new browser sees a standalone sign-in page immediately. The application HTML, scripts, styles and financial APIs are protected on the server; they are not sent to unauthenticated visitors. After signing in, the same browser opens the application directly without showing the sign-in form. Authenticated deployments disable offline asset caching and remove caches left by the local-mode service worker.
+
 The app supports one configured username and password, persistent browser sessions, sign-out and login throttling. Sign in once on each browser/device; closing the browser or restarting the server preserves access. Sessions have no server-side expiry and remain valid until you sign out. Signing out revokes that browser's session, including after a server restart; other devices stay signed in. Changing the configured username or password hash and restarting invalidates all saved sessions.
 
 Browsers limit cookie lifetimes, so the app renews its persistent cookie for 400 days on each authenticated API request. Clearing cookies, using a private browsing session, or leaving the app unused beyond the browser's cookie lifetime requires signing in again. See [Chrome's cookie lifetime limit](https://developer.chrome.com/blog/cookie-max-age-expires).
@@ -55,3 +57,17 @@ Caddy handles certificates and HTTP-to-HTTPS redirects. The Go server validates 
 Open `https://fin.anasko.net` and sign in. A direct request to `/api/data/export` without a session must return 401. Financial API responses are never cached. Session cookies are HttpOnly, SameSite=Strict and Secure in public mode. Password hashing uses [Go bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt).
 
 For auth testing on the local machine, set username/hash and omit `CAPITAL_TRACKER_PUBLIC_ORIGIN`. This permits a non-Secure cookie only on the existing loopback Host allowlist. Use the HTTPS public origin when hosting remotely.
+
+For example, build the app and start it with a separate local test database (Zsh/Bash):
+
+```sh
+go build -o /tmp/capital-tracker ./cmd/capital-tracker
+export CAPITAL_TRACKER_USERNAME=andrei
+read -r -s CAPITAL_TRACKER_PASSWORD
+export CAPITAL_TRACKER_PASSWORD
+export CAPITAL_TRACKER_PASSWORD_HASH="$(/tmp/capital-tracker hash-password)"
+unset CAPITAL_TRACKER_PASSWORD CAPITAL_TRACKER_PUBLIC_ORIGIN
+/tmp/capital-tracker --no-browser --data-dir /tmp/capital-tracker-auth-test --port 8766
+```
+
+Enter a test password of 12–72 bytes at the `read` step, then open `http://127.0.0.1:8766`. Use a private window to verify that another browser sees only the sign-in form; normal browsing preserves your existing login. This test directory is separate from your regular financial database.

@@ -50,7 +50,7 @@ func TestEnglishMessages(t *testing.T) {
 }
 
 func TestEmbeddedStaticFiles(t *testing.T) {
-	for _, file := range []string{"index.html", "css/app.css", "js/boot.js", "js/app.js", "icons/favicon.svg", "icons/icon-192.png", "icons/icon-512.png", "manifest.webmanifest", "sw.js"} {
+	for _, file := range []string{"index.html", "login.html", "css/login.css", "js/login.js", "auth-sw.js", "css/app.css", "js/boot.js", "js/app.js", "icons/favicon.svg", "icons/icon-192.png", "icons/icon-512.png", "manifest.webmanifest", "sw.js"} {
 		data, err := fs.ReadFile(Assets, file)
 		if err != nil || len(data) == 0 {
 			t.Fatalf("missing/empty %s: %v", file, err)

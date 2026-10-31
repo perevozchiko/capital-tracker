@@ -45,7 +45,7 @@ func (s *Server) Handler() http.Handler {
 	registerSettings(mux, s)
 	registerStatic(mux, s)
 	if s.Auth != nil {
-		return secureRequests(s.Auth.protect(mux), s.Auth.Origin)
+		return secureRequests(s.Auth.protect(mux, s.Assets), s.Auth.Origin)
 	}
 	mux.HandleFunc("/api/auth/status", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {

@@ -1698,24 +1698,3 @@ th button:hover {
 [hidden] {
   display: none !important;
 }
-.signed-out .sidebar,
-.signed-out .topbar {
-  display: none;
-}
-.signed-out .app-main {
-  max-width: 480px;
-  margin: auto;
-  padding-top: max(32px, env(safe-area-inset-top));
-}
-.login-panel {
-  width: 100%;
-}
-.login-panel .field {
-  margin-bottom: 18px;
-}
-.login-panel input {
-  width: 100%;
-}
-#loginError {
-  color: var(--negative);
-}

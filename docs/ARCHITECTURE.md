@@ -60,7 +60,7 @@ To change the schema, add the next numbered migration. Never edit an already-rel
 
 - The listener binds `127.0.0.1`, not the LAN. `internal/httpapi/security.go` restricts allowed `Host`, checks `Origin`/fetch metadata on mutations and requires the `X-Capital-Tracker: 1` header.
 - Browsers receive a restrictive Content Security Policy, `X-Frame-Options`, `nosniff`, and no-referrer headers.
-- The service worker caches **static** assets only; API responses are not cached. Asset requests are network-first.
+- In local mode the service worker caches **static** assets only; API responses are not cached. Asset requests are network-first. With authentication enabled, a standalone server-rendered sign-in page gates the application HTML and assets as well as financial APIs. A network-only service worker removes old static caches so a cached application page cannot bypass the sign-in screen.
 - The local SQLite file and JSON exports contain sensitive financial information. They are not encrypted by Capital Tracker; use OS/disk protection and safe backups.
 
 For endpoint details, see [HTTP API](API.md). For commands, tests and packaging, see [Developer guide](DEVELOPMENT.md).

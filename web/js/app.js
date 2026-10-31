@@ -322,7 +322,7 @@ document.addEventListener('focusout', (e) => {
 });
 async function boot() {
   try {
-    if (!(await checkLogin(boot))) return;
+    if (!(await checkLogin())) return;
     const [settings, metadata] = await Promise.all([
       api('/settings'),
       api('/meta'),

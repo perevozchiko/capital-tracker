@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0e1421" />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/css/login.css" />
+    <title>Sign in · Capital Tracker</title>
+    <script src="/js/login.js" defer></script>
+  </head>
+  <body>
+    <main class="login-panel" aria-labelledby="loginTitle">
+      <img src="/icons/favicon.svg" width="44" height="44" alt="" />
+      <h1 id="loginTitle">Capital Tracker</h1>
+      <p class="subtitle">Sign in to your finances</p>
+      <form id="loginForm" method="post" action="/api/auth/login">
+        <label for="loginUsername">Username</label>
+        <input
+          id="loginUsername"
+          name="username"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+          maxlength="100"
+          required
+          autofocus
+        />
+        <label for="loginPassword">Password</label>
+        <input
+          id="loginPassword"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+        <p id="loginError" role="alert" aria-live="polite"></p>
+        <button type="submit">Sign in</button>
+      </form>
+      <noscript><p>Enable JavaScript to sign in.</p></noscript>
+    </main>
+  </body>
+</html>

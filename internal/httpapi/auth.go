@@ -6,6 +6,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"errors"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"sync"
@@ -74,7 +75,7 @@ func (a *Auth) cookie(value string, maxAge int) *http.Cookie {
 	return &http.Cookie{Name: sessionCookie, Value: value, Path: "/", HttpOnly: true, Secure: a.Origin != "", SameSite: http.SameSiteStrictMode, MaxAge: maxAge}
 }
 
-func (a *Auth) protect(next http.Handler) http.Handler {
+func (a *Auth) protect(next http.Handler, assets fs.FS) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		switch r.URL.Path {
@@ -111,12 +112,26 @@ func (a *Auth) protect(next http.Handler) http.Handler {
 			http.SetCookie(w, a.cookie("", -1))
 			w.WriteHeader(http.StatusNoContent)
 			return
-		}
-		if len(r.URL.Path) >= 5 && r.URL.Path[:5] == "/api/" && r.URL.Path != "/api/meta" && !a.authenticated(w, r) {
-			fail(w, 401, "unauthorized", "")
+		// Only the sign-in page's assets and the cache-cleanup worker are public.
+		// Metadata is also used by the launcher to detect a running instance.
+		case "/css/login.css", "/js/login.js", "/icons/favicon.svg", "/sw.js", "/api/meta":
+			next.ServeHTTP(w, r)
 			return
 		}
-		next.ServeHTTP(w, r)
+		if a.authenticated(w, r) {
+			if r.URL.Path == "/login.html" {
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+				return
+			}
+			next.ServeHTTP(w, r)
+			return
+		}
+		switch r.URL.Path {
+		case "/", "/index.html", "/login.html":
+			servePage(w, r, assets, "login.html")
+		default:
+			fail(w, 401, "unauthorized", "")
+		}
 	})
 }
 
