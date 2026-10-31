@@ -18,91 +18,93 @@
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue" alt="MIT OR Apache-2.0 license"></a>
 <a href="https://github.com/perevozchiko/capital-tracker/releases"><img src="https://img.shields.io/github/v/release/perevozchiko/capital-tracker?include_prereleases&label=release" alt="Latest release, when available"></a>
 
-<p><strong>Go + SQLite</strong> · <strong>No cloud or account required</strong> · <strong>Local data</strong> · <strong>macOS / Linux / Windows</strong></p>
+<p><strong>Go + SQLite</strong> · <strong>No mandatory cloud or account</strong> · <strong>Local data</strong> · <strong>macOS / Linux / Windows</strong></p>
 
 </div>
 
-Capital Tracker is independently developed open-source software. It is not affiliated with any commercial budgeting app. Your financial data stays in a SQLite database on your computer.
+Capital Tracker is independently developed open-source software, not affiliated with any commercial budgeting app. Your balances and notes live in your own SQLite database. Run it locally with no sign-in, or optionally self-host it behind HTTPS with password-protected access from your devices.
 
 ## Screenshots
 
+<p align="center"><strong>Real Chromium captures from the application — not renders or mockups.</strong><br>
+Dark theme · isolated, fictional 12-month demo · October 2025–September 2026.<br>
+Click any image to open the original full-size PNG.</p>
+
 <div align="center">
 
-<p><strong>Real browser screenshots, not mockups.</strong> Captured in Chromium with fictional demo data and the app's Dark theme.</p>
-
-<h3>Dashboard</h3>
+### Dashboard
 
 <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png">
-  <img src="docs/screenshots/dashboard.png" alt="Capital Tracker dashboard: monthly net worth, monthly change and history chart" width="940">
+  <img src="docs/screenshots/dashboard.png" alt="Capital Tracker dark dashboard with EUR net worth, month-on-month change and history chart" width="940">
 </a>
 
-<sub><strong>Tap or click the screenshot</strong> to view it at full resolution. Use your browser's image zoom to inspect the details.</sub>
+<sub>Net worth at a glance, with an accurate month-to-month comparison and capital history.</sub>
 
 </div>
 
 <table>
+  <tr><th width="50%">Monthly balances</th><th width="50%">Accounts &amp; groups</th></tr>
   <tr>
-    <td align="center" width="50%">
-      <strong>Monthly balances</strong>
-    </td>
-    <td align="center" width="50%">
-      <strong>Accounts & groups</strong>
-    </td>
+    <td align="center"><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/monthly-balances.png"><img src="docs/screenshots/monthly-balances.png" alt="Grouped monthly balances, previous-month differences and currency rates" width="455"></a></td>
+    <td align="center"><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/accounts.png"><img src="docs/screenshots/accounts.png" alt="Account groups with EUR subtotals and account organization" width="455"></a></td>
   </tr>
   <tr>
-    <td align="center">
-      <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/monthly-balances.png">
-        <img src="docs/screenshots/monthly-balances.png" alt="Monthly balance editor with grouped account balances and exchange rates" width="455">
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/accounts.png">
-        <img src="docs/screenshots/accounts.png" alt="Account management showing groups and individual accounts" width="455">
-      </a>
-    </td>
+    <td align="center"><sub>Update just one account or several, with last month's value beside each entry.</sub></td>
+    <td align="center"><sub>Arrange accounts by dragging, collapse sections and keep archived history.</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr><th width="50%">Income</th><th width="50%">Major expenses</th></tr>
+  <tr>
+    <td align="center"><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/income.png"><img src="docs/screenshots/income.png" alt="Monthly named income sources in multiple currencies and EUR income history" width="455"></a></td>
+    <td align="center"><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/major-expenses.png"><img src="docs/screenshots/major-expenses.png" alt="Named large expenses, monthly totals and EUR history chart" width="455"></a></td>
   </tr>
   <tr>
-    <td align="center">
-      <sub>Record balances for one or several accounts at a time.</sub>
-    </td>
-    <td align="center">
-      <sub>Reorder groups and accounts with drag-and-drop.</sub>
-    </td>
+    <td align="center"><sub>Track salary, side income and other sources separately from account balances.</sub></td>
+    <td align="center"><sub>Record noteworthy purchases without keeping a transaction ledger.</sub></td>
   </tr>
 </table>
 
 <div align="center">
 
-<p><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/dashboard.png">Dashboard full size</a> · <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/monthly-balances.png">Monthly balances full size</a> · <a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/accounts.png">Accounts full size</a></p>
+### Recurring expenses
 
-<p><a href="docs/screenshots/README.md">About these screenshots and how to regenerate them</a></p>
-
-</div>
-
-<div align="center">
-
-<h3>Mobile balances</h3>
-
-<a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/mobile-balances.png">
-  <img src="docs/screenshots/mobile-balances.png" alt="Mobile monthly balances with shared collapse and expand controls and readable financial values" width="280">
+<a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/recurring-expenses.png">
+  <img src="docs/screenshots/recurring-expenses.png" alt="Recurring monthly expenses with category-like names, EUR totals and history" width="940">
 </a>
 
-<p><sub>Real 390-pixel browser viewport. Tap the screenshot to view the original.</sub></p>
+<sub>Maintain a monthly snapshot of rent, utilities and other regular costs; unsaved months inherit the last saved list.</sub>
+
+### Mobile
+
+<table>
+  <tr><th width="50%">Dashboard</th><th width="50%">Monthly balances</th></tr>
+  <tr>
+    <td align="center"><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/mobile-dashboard.png"><img src="docs/screenshots/mobile-dashboard.png" alt="Capital Tracker dark dashboard in a 390-pixel phone viewport" width="290"></a></td>
+    <td align="center"><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/mobile-balances.png"><img src="docs/screenshots/mobile-balances.png" alt="Grouped monthly balance editor in a 390-pixel phone viewport" width="290"></a></td>
+  </tr>
+</table>
+
+<sub>Both captures use a real 390-pixel browser viewport, not a scaled desktop screenshot.</sub>
+
+<p><a href="docs/screenshots/README.md">Open the full screenshot gallery &amp; regeneration instructions</a></p>
 
 </div>
 
 ## What it does
 
-- **Monthly snapshots:** save balances for one or more accounts now and finish later; unknown is different from zero.
-- **Accounts and groups:** drag to reorder groups, move accounts between groups or change their order within a group. Keep archived history and see group subtotals in EUR.
-- **Group visibility:** collapse or expand individual groups, or use **Collapse all / Expand all** on both Accounts and Monthly balances. The shared state survives reload and restart.
-- **Five currencies:** EUR (reporting base), USD, RSD, RUB and TRY. Enter rates manually or click **Load latest exchange rates** to replace unsaved rates (including manual entries) with the latest available quotes. Saving keeps those exact values for the selected month; saved rates are locked and later quotes do not revalue history. You can backfill balances before an account’s start month; saving moves its start back.
-- **Capital history:** a chart and change against the **previous calendar month**. Change is shown when both months are complete; the comparison month and its total are displayed.
-- **Major expenses:** named monthly expenses with shared currency rates, EUR equivalents, totals and a history chart, independent of income and capital. Included in JSON backups.
-- **Income notes:** named income entries in multiple currencies, per-entry EUR equivalents, monthly totals, shared monthly exchange rates per currency and a EUR history chart, independent of accounts and net worth.
-- **Exact calculations:** integer minor units and fixed-point exchange rates; no floating-point rounding of stored money.
-- **Responsive interface:** desktop and narrow-screen layouts, Dark/Light/System themes and English interface. Large balances such as **10,000,000.99** remain readable in every supported currency, including on phones in portrait and landscape. Local data remains usable without a currency-provider connection.
-- **Your data:** portable JSON exports, full SQLite backups, intentional deletion with confirmation, and a safe fictional demo mode.
+- **Monthly net-worth snapshots:** update balances once a month, not every transaction. Add one account now and fill in the rest later; a missing balance is not zero.
+- **Accounts & groups:** keep bank, cash, investment and loan accounts in expandable groups with EUR subtotals. Drag accounts between groups, reorder them and archive without erasing history. Monthly balances use the same groups in a read-only arrangement.
+- **Five currencies:** EUR is the reporting base, with USD, RSD, RUB and TRY. Enter month-specific exchange rates manually or request the latest available quotes. Saved historical rates stay fixed.
+- **Capital dashboard:** a EUR net-worth total, comparison against the previous complete calendar month where available, and a history chart. Incomplete months are clearly marked.
+- **Income:** named sources such as salary and freelance work, each in its original currency. See EUR equivalents, shared rates for entries in the same currency/month, and monthly income history.
+- **Major expenses:** record occasional large purchases with names, currencies, EUR equivalents, totals and a separate history chart.
+- **Recurring expenses:** keep a monthly list of regular costs. An unsaved month inherits the latest earlier saved snapshot; saving the month freezes its own list. View EUR totals and historical trends.
+- **Privacy & backups:** use it locally without an account; optionally deploy your own HTTPS server with single-user password login and revocable sessions. Export and import JSON, back up SQLite, or deliberately clear the database with confirmation.
+- **Responsive PWA:** desktop and phone layouts, Dark/Light/System themes, hide/show amounts, and an English interface. Stored money uses integer minor units and exact fixed-point FX rates.
+
+Income, major expenses and recurring expenses are **independent notes**, not bank transactions. They do not automatically change account balances or net worth.
 
 ## Quick start
 
@@ -134,14 +136,14 @@ The executable bundles the web interface and uses only a local HTTP server. It h
 <details>
 <summary><strong>What is included in the demo?</strong></summary>
 
-The isolated sample contains 12 complete monthly snapshots (October 2025–September 2026), with fictional account balances, EUR/USD rates, savings, investments and a loan. Demo mode never opens or edits your regular database. See the [User Guide](docs/USER_GUIDE.md) for details.
+The isolated sample contains 12 complete monthly snapshots (October 2025–September 2026), with fictional account balances, EUR/USD rates, savings, investments, a loan, named income, major expenses and regular expenses. Demo mode never opens or edits your regular database. See the [User Guide](docs/USER_GUIDE.md) for details.
 
 </details>
 
 <details>
 <summary><strong>How private is the app?</strong></summary>
 
-The app binds only to the local loopback interface, does not require an online account, and stores financial data in local SQLite. Optional exchange-rate lookups require an explicit user action and do not send your account balances to the provider. The SQLite database and exported JSON are not encrypted by the application; use full-disk encryption and backups for protection. See [Security](SECURITY.md).
+The app binds only to the local loopback interface, does not require an online account, and stores financial data in local SQLite. Optional exchange-rate lookups require an explicit user action and do not send your account balances to the provider. Self-hosted access can use password-protected HTTPS through your own reverse proxy; this is optional and requires setup. The SQLite database and exported JSON are not encrypted by the application; use full-disk encryption and backups for protection. See [Security](SECURITY.md).
 
 </details>
 
@@ -157,8 +159,8 @@ Downloaded binaries are currently unsigned/not notarized. Verify the attached SH
 
 | Guide | Contents |
 | --- | --- |
-| [User Guide](docs/USER_GUIDE.md) | Demo, groups, archive, balances, rates, imports, exports, backups and financial rules |
-| [Architecture](docs/ARCHITECTURE.md) | Go and browser modules, data flow, SQLite migrations, exact-money invariants, security |
+| [User Guide](docs/USER_GUIDE.md) | Demo, groups, balances, income and expense notes, rates, backups and financial rules |
+| [Self-hosting](docs/HOSTING.md) | Optional single-user login, systemd service and HTTPS reverse proxy |\n| [Architecture](docs/ARCHITECTURE.md) | Go and browser modules, data flow, SQLite migrations, exact-money invariants, security |
 | [HTTP API](docs/API.md) | Endpoint list, JSON payloads, errors and same-origin requirements |
 | [Development and releases](docs/DEVELOPMENT.md) | Build/run options, formatting, unit and browser tests, GitHub Actions, release versions |
 | [Browser test coverage](docs/TEST_COVERAGE.md) | Scenario matrix, drag-and-drop, group visibility, large mobile balances, history persistence and live currency-provider checks |
@@ -176,7 +178,7 @@ npx playwright install chromium
 npm run test:ui
 ```
 
-The browser suite covers Chromium and WebKit (Chrome and Safari engines), covering account/group management, native drag-and-drop, collapse/expand controls, financial input boundaries, rate snapshots and long workflows through restart, export, deletion and import. Mobile layout scenarios check large values in all five currencies, clipping, overlap and account history table visibility; they also save screenshots.
+The browser suite covers Chromium and WebKit (Chrome and Safari engines), covering accounts/groups, income and expenses, recurring-month inheritance, authentication, drag-and-drop, financial boundaries and workflows through restart, export, deletion and import. Mobile layout scenarios check large values in all five currencies, clipping, overlap and account history table visibility; they also save screenshots.
 
 Browser tests use fresh isolated temporary databases, not your personal data. The external-provider scenario is skipped by default. To also exercise real quote loading through the browser and verify that the loaded rates are saved exactly:
 
@@ -184,7 +186,7 @@ Browser tests use fresh isolated temporary databases, not your personal data. Th
 CAPITAL_TRACKER_LIVE_RATES=1 npm run test:ui -- --workers=4
 ```
 
-See the [coverage matrix](docs/TEST_COVERAGE.md) for the scenario breakdown. `npm run format` formats Go and frontend sources; see the [Development guide](docs/DEVELOPMENT.md) for details.
+To regenerate the eight real browser screenshots on a fresh isolated demo, run `python3 scripts/capture-demo-screenshots.py` after installing Python Playwright and Chromium, or use the manual screenshot GitHub Action. See [screenshot instructions](docs/screenshots/README.md).\n\nSee the [coverage matrix](docs/TEST_COVERAGE.md) for the scenario breakdown. `npm run format` formats Go and frontend sources; see the [Development guide](docs/DEVELOPMENT.md) for details.
 
 ## License
 
