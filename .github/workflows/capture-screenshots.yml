@@ -2,6 +2,11 @@ name: Capture demo screenshots
 
 on:
   workflow_dispatch:
+  # One-time documentation refresh; remove this temporary branch trigger after capture.
+  push:
+    branches: [docs/refresh-gallery-2026]
+    paths:
+      - .github/workflows/capture-screenshots.yml
 
 permissions:
   contents: write
