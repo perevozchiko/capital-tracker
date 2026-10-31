@@ -1,6 +1,6 @@
 {
   "format": "capital-tracker",
-  "schema_version": 2,
+  "schema_version": 6,
   "exported_at": "2026-10-01T12:00:00Z",
   "accounts": [
     {
@@ -697,6 +697,779 @@
       "sort_order": 3,
       "created_at": "2025-10-01T09:00:00Z",
       "updated_at": "2025-10-01T09:00:00Z"
+    }
+  ],
+  "incomes": [
+    {
+      "month": "2025-10",
+      "currency": "EUR",
+      "amount_minor": "280000",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2025-10",
+      "currency": "USD",
+      "amount_minor": "18000",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2025-11",
+      "currency": "EUR",
+      "amount_minor": "280000",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2025-11",
+      "currency": "USD",
+      "amount_minor": "20200",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2025-12",
+      "currency": "EUR",
+      "amount_minor": "280000",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2025-12",
+      "currency": "USD",
+      "amount_minor": "22400",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2025-12",
+      "currency": "EUR",
+      "amount_minor": "55000",
+      "rate": "1",
+      "name": "Annual bonus"
+    },
+    {
+      "month": "2026-01",
+      "currency": "EUR",
+      "amount_minor": "280000",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2026-01",
+      "currency": "USD",
+      "amount_minor": "18000",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2026-02",
+      "currency": "EUR",
+      "amount_minor": "287500",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2026-02",
+      "currency": "USD",
+      "amount_minor": "20200",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2026-03",
+      "currency": "EUR",
+      "amount_minor": "287500",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2026-03",
+      "currency": "USD",
+      "amount_minor": "22400",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2026-04",
+      "currency": "EUR",
+      "amount_minor": "287500",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2026-04",
+      "currency": "USD",
+      "amount_minor": "18000",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2026-05",
+      "currency": "EUR",
+      "amount_minor": "287500",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2026-05",
+      "currency": "USD",
+      "amount_minor": "20200",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2026-06",
+      "currency": "EUR",
+      "amount_minor": "295000",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2026-06",
+      "currency": "USD",
+      "amount_minor": "22400",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2026-06",
+      "currency": "EUR",
+      "amount_minor": "40000",
+      "rate": "1",
+      "name": "Annual bonus"
+    },
+    {
+      "month": "2026-07",
+      "currency": "EUR",
+      "amount_minor": "295000",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2026-07",
+      "currency": "USD",
+      "amount_minor": "18000",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2026-08",
+      "currency": "EUR",
+      "amount_minor": "295000",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2026-08",
+      "currency": "USD",
+      "amount_minor": "20200",
+      "rate": "1.10",
+      "name": "Side projects"
+    },
+    {
+      "month": "2026-09",
+      "currency": "EUR",
+      "amount_minor": "295000",
+      "rate": "1",
+      "name": "Salary"
+    },
+    {
+      "month": "2026-09",
+      "currency": "USD",
+      "amount_minor": "22400",
+      "rate": "1.10",
+      "name": "Side projects"
+    }
+  ],
+  "expenses": [
+    {
+      "month": "2025-10",
+      "currency": "EUR",
+      "amount_minor": "24000",
+      "rate": "1",
+      "name": "Car maintenance"
+    },
+    {
+      "month": "2025-11",
+      "currency": "EUR",
+      "amount_minor": "33200",
+      "rate": "1",
+      "name": "Household purchase"
+    },
+    {
+      "month": "2025-12",
+      "currency": "EUR",
+      "amount_minor": "42400",
+      "rate": "1",
+      "name": "Household purchase"
+    },
+    {
+      "month": "2026-01",
+      "currency": "EUR",
+      "amount_minor": "51600",
+      "rate": "1",
+      "name": "Car maintenance"
+    },
+    {
+      "month": "2026-02",
+      "currency": "EUR",
+      "amount_minor": "24000",
+      "rate": "1",
+      "name": "Household purchase"
+    },
+    {
+      "month": "2026-02",
+      "currency": "EUR",
+      "amount_minor": "94000",
+      "rate": "1",
+      "name": "New laptop"
+    },
+    {
+      "month": "2026-03",
+      "currency": "EUR",
+      "amount_minor": "33200",
+      "rate": "1",
+      "name": "Household purchase"
+    },
+    {
+      "month": "2026-04",
+      "currency": "EUR",
+      "amount_minor": "42400",
+      "rate": "1",
+      "name": "Car maintenance"
+    },
+    {
+      "month": "2026-05",
+      "currency": "EUR",
+      "amount_minor": "51600",
+      "rate": "1",
+      "name": "Household purchase"
+    },
+    {
+      "month": "2026-05",
+      "currency": "EUR",
+      "amount_minor": "120000",
+      "rate": "1",
+      "name": "Summer holiday"
+    },
+    {
+      "month": "2026-06",
+      "currency": "EUR",
+      "amount_minor": "24000",
+      "rate": "1",
+      "name": "Household purchase"
+    },
+    {
+      "month": "2026-06",
+      "currency": "EUR",
+      "amount_minor": "180000",
+      "rate": "1",
+      "name": "Summer holiday"
+    },
+    {
+      "month": "2026-07",
+      "currency": "EUR",
+      "amount_minor": "33200",
+      "rate": "1",
+      "name": "Car maintenance"
+    },
+    {
+      "month": "2026-08",
+      "currency": "EUR",
+      "amount_minor": "42400",
+      "rate": "1",
+      "name": "Household purchase"
+    },
+    {
+      "month": "2026-09",
+      "currency": "EUR",
+      "amount_minor": "51600",
+      "rate": "1",
+      "name": "Household purchase"
+    }
+  ],
+  "recurring_expenses": [
+    {
+      "month": "2025-10",
+      "entries": [
+        {
+          "month": "2025-10",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2025-10",
+          "currency": "EUR",
+          "amount_minor": "39000",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2025-10",
+          "currency": "EUR",
+          "amount_minor": "14000",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2025-10",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2025-10",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2025-11",
+      "entries": [
+        {
+          "month": "2025-11",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2025-11",
+          "currency": "EUR",
+          "amount_minor": "41300",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2025-11",
+          "currency": "EUR",
+          "amount_minor": "15100",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2025-11",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2025-11",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2025-12",
+      "entries": [
+        {
+          "month": "2025-12",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2025-12",
+          "currency": "EUR",
+          "amount_minor": "43600",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2025-12",
+          "currency": "EUR",
+          "amount_minor": "16200",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2025-12",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2025-12",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2026-01",
+      "entries": [
+        {
+          "month": "2026-01",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2026-01",
+          "currency": "EUR",
+          "amount_minor": "39000",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2026-01",
+          "currency": "EUR",
+          "amount_minor": "17300",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2026-01",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2026-01",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2026-02",
+      "entries": [
+        {
+          "month": "2026-02",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2026-02",
+          "currency": "EUR",
+          "amount_minor": "41300",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2026-02",
+          "currency": "EUR",
+          "amount_minor": "14000",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2026-02",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2026-02",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2026-03",
+      "entries": [
+        {
+          "month": "2026-03",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2026-03",
+          "currency": "EUR",
+          "amount_minor": "43600",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2026-03",
+          "currency": "EUR",
+          "amount_minor": "15100",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2026-03",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2026-03",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2026-04",
+      "entries": [
+        {
+          "month": "2026-04",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2026-04",
+          "currency": "EUR",
+          "amount_minor": "39000",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2026-04",
+          "currency": "EUR",
+          "amount_minor": "16200",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2026-04",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2026-04",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2026-05",
+      "entries": [
+        {
+          "month": "2026-05",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2026-05",
+          "currency": "EUR",
+          "amount_minor": "41300",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2026-05",
+          "currency": "EUR",
+          "amount_minor": "17300",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2026-05",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2026-05",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2026-06",
+      "entries": [
+        {
+          "month": "2026-06",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2026-06",
+          "currency": "EUR",
+          "amount_minor": "43600",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2026-06",
+          "currency": "EUR",
+          "amount_minor": "14000",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2026-06",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2026-06",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2026-07",
+      "entries": [
+        {
+          "month": "2026-07",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2026-07",
+          "currency": "EUR",
+          "amount_minor": "39000",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2026-07",
+          "currency": "EUR",
+          "amount_minor": "15100",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2026-07",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2026-07",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2026-08",
+      "entries": [
+        {
+          "month": "2026-08",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2026-08",
+          "currency": "EUR",
+          "amount_minor": "41300",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2026-08",
+          "currency": "EUR",
+          "amount_minor": "16200",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2026-08",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2026-08",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
+    },
+    {
+      "month": "2026-09",
+      "entries": [
+        {
+          "month": "2026-09",
+          "currency": "EUR",
+          "amount_minor": "85000",
+          "rate": "1",
+          "name": "Rent"
+        },
+        {
+          "month": "2026-09",
+          "currency": "EUR",
+          "amount_minor": "43600",
+          "rate": "1",
+          "name": "Groceries"
+        },
+        {
+          "month": "2026-09",
+          "currency": "EUR",
+          "amount_minor": "17300",
+          "rate": "1",
+          "name": "Utilities"
+        },
+        {
+          "month": "2026-09",
+          "currency": "EUR",
+          "amount_minor": "4800",
+          "rate": "1",
+          "name": "Internet & mobile"
+        },
+        {
+          "month": "2026-09",
+          "currency": "EUR",
+          "amount_minor": "12000",
+          "rate": "1",
+          "name": "Transport"
+        }
+      ]
     }
   ]
 }
