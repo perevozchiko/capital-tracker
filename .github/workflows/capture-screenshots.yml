@@ -2,25 +2,21 @@ name: Capture demo screenshots
 
 on:
   workflow_dispatch:
-  # Temporary, branch-limited trigger to capture the documentation PR once.
-  pull_request:
-    branches: [master]
-    paths:
-      - scripts/capture-demo-screenshots.py
-      - internal/demo/sample-2025-2026.json
-      - .github/workflows/capture-screenshots.yml
+  # Temporary one-shot request via a PR comment; remove after assets are captured.
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write
 
 jobs:
   screenshots:
-    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'docs/refresh-gallery-2026')
+    if: github.event_name != 'issue_comment' || (github.event.issue.number == 12 && github.event.comment.body == '/capture-gallery' && github.event.issue.pull_request)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.head_ref || github.ref_name }}
+          ref: ${{ github.event_name == 'issue_comment' && 'docs/refresh-gallery-2026' || github.ref_name }}
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
