@@ -1,13 +1,12 @@
 package httpapi
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -17,7 +16,7 @@ func TestAuthenticationProtectsDataAndRevokesSessions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	auth, err := NewAuth("andrei", string(hash), "https://fin.anasko.net")
+	auth, err := NewAuth("andrei", string(hash), "https://fin.anasko.net", filepath.Join(t.TempDir(), "sessions.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +64,7 @@ func TestAuthenticationProtectsDataAndRevokesSessions(t *testing.T) {
 		t.Fatalf("cookies: %v", cookies)
 	}
 	cookie := cookies[0]
-	if !cookie.Secure || !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode || cookie.Path != "/" || cookie.MaxAge != int(sessionLifetime.Seconds()) {
+	if !cookie.Secure || !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode || cookie.Path != "/" || cookie.MaxAge != int(sessionCookieLifetime.Seconds()) {
 		t.Fatalf("insecure cookie: %+v", cookie)
 	}
 	status := call("GET", "/api/auth/status", "", cookie, "")
@@ -84,14 +83,6 @@ func TestAuthenticationProtectsDataAndRevokesSessions(t *testing.T) {
 	if out := call("GET", "/api/accounts", "", cookie, ""); out.Code != 401 {
 		t.Fatal("logged-out session accepted")
 	}
-	out = call("POST", "/api/auth/login", payload, nil, "https://fin.anasko.net")
-	cookie = out.Result().Cookies()[0]
-	auth.mu.Lock()
-	auth.sessions[sha256.Sum256([]byte(cookie.Value))] = time.Now().Add(-time.Second)
-	auth.mu.Unlock()
-	if out := call("GET", "/api/accounts", "", cookie, ""); out.Code != 401 {
-		t.Fatal("expired session accepted")
-	}
 	// A forged proxy header must never bypass Host validation.
 	req := httptest.NewRequest("GET", "http://evil.example/api/auth/status", nil)
 	req.Header.Set("X-Forwarded-Host", "fin.anasko.net")
@@ -108,17 +99,17 @@ func TestAuthConfigAndLoginThrottling(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, origin := range []string{"http://fin.anasko.net", "https://fin.anasko.net/", "https://user:pass@fin.anasko.net", "https://fin.anasko.net?x=1"} {
-		if _, err := NewAuth("andrei", string(hash), origin); err == nil {
+		if _, err := NewAuth("andrei", string(hash), origin, filepath.Join(t.TempDir(), "sessions.json")); err == nil {
 			t.Fatalf("accepted origin %s", origin)
 		}
 	}
-	if _, err := NewAuth("", string(hash), ""); err == nil {
+	if _, err := NewAuth("", string(hash), "", filepath.Join(t.TempDir(), "sessions.json")); err == nil {
 		t.Fatal("empty username accepted")
 	}
-	if _, err := NewAuth("andrei", "placeholder", ""); err == nil {
+	if _, err := NewAuth("andrei", "placeholder", "", filepath.Join(t.TempDir(), "sessions.json")); err == nil {
 		t.Fatal("bad hash accepted")
 	}
-	auth, err := NewAuth("andrei", string(hash), "")
+	auth, err := NewAuth("andrei", string(hash), "", filepath.Join(t.TempDir(), "sessions.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

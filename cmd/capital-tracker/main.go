@@ -116,15 +116,6 @@ func run() error {
 	if err = os.MkdirAll(*dataDir, 0700); err != nil {
 		return err
 	}
-	var auth *httpapi.Auth
-	publicOrigin := os.Getenv("CAPITAL_TRACKER_PUBLIC_ORIGIN")
-	username, hash := os.Getenv("CAPITAL_TRACKER_USERNAME"), os.Getenv("CAPITAL_TRACKER_PASSWORD_HASH")
-	if publicOrigin != "" || username != "" || hash != "" {
-		auth, err = httpapi.NewAuth(username, hash, publicOrigin)
-		if err != nil {
-			return err
-		}
-	}
 	lockFile := filepath.Join(*dataDir, ".capital-tracker.lock")
 	lock, e := acquireAppLock(lockFile)
 	if e != nil {
@@ -148,6 +139,15 @@ func run() error {
 		return e
 	}
 	defer lock.Close()
+	var auth *httpapi.Auth
+	publicOrigin := os.Getenv("CAPITAL_TRACKER_PUBLIC_ORIGIN")
+	username, hash := os.Getenv("CAPITAL_TRACKER_USERNAME"), os.Getenv("CAPITAL_TRACKER_PASSWORD_HASH")
+	if publicOrigin != "" || username != "" || hash != "" {
+		auth, err = httpapi.NewAuth(username, hash, publicOrigin, filepath.Join(*dataDir, "auth-sessions.json"))
+		if err != nil {
+			return err
+		}
+	}
 	s, e := storage.Open(*dataDir)
 	if e != nil {
 		return e

@@ -15,20 +15,25 @@ import (
 )
 
 const sessionCookie = "capital_tracker_session"
-const sessionLifetime = 7 * 24 * time.Hour
+
+// Browsers cap persistent cookies at 400 days. Renew on authenticated requests;
+// the server-side session has no expiry and remains valid until sign-out.
+const sessionCookieLifetime = 400 * 24 * time.Hour
 
 type Auth struct {
 	username     string
 	passwordHash []byte
 	Origin       string
 	mu           sync.Mutex
-	sessions     map[[32]byte]time.Time
+	sessions     map[string]struct{}
+	sessionPath  string
+	credentials  string
 	attempts     int
 	window       time.Time
 }
 
 // Credentials are deployment configuration, never part of financial backups.
-func NewAuth(username, hash, origin string) (*Auth, error) {
+func NewAuth(username, hash, origin, sessionPath string) (*Auth, error) {
 	if username == "" || len(username) > 100 {
 		return nil, errors.New("auth username is required (max 100 bytes)")
 	}
@@ -42,21 +47,25 @@ func NewAuth(username, hash, origin string) (*Auth, error) {
 			return nil, errors.New("public origin must be an HTTPS origin, e.g. https://fin.anasko.net (no trailing slash)")
 		}
 	}
-	return &Auth{username: username, passwordHash: []byte(hash), Origin: origin, sessions: make(map[[32]byte]time.Time)}, nil
+	a := &Auth{username: username, passwordHash: []byte(hash), Origin: origin, sessionPath: sessionPath}
+	fingerprint := sha256.Sum256([]byte(username + "\x00" + hash))
+	a.credentials = hex.EncodeToString(fingerprint[:])
+	if err := a.loadSessions(); err != nil {
+		return nil, err
+	}
+	return a, nil
 }
 
-func (a *Auth) authenticated(r *http.Request) bool {
+func (a *Auth) authenticated(w http.ResponseWriter, r *http.Request) bool {
 	cookie, err := r.Cookie(sessionCookie)
 	if err != nil || len(cookie.Value) != 64 {
 		return false
 	}
-	key := sha256.Sum256([]byte(cookie.Value))
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	expires, ok := a.sessions[key]
-	if ok && !time.Now().Before(expires) {
-		delete(a.sessions, key)
-		return false
+	_, ok := a.sessions[sessionKey(cookie.Value)]
+	if ok {
+		http.SetCookie(w, a.cookie(cookie.Value, int(sessionCookieLifetime.Seconds())))
 	}
 	return ok
 }
@@ -74,7 +83,7 @@ func (a *Auth) protect(next http.Handler) http.Handler {
 				fail(w, 405, "method_not_allowed", "")
 				return
 			}
-			writeJSON(w, 200, map[string]bool{"enabled": true, "authenticated": a.authenticated(r)})
+			writeJSON(w, 200, map[string]bool{"enabled": true, "authenticated": a.authenticated(w, r)})
 			return
 		case "/api/auth/login":
 			a.login(w, r)
@@ -86,14 +95,24 @@ func (a *Auth) protect(next http.Handler) http.Handler {
 			}
 			if cookie, err := r.Cookie(sessionCookie); err == nil {
 				a.mu.Lock()
-				delete(a.sessions, sha256.Sum256([]byte(cookie.Value)))
+				key := sessionKey(cookie.Value)
+				_, existed := a.sessions[key]
+				delete(a.sessions, key)
+				if existed {
+					if err := a.saveSessions(); err != nil {
+						a.sessions[key] = struct{}{}
+						a.mu.Unlock()
+						fail(w, 500, "internal_error", "")
+						return
+					}
+				}
 				a.mu.Unlock()
 			}
 			http.SetCookie(w, a.cookie("", -1))
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-		if len(r.URL.Path) >= 5 && r.URL.Path[:5] == "/api/" && r.URL.Path != "/api/meta" && !a.authenticated(r) {
+		if len(r.URL.Path) >= 5 && r.URL.Path[:5] == "/api/" && r.URL.Path != "/api/meta" && !a.authenticated(w, r) {
 			fail(w, 401, "unauthorized", "")
 			return
 		}
@@ -139,27 +158,24 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	token := hex.EncodeToString(random[:])
-	for key, expires := range a.sessions {
-		if !now.Before(expires) {
-			delete(a.sessions, key)
-		}
-	}
-	// Rotate the current browser session and bound memory across repeated logins.
+	// Rotate only this browser's session; other devices stay signed in.
+	var oldKey string
+	var hadOld bool
 	if old, err := r.Cookie(sessionCookie); err == nil {
-		delete(a.sessions, sha256.Sum256([]byte(old.Value)))
+		oldKey = sessionKey(old.Value)
+		_, hadOld = a.sessions[oldKey]
+		delete(a.sessions, oldKey)
 	}
-	if len(a.sessions) >= 32 {
-		var oldest [32]byte
-		var expiry time.Time
-		for key, expires := range a.sessions {
-			if expiry.IsZero() || expires.Before(expiry) {
-				oldest = key
-				expiry = expires
-			}
+	key := sessionKey(token)
+	a.sessions[key] = struct{}{}
+	if err := a.saveSessions(); err != nil {
+		delete(a.sessions, key)
+		if hadOld {
+			a.sessions[oldKey] = struct{}{}
 		}
-		delete(a.sessions, oldest)
+		fail(w, 500, "internal_error", "")
+		return
 	}
-	a.sessions[sha256.Sum256([]byte(token))] = now.Add(sessionLifetime)
-	http.SetCookie(w, a.cookie(token, int(sessionLifetime.Seconds())))
+	http.SetCookie(w, a.cookie(token, int(sessionCookieLifetime.Seconds())))
 	w.WriteHeader(http.StatusNoContent)
 }

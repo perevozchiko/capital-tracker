@@ -13,3 +13,5 @@ __pycache__/
 .env
 /deploy/*.env
 /deploy/.env
+auth-sessions.json
+.auth-sessions-*

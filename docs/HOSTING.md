@@ -1,6 +1,10 @@
 # Access through fin.anasko.net
 
-The app supports one configured username and password, browser sessions lasting seven days, sign-out and login throttling. Credentials are outside SQLite and JSON backups. Restarting the server signs out all browsers. Changing credentials requires a restart. With no auth environment variables, the original local-only mode still works. Setting a public origin without valid credentials prevents startup.
+The app supports one configured username and password, persistent browser sessions, sign-out and login throttling. Sign in once on each browser/device; closing the browser or restarting the server preserves access. Sessions have no server-side expiry and remain valid until you sign out. Signing out revokes that browser's session, including after a server restart; other devices stay signed in. Changing the configured username or password hash and restarting invalidates all saved sessions.
+
+Browsers limit cookie lifetimes, so the app renews its persistent cookie for 400 days on each authenticated API request. Clearing cookies, using a private browsing session, or leaving the app unused beyond the browser's cookie lifetime requires signing in again. See [Chrome's cookie lifetime limit](https://developer.chrome.com/blog/cookie-max-age-expires).
+
+Session token hashes are stored in `auth-sessions.json` in the application data directory, with owner-only file permissions. Keep this file across restarts. Credentials and sessions are outside SQLite and financial JSON/SQLite backups; financial data import or deletion does not sign you out. With no auth environment variables, the original local-only mode still works. Setting a public origin without valid credentials prevents startup.
 
 The Go server stays on `127.0.0.1:8765`. Caddy on the same Linux machine serves HTTPS at `fin.anasko.net` and proxies to Go. Only ports 80/443 should be forwarded from your router; do not forward 8765. A public IP or an existing tunnel/reverse proxy is required; router forwarding alone will not work behind CGNAT. Point DNS A (and AAAA only if IPv6 is configured) to your public address. Phones then use the same HTTPS URL, including outside home Wi-Fi.
 
