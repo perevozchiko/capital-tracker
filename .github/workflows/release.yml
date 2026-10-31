@@ -114,7 +114,7 @@ jobs:
           python -m unittest discover -s tests -p '*release*test.py'
       - name: Test browser UI
         run: |
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
           npm run test:ui
 
   build:
