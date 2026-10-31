@@ -8,6 +8,7 @@ import { renderAccounts } from './accounts.js';
 import { renderMonthly } from './monthly.js';
 import { renderIncomes } from './incomes.js';
 import { renderExpenses } from './expenses.js';
+import { renderRecurringExpenses } from './recurring-expenses.js';
 import { renderSettings } from './settings.js';
 
 async function navigate(page) {
@@ -28,14 +29,23 @@ async function setMonth(month) {
   return true;
 }
 async function render() {
-  renderNav();
-  renderHeader();
-  if (state.page === 'dashboard') await renderDashboard();
-  else if (state.page === 'accounts') await renderAccounts();
-  else if (state.page === 'monthly') await renderMonthly();
-  else if (state.page === 'incomes') await renderIncomes();
-  else if (state.page === 'expenses') await renderExpenses();
-  else renderSettings();
+  const renderID = ++state.renderID;
+  const content = $('#pageContent');
+  content.inert = true;
+  try {
+    renderNav();
+    renderHeader();
+    if (state.page === 'dashboard') await renderDashboard();
+    else if (state.page === 'accounts') await renderAccounts();
+    else if (state.page === 'monthly') await renderMonthly();
+    else if (state.page === 'incomes') await renderIncomes();
+    else if (state.page === 'expenses') await renderExpenses();
+    else if (state.page === 'recurringExpenses')
+      await renderRecurringExpenses();
+    else renderSettings();
+  } finally {
+    if (state.renderID === renderID) content.inert = false;
+  }
 }
 async function refresh() {
   const [accounts, months, history, currencies] = await Promise.all([

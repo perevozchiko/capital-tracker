@@ -1,19 +1,12 @@
-import { state } from './state.js';
+import { captureView, state } from './state.js';
 import { api, request } from './api.js';
 import { t } from './messages.js';
-import {
-  escapeHTML,
-  minorToInput,
-  moneyHTML,
-  parseMoney,
-  parseRate,
-} from './format.js';
+import { escapeHTML, moneyHTML, parseMoney, parseRate } from './format.js';
 import { $, notify, applyAmountVisibility } from './ui.js';
 import { chart } from './dashboard.js';
 import { showConfirm } from './dialogs.js';
 import { incomeTotal as expenseTotal } from './income-math.js';
 
-let rowSequence = 0;
 let monthRates = new Map();
 
 function syncExpenseRates() {
@@ -22,8 +15,8 @@ function syncExpenseRates() {
     monthRates.set(input.dataset.expenseRate, input.value);
   }
   const used = new Set(
-    [...document.querySelectorAll('[data-expense-currency]')]
-      .map((input) => input.value)
+    [...document.querySelectorAll('[data-expense-row]')]
+      .map((row) => row.dataset.currency)
       .filter((currency) => currency !== 'EUR'),
   );
   for (const label of container.querySelectorAll('[data-expense-rate-label]')) {
@@ -40,20 +33,20 @@ function syncExpenseRates() {
   }
   $('#expenseRates').hidden = used.size === 0;
 }
-function expenseRow(entry = {}) {
-  const id = ++rowSequence;
-  const currency = entry.currency || 'EUR';
-  return `<div class="income-row" data-expense-row>
-    <label for="expense-name-${id}">${t('expenseName')}<input id="expense-name-${id}" class="editor-input" data-expense-name maxlength="100" value="${escapeHTML(entry.name || '')}" placeholder="${t('expenseNamePlaceholder')}"></label>
-    <label for="expense-amount-${id}">${t('expenseAmount')}<input id="expense-amount-${id}" class="editor-input" data-expense type="text" inputmode="decimal" autocomplete="off" value="${escapeHTML(minorToInput(entry.amount_minor))}"></label>
-    <label for="expense-currency-${id}">${t('currency')}<select id="expense-currency-${id}" class="editor-input" data-expense-currency>${state.currencies.map((c) => `<option ${c === currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
-    <div class="income-equivalent"><span class="subtle">${t('totalEUR')}</span><strong data-expense-eur>—</strong></div>
+function expenseRow(entry) {
+  return `<div class="account-row income-list-row" data-expense-row data-name="${escapeHTML(entry.name)}" data-currency="${escapeHTML(entry.currency)}" data-amount-minor="${escapeHTML(entry.amount_minor)}">
+    <div class="account-main income-list-main"><strong data-expense-name>${escapeHTML(entry.name)}</strong><span class="currency-tag">${escapeHTML(entry.currency)}</span></div>
+    <div class="account-balance"><strong data-expense-amount>${moneyHTML(entry.amount_minor, entry.currency)}</strong><small>${t('expenseAmount')}</small></div>
+    <div class="account-balance"><strong data-expense-eur>—</strong><small>${t('totalEUR')}</small></div>
     <button class="btn btn-icon" type="button" data-action="removeExpenseRow" aria-label="${t('removeExpense')}">×</button>
   </div>`;
 }
 
 async function renderExpenses() {
-  state.expenseHistory = await api('/expenses');
+  const isCurrentView = captureView();
+  const history = await api('/expenses');
+  if (!isCurrentView()) return;
+  state.expenseHistory = history;
   const month = state.expenseHistory.find((m) => m.month === state.month);
   monthRates = new Map();
   for (const entry of month?.entries || []) {
@@ -64,17 +57,20 @@ async function renderExpenses() {
     );
   }
   $('#pageContent').innerHTML =
-    `<section class="card panel"><div class="panel-heading"><h2>${t('expenseEditor')}</h2></div><p class="subtle">${t('expenseHelp')}</p><form id="expenseForm"><div class="income-fields">${(month?.entries || []).map(expenseRow).join('')}</div><button class="btn" type="button" data-action="addExpenseRow"><span aria-hidden="true">+</span> ${t('addExpense')}</button><aside id="expenseRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('expenseSharedRatesHelp')}</p><div id="expenseRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadExpenseRates">${t('loadRates')}</button><p id="expenseRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyExpenseTotal')}</span><strong id="expenseTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveExpense')}</button><button class="btn btn-danger" type="button" data-action="deleteExpense" ${month ? '' : 'disabled'}>${t('deleteExpense')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('expenseHistory')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.expenseHistory, 'expense')}</section>`;
+    `<section class="card panel"><h2>${t('addExpense')}</h2><p class="caption">${t('expenseAddHelp')}</p><form id="addExpenseForm" class="form-row">
+ <div class="field"><label for="expenseName">${t('expenseName')}</label><input id="expenseName" name="name" maxlength="100" required placeholder="${t('expenseNamePlaceholder')}"></div>
+ <div class="field"><label for="expenseAmount">${t('expenseAmount')}</label><input id="expenseAmount" name="amount" data-expense type="text" inputmode="decimal" autocomplete="off" required></div>
+ <div class="field"><label for="expenseCurrency">${t('currency')}</label><select id="expenseCurrency" name="currency">${state.currencies.map((c) => `<option ${c === 'EUR' ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+ <button class="btn btn-primary" type="submit">${t('addExpense')}</button></form></section>
+ <section class="card panel"><div class="panel-heading"><h2>${t('expenseEditor')}</h2></div><p class="subtle">${t('expenseHelp')}</p><form id="expenseForm"><p id="expenseListEmpty" class="caption" ${month?.entries?.length ? 'hidden' : ''}>${t('expenseListEmpty')}</p><div class="income-fields">${(month?.entries || []).map(expenseRow).join('')}</div><aside id="expenseRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('expenseSharedRatesHelp')}</p><div id="expenseRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadExpenseRates">${t('loadRates')}</button><p id="expenseRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyExpenseTotal')}</span><strong id="expenseTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveExpense')}</button><button class="btn btn-danger" type="button" data-action="deleteExpense" ${month ? '' : 'disabled'}>${t('deleteExpense')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('expenseHistory')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.expenseHistory, 'expense')}</section>`;
   syncExpenseRates();
   updateExpenseTotals();
   applyAmountVisibility();
 }
 
 function readRow(row) {
-  const amount = parseMoney(row.querySelector('[data-expense]').value);
-  if (amount == null || BigInt(amount) < 0n)
-    throw new Error(t('expenseNonnegative'));
-  const currency = row.querySelector('[data-expense-currency]').value;
+  const amount = row.dataset.amountMinor;
+  const currency = row.dataset.currency;
   const rate =
     currency === 'EUR'
       ? '1'
@@ -82,7 +78,7 @@ function readRow(row) {
   if (!rate) throw new Error(t('invalidRate'));
   return {
     month: state.month,
-    name: row.querySelector('[data-expense-name]').value.trim(),
+    name: row.dataset.name,
     currency,
     amount_minor: amount,
     rate,
@@ -111,19 +107,31 @@ function updateExpenseTotals() {
     : '—';
 }
 
-function addExpenseRow() {
+function addExpenseRow(form) {
+  const name = form.elements.name.value.trim();
+  if (!name) throw new Error(t('field_name'));
+  const amount = parseMoney(form.elements.amount.value);
+  if (amount == null || BigInt(amount) < 0n)
+    throw new Error(t('expenseNonnegative'));
   $('#expenseForm .income-fields').insertAdjacentHTML(
     'beforeend',
-    expenseRow(),
+    expenseRow({
+      name,
+      amount_minor: amount,
+      currency: form.elements.currency.value,
+    }),
   );
+  $('#expenseListEmpty').hidden = true;
   state.dirty = true;
   syncExpenseRates();
   updateExpenseTotals();
   applyAmountVisibility();
-  $('#expenseForm [data-expense-row]:last-child [data-expense-name]').focus();
+  form.reset();
+  form.elements.name.focus();
 }
 function removeExpenseRow(button) {
   button.closest('[data-expense-row]').remove();
+  $('#expenseListEmpty').hidden = !!$('#expenseForm [data-expense-row]');
   syncExpenseRates();
   state.dirty = true;
   updateExpenseTotals();
@@ -132,14 +140,9 @@ function removeExpenseRow(button) {
 document.addEventListener('input', (event) => {
   if (event.target.closest('#expenseForm')) updateExpenseTotals();
 });
-document.addEventListener('change', (event) => {
-  if (!event.target.matches('[data-expense-currency]')) return;
-  syncExpenseRates();
-  state.dirty = true;
-  updateExpenseTotals();
-});
 
 async function saveExpense(form) {
+  const isCurrentView = captureView();
   const entries = [];
   for (const row of form.querySelectorAll('[data-expense-row]')) {
     try {
@@ -151,15 +154,24 @@ async function saveExpense(form) {
       return;
     }
   }
-  const buttons = [...form.querySelectorAll('button')];
+  const buttons = [
+    ...form.querySelectorAll('button'),
+    ...document.querySelectorAll('#addExpenseForm button'),
+  ];
   const disabled = buttons.map((button) => button.disabled);
   buttons.forEach((button) => (button.disabled = true));
+  const addForm = $('#addExpenseForm');
+  form.inert = true;
+  addForm.inert = true;
   try {
     await request('/expenses/' + state.month, 'PUT', { entries });
+    if (!isCurrentView()) return;
     state.dirty = false;
     await renderExpenses();
     notify(t('expenseSaved'));
   } finally {
+    form.inert = false;
+    addForm.inert = false;
     buttons.forEach((button, i) => {
       if (button.isConnected) button.disabled = disabled[i];
     });

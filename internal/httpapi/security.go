@@ -7,14 +7,16 @@ import (
 	"strings"
 )
 
-func secureLocalRequests(next http.Handler) http.Handler {
+func secureLocalRequests(next http.Handler) http.Handler { return secureRequests(next, "") }
+func secureRequests(next http.Handler, publicOrigin string) http.Handler {
+	publicURL, _ := url.Parse(publicOrigin)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// A loopback listener alone does not defeat DNS rebinding; reject unexpected Host.
 		host, _, e := net.SplitHostPort(r.Host)
 		if e != nil {
 			host = r.Host
 		}
-		if host != "127.0.0.1" && host != "localhost" && host != "[::1]" && host != "::1" {
+		if !(publicOrigin != "" && strings.EqualFold(r.Host, publicURL.Host)) && host != "127.0.0.1" && host != "localhost" && host != "[::1]" && host != "::1" {
 			fail(w, 403, "invalid_host", "")
 			return
 		}
@@ -25,7 +27,11 @@ func secureLocalRequests(next http.Handler) http.Handler {
 			}
 			if origin := r.Header.Get("Origin"); origin != "" {
 				u, e := url.Parse(origin)
-				if e != nil || u.Scheme != "http" || !strings.EqualFold(u.Host, r.Host) {
+				expectedScheme := "http"
+				if publicOrigin != "" && strings.EqualFold(r.Host, publicURL.Host) {
+					expectedScheme = "https"
+				}
+				if e != nil || u.Scheme != expectedScheme || !strings.EqualFold(u.Host, r.Host) || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" {
 					fail(w, 403, "invalid_origin", "")
 					return
 				}

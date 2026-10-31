@@ -22,6 +22,7 @@ import (
 	"github.com/perevozchiko/capital-tracker/internal/httpapi"
 	"github.com/perevozchiko/capital-tracker/internal/storage"
 	"github.com/perevozchiko/capital-tracker/web"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var version = buildinfo.Version
@@ -38,11 +39,15 @@ func browser(url string) error {
 	case "darwin":
 		cmd = exec.Command("open", url)
 	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", "", url)
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
 	default:
 		cmd = exec.Command("xdg-open", url)
 	}
-	return cmd.Start()
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	go func() { _ = cmd.Wait() }()
+	return nil
 }
 func main() {
 	if e := run(); e != nil {
@@ -51,6 +56,18 @@ func main() {
 	}
 }
 func run() error {
+	if len(os.Args) == 2 && os.Args[1] == "hash-password" {
+		password := os.Getenv("CAPITAL_TRACKER_PASSWORD")
+		if len(password) < 12 || len(password) > 72 {
+			return errors.New("set CAPITAL_TRACKER_PASSWORD to a password of 12..72 bytes")
+		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(hash))
+		return nil
+	}
 	if len(os.Args) == 2 && (os.Args[1] == "--version" || os.Args[1] == "-version") {
 		fmt.Printf("Capital Tracker v%s (%s)\n", buildinfo.Version, buildinfo.ShortCommit())
 		return nil
@@ -99,6 +116,15 @@ func run() error {
 	if err = os.MkdirAll(*dataDir, 0700); err != nil {
 		return err
 	}
+	var auth *httpapi.Auth
+	publicOrigin := os.Getenv("CAPITAL_TRACKER_PUBLIC_ORIGIN")
+	username, hash := os.Getenv("CAPITAL_TRACKER_USERNAME"), os.Getenv("CAPITAL_TRACKER_PASSWORD_HASH")
+	if publicOrigin != "" || username != "" || hash != "" {
+		auth, err = httpapi.NewAuth(username, hash, publicOrigin)
+		if err != nil {
+			return err
+		}
+	}
 	lockFile := filepath.Join(*dataDir, ".capital-tracker.lock")
 	lock, e := acquireAppLock(lockFile)
 	if e != nil {
@@ -132,7 +158,7 @@ func run() error {
 			return fmt.Errorf("initialize demo data: %w", e)
 		}
 	}
-	handler := (&httpapi.Server{Store: s, Version: version, Commit: buildinfo.ShortCommit(), Assets: web.Assets}).Handler()
+	handler := (&httpapi.Server{Store: s, Auth: auth, Version: version, Commit: buildinfo.ShortCommit(), Assets: web.Assets}).Handler()
 	srv := httpapi.NewHTTPServer(net.JoinHostPort("127.0.0.1", *port), handler)
 	listener, e := net.Listen("tcp", srv.Addr)
 	if e != nil {

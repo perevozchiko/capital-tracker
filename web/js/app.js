@@ -1,3 +1,4 @@
+import { checkLogin, logout } from './auth.js';
 import { state } from './state.js';
 import { api, request } from './api.js';
 import { t } from './messages.js';
@@ -39,6 +40,13 @@ import {
   addExpenseRow,
   removeExpenseRow,
 } from './expenses.js';
+import {
+  saveRecurringExpense,
+  deleteRecurringExpense,
+  loadRecurringExpenseRates,
+  addRecurringExpenseRow,
+  removeRecurringExpenseRow,
+} from './recurring-expenses.js';
 
 bindAccountDragAndDrop();
 
@@ -64,7 +72,8 @@ document.addEventListener('click', async (e) => {
   const action = node.dataset.action,
     id = Number(node.dataset.id);
   try {
-    if (action === 'toggleAmounts') toggleAmountVisibility();
+    if (action === 'logout') await logout();
+    else if (action === 'toggleAmounts') toggleAmountVisibility();
     else if (action === 'monthPrev') await setMonth(nextMonth(state.month, -1));
     else if (action === 'monthNext') await setMonth(nextMonth(state.month, 1));
     else if (action === 'monthCurrent') {
@@ -91,11 +100,15 @@ document.addEventListener('click', async (e) => {
       updateBalanceDifference(input);
       input.focus();
     } else if (action === 'loadRates') await loadRates(node);
-    else if (action === 'addExpenseRow') addExpenseRow();
     else if (action === 'removeExpenseRow') removeExpenseRow(node);
     else if (action === 'deleteExpense') await deleteExpense();
     else if (action === 'loadExpenseRates') await loadExpenseRates(node);
-    else if (action === 'addIncomeRow') addIncomeRow();
+    else if (action === 'removeRecurringExpenseRow')
+      removeRecurringExpenseRow(node);
+    else if (action === 'deleteRecurringExpense')
+      await deleteRecurringExpense();
+    else if (action === 'loadRecurringExpenseRates')
+      await loadRecurringExpenseRates(node);
     else if (action === 'removeIncomeRow') removeIncomeRow(node);
     else if (action === 'deleteIncome') await deleteIncome();
     else if (action === 'loadIncomeRates') await loadIncomeRates(node);
@@ -123,10 +136,46 @@ document.addEventListener('click', async (e) => {
   }
 });
 document.addEventListener('submit', async (e) => {
+  if (e.target.id === 'addExpenseForm') {
+    e.preventDefault();
+    try {
+      addExpenseRow(e.target);
+    } catch (error) {
+      notify(error.message, true);
+    }
+    return;
+  }
   if (e.target.id === 'expenseForm') {
     e.preventDefault();
     try {
       await saveExpense(e.target);
+    } catch (error) {
+      notify(error.message, true);
+    }
+    return;
+  }
+  if (e.target.id === 'addRecurringExpenseForm') {
+    e.preventDefault();
+    try {
+      addRecurringExpenseRow(e.target);
+    } catch (error) {
+      notify(error.message, true);
+    }
+    return;
+  }
+  if (e.target.id === 'recurringExpenseForm') {
+    e.preventDefault();
+    try {
+      await saveRecurringExpense(e.target);
+    } catch (error) {
+      notify(error.message, true);
+    }
+    return;
+  }
+  if (e.target.id === 'addIncomeForm') {
+    e.preventDefault();
+    try {
+      addIncomeRow(e.target);
     } catch (error) {
       notify(error.message, true);
     }
@@ -225,7 +274,11 @@ document.addEventListener('click', (e) => {
 });
 $('#cancelEdit').addEventListener('click', () => $('#accountDialog').close());
 $('#accountDialog').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) e.currentTarget.close();
+  if (e.target === e.currentTarget && !$('#editAccountForm').inert)
+    e.currentTarget.close();
+});
+$('#accountDialog').addEventListener('cancel', (event) => {
+  if ($('#editAccountForm').inert) event.preventDefault();
 });
 $('#mobileMenu').addEventListener('click', () =>
   $('#sidebar').classList.toggle('show'),
@@ -236,7 +289,9 @@ function pointTooltip(node, event) {
       ? state.incomeHistory
       : node.dataset.chartSource === 'expense'
         ? state.expenseHistory
-        : state.history
+        : node.dataset.chartSource === 'recurringExpense'
+          ? state.recurringExpenseHistory
+          : state.history
   )[Number(node.dataset.chartIndex)];
   if (!p) return;
   const tooltip = $('#chartTooltip');
@@ -267,6 +322,7 @@ document.addEventListener('focusout', (e) => {
 });
 async function boot() {
   try {
+    if (!(await checkLogin(boot))) return;
     const [settings, metadata] = await Promise.all([
       api('/settings'),
       api('/meta'),
@@ -289,3 +345,7 @@ async function boot() {
   }
 }
 boot();
+
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) location.reload();
+});

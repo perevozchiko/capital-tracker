@@ -1,11 +1,14 @@
 const { test, expect, open, nav, setMonth } = require('./helpers.cjs');
 const rows = (page) => page.locator('[data-expense-row]');
 async function add(page, name, amount, currency = 'EUR', rate = '') {
+  await page.locator('#expenseName').fill(name);
+  await page.locator('#expenseAmount').fill(amount);
+  await page.locator('#expenseCurrency').selectOption(currency);
   await page.getByRole('button', { name: 'Add expense', exact: true }).click();
   const row = rows(page).last();
-  await row.locator('[data-expense-name]').fill(name);
-  await row.locator('[data-expense]').fill(amount);
-  await row.locator('[data-expense-currency]').selectOption(currency);
+  await expect(page.locator('#expenseName')).toBeFocused();
+  await expect(row.locator('input, select, textarea')).toHaveCount(0);
+  await expect(row.locator('[data-expense-name]')).toHaveText(name);
   if (rate) await page.locator(`[data-expense-rate="${currency}"]`).fill(rate);
   return row;
 }
@@ -24,8 +27,14 @@ for (const width of [320, 1280]) {
     await nav(page, 'Major expenses');
     await setMonth(page, '2026-10');
     await expect(rows(page)).toHaveCount(0);
-    const car = await add(page, 'Автомобиль', '100 000', 'RSD', '117,2');
-    await expect(car.locator('[data-expense-eur]')).toHaveText('€853.24');
+    await expect(page.locator('#addExpenseForm')).toBeVisible();
+    await expect(page.locator('#expenseListEmpty')).toBeVisible();
+    const salary = await add(page, 'Автомобиль', '100 000', 'RSD', '117,2');
+    await expect(salary.locator('[data-expense-eur]')).toHaveText('€853.24');
+    await expect(page.locator('#expenseName')).toHaveValue('');
+    await expect(page.locator('#expenseAmount')).toHaveValue('');
+    await expect(page.locator('#expenseCurrency')).toHaveValue('EUR');
+    await expect(page.locator('#expenseListEmpty')).toBeHidden();
     const refund = await add(page, 'Ремонт', '100');
     await expect(refund.locator('[data-expense-eur]')).toHaveText('€100.00');
     await expect(rows(page).locator('[data-expense-rate]')).toHaveCount(0);
@@ -58,16 +67,21 @@ for (const width of [320, 1280]) {
     await nav(page, 'Major expenses');
     await setMonth(page, '2026-10');
     await expect(rows(page)).toHaveCount(3);
-    await expect(rows(page).first().locator('[data-expense-name]')).toHaveValue(
+    await expect(rows(page).first().locator('[data-expense-name]')).toHaveText(
       'Автомобиль',
     );
     await expect(page.locator('#expenseTotal')).toHaveText('€1,153.24');
-    await rows(page).first().locator('[data-expense]').fill('117200');
-    await expect(rows(page).first().locator('[data-expense-eur]')).toHaveText(
+    await expect(rows(page).locator('input, select, textarea')).toHaveCount(0);
+    await rows(page)
+      .first()
+      .getByRole('button', { name: 'Remove expense' })
+      .click();
+    const replacement = await add(page, 'Автомобиль', '117200', 'RSD');
+    await expect(replacement.locator('[data-expense-eur]')).toHaveText(
       '€1,000.00',
     );
     await rows(page)
-      .last()
+      .nth(1)
       .getByRole('button', { name: 'Remove expense' })
       .click();
     await expect(page.locator('#expenseTotal')).toHaveText('€1,100.00');
@@ -80,11 +94,13 @@ for (const width of [320, 1280]) {
     await page.locator('[data-chart-source="expense"]').last().focus();
     await expect(page.locator('#chartTooltip')).toContainText('€2,000.00');
     await page.locator('#amountVisibility').click();
-    await expect(rows(page).first().locator('[data-expense]')).toHaveAttribute(
-      'type',
-      'password',
-    );
-    await expect(rows(page).first().locator('[data-expense-name]')).toHaveValue(
+    await expect(
+      rows(page).first().locator('[data-expense-amount] .money-text'),
+    ).toBeHidden();
+    await expect(
+      rows(page).first().locator('[data-expense-eur] .money-text'),
+    ).toBeHidden();
+    await expect(rows(page).first().locator('[data-expense-name]')).toHaveText(
       'Car',
     );
     await expect(
@@ -97,39 +113,32 @@ for (const width of [320, 1280]) {
     await page.locator('#confirmAccept').click();
     await expect(rows(page)).toHaveCount(0);
     await expect(page.locator('#expenseTotal')).toHaveText('€0.00');
+    await expect(page.locator('#expenseListEmpty')).toBeVisible();
   });
 }
 
-test('expense validates names, amounts and rates and protects unsaved edits', async ({
+test('expense validates rates and protects unsaved entries', async ({
   page,
   app,
 }) => {
   await open(page, app);
   await nav(page, 'Major expenses');
-  const row = await add(page, '', '100');
+  const row = await add(page, 'Car', '100', 'USD', '1');
   const saveButton = page.getByRole('button', {
     name: 'Save expense',
     exact: true,
   });
-  await saveButton.click();
-  await expect(page.locator('#toast')).toHaveText('Please enter a name.');
-  await row.locator('[data-expense-name]').fill('Car');
-  await row.locator('[data-expense]').fill('-1');
-  await saveButton.click();
-  await expect(page.locator('#toast')).toHaveText(
-    'Expense must be zero or positive.',
-  );
-  await row.locator('[data-expense]').fill('100');
-  await row.locator('[data-expense-currency]').selectOption('USD');
+  await page.locator('[data-expense-rate="USD"]').fill('');
   await expect(row.locator('[data-expense-eur]')).toHaveText('—');
   await saveButton.click();
   await expect(page.locator('#toast')).toContainText('positive exchange rate');
   await nav(page, 'Dashboard');
   await page.locator('#confirmCancel').click();
-  await expect(row.locator('[data-expense]')).toHaveValue('100');
+  await expect(row.locator('[data-expense-amount]')).toHaveText('$100.00');
   await page.locator('[data-expense-rate="USD"]').fill('2');
   await expect(page.locator('#expenseTotal')).toHaveText('€50.00');
-  await row.locator('[data-expense-currency]').selectOption('EUR');
+  await row.getByRole('button', { name: 'Remove expense' }).click();
+  await add(page, 'Car', '100', 'EUR');
   await expect(page.locator('#expenseTotal')).toHaveText('€100.00');
   await save(page);
 });
@@ -171,7 +180,7 @@ test('expense rate loading protects concurrent edits and failed saves can retry'
     'Database or server error.',
   );
   await expect(saveButton).toBeEnabled();
-  await expect(row.locator('[data-expense-name]')).toHaveValue('Car');
+  await expect(row.locator('[data-expense-name]')).toHaveText('Car');
   await page.unroute('**/api/expenses/2026-01');
   await save(page);
 });
@@ -183,7 +192,7 @@ test('loaded rates update each matching expense and its EUR equivalent', async (
   await open(page, app);
   await nav(page, 'Major expenses');
   await add(page, 'Car', '100000', 'RSD');
-  await add(page, 'Renovation', '17200', 'RSD');
+  await add(page, 'Bonus', '17200', 'RSD');
   await page.route('**/api/exchange-rates?*', (route) =>
     route.fulfill({ json: { date: '2026-10-30', rates: { RSD: '117.2' } } }),
   );
@@ -202,8 +211,8 @@ for (const width of [320, 1280]) {
     await nav(page, 'Major expenses');
     await setMonth(page, '2026-10');
     await add(page, 'Car', '100000', 'RSD', '117.2');
-    await add(page, 'Renovation', '17200', 'RSD');
-    await add(page, 'Travel', '100', 'EUR');
+    await add(page, 'Bonus', '17200', 'RSD');
+    await add(page, 'Refund', '100', 'EUR');
     await expect(rows(page).locator('[data-expense-rate]')).toHaveCount(0);
     await expect(page.locator('[data-expense-rate]')).toHaveCount(1);
     await expect(page.locator('#expenseRates')).toBeVisible();
@@ -216,18 +225,12 @@ for (const width of [320, 1280]) {
       '€172.00',
     );
     await expect(page.locator('#expenseTotal')).toHaveText('€1,272.00');
-    // Changing another row's currency keeps the shared RSD rate intact.
-    await rows(page)
-      .nth(1)
-      .locator('[data-expense-currency]')
-      .selectOption('USD');
+    // Adding another currency keeps the shared RSD rate intact.
+    const temporary = await add(page, 'Temporary expense', '20', 'USD');
     await expect(page.locator('[data-expense-rate]')).toHaveCount(2);
     await expect(page.locator('[data-expense-rate="RSD"]')).toHaveValue('100');
     await page.locator('[data-expense-rate="USD"]').fill('2');
-    await rows(page)
-      .nth(1)
-      .locator('[data-expense-currency]')
-      .selectOption('RSD');
+    await temporary.getByRole('button', { name: 'Remove expense' }).click();
     await expect(page.locator('[data-expense-rate]')).toHaveCount(1);
     await expect(page.locator('#expenseTotal')).toHaveText('€1,272.00');
     await save(page);
@@ -255,7 +258,7 @@ for (const width of [320, 1280]) {
     await expect(page.locator('#expenseTotal')).toHaveText('€1,272.00');
     await setMonth(page, '2026-09');
     await expect(page.locator('#expenseRates')).toBeHidden();
-    await add(page, 'Earlier car', '100000', 'RSD', '200');
+    await add(page, 'Earlier salary', '100000', 'RSD', '200');
     await save(page);
     await setMonth(page, '2026-10');
     await expect(page.locator('[data-expense-rate="RSD"]')).toHaveValue('100');
@@ -275,6 +278,36 @@ for (const width of [320, 1280]) {
   });
 }
 
+test('expense creation validates the form before adding an entry', async ({
+  page,
+  app,
+}) => {
+  await open(page, app);
+  await nav(page, 'Major expenses');
+  const addButton = page.locator('#addExpenseForm button');
+  await addButton.click();
+  await expect(rows(page)).toHaveCount(0);
+  await page.locator('#expenseName').fill('   ');
+  await page.locator('#expenseAmount').fill('100');
+  await addButton.click();
+  await expect(page.locator('#toast')).toHaveText('Please enter a name.');
+  await expect(rows(page)).toHaveCount(0);
+  await page.locator('#expenseName').fill('Car');
+  await page.locator('#expenseAmount').fill('-1');
+  await addButton.click();
+  await expect(page.locator('#toast')).toHaveText(
+    'Expense must be zero or positive.',
+  );
+  await expect(rows(page)).toHaveCount(0);
+  await expect(page.locator('#expenseName')).toHaveValue('Car');
+  await page.locator('#expenseAmount').fill('0');
+  await page.locator('#expenseAmount').press('Enter');
+  await expect(rows(page)).toHaveCount(1);
+  await expect(page.locator('#expenseTotal')).toHaveText('€0.00');
+  await rows(page).getByRole('button', { name: 'Remove expense' }).click();
+  await expect(page.locator('#expenseListEmpty')).toBeVisible();
+});
+
 test('export, clear and import restore expenses and income independently', async ({
   page,
   app,
@@ -282,9 +315,9 @@ test('export, clear and import restore expenses and income independently', async
   await open(page, app);
   await nav(page, 'Income');
   await setMonth(page, '2026-10');
-  await page.locator('[data-action="addIncomeRow"]').click();
-  await page.locator('[data-income-name]').fill('Salary');
-  await page.locator('[data-income]').fill('3000');
+  await page.locator('#incomeName').fill('Salary');
+  await page.locator('#incomeAmount').fill('3000');
+  await page.getByRole('button', { name: 'Add income', exact: true }).click();
   await page.getByRole('button', { name: 'Save income', exact: true }).click();
   await expect(page.locator('#toast')).toHaveText('Income saved.');
   await nav(page, 'Major expenses');
@@ -313,7 +346,7 @@ test('export, clear and import restore expenses and income independently', async
   );
   await nav(page, 'Major expenses');
   await setMonth(page, '2026-10');
-  await expect(rows(page).first().locator('[data-expense-name]')).toHaveValue(
+  await expect(rows(page).first().locator('[data-expense-name]')).toHaveText(
     'Renovation',
   );
   await expect(page.locator('[data-expense-rate="RSD"]')).toHaveValue('117.2');

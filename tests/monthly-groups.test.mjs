@@ -82,6 +82,7 @@ function setup(active) {
     String(v).replaceAll('&', '&amp;').replaceAll('<', '&lt;');
   const render = new Function(
     'state',
+    'captureView',
     'api',
     'nextMonth',
     't',
@@ -100,6 +101,7 @@ function setup(active) {
     fn + '\nreturn renderMonthly;',
   )(
     state,
+    () => () => true,
     api,
     () => '2026-08',
     (k) => k,

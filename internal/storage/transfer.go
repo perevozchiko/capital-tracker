@@ -14,18 +14,19 @@ import (
 // TransferDocument is a portable, versioned snapshot of application data.
 // Monetary amounts and exchange rates use decimal strings to retain precision.
 type TransferDocument struct {
-	Format         string            `json:"format"`
-	SchemaVersion  int               `json:"schema_version"`
-	ExportedAt     string            `json:"exported_at"`
-	Accounts       []Account         `json:"accounts"`
-	Groups         []AccountGroup    `json:"groups"`
-	AccountPeriods []TransferPeriod  `json:"account_periods"`
-	Months         []Month           `json:"months"`
-	Balances       []TransferBalance `json:"balances"`
-	Rates          []TransferRate    `json:"rates"`
-	Expenses       []Expense         `json:"expenses"`
-	Incomes        []Income          `json:"incomes"`
-	Settings       map[string]string `json:"settings"`
+	RecurringExpenses []RecurringExpenseSnapshot `json:"recurring_expenses"`
+	Format            string                     `json:"format"`
+	SchemaVersion     int                        `json:"schema_version"`
+	ExportedAt        string                     `json:"exported_at"`
+	Accounts          []Account                  `json:"accounts"`
+	Groups            []AccountGroup             `json:"groups"`
+	AccountPeriods    []TransferPeriod           `json:"account_periods"`
+	Months            []Month                    `json:"months"`
+	Balances          []TransferBalance          `json:"balances"`
+	Rates             []TransferRate             `json:"rates"`
+	Expenses          []Expense                  `json:"expenses"`
+	Incomes           []Income                   `json:"incomes"`
+	Settings          map[string]string          `json:"settings"`
 }
 
 type TransferPeriod struct {
@@ -53,9 +54,9 @@ type TransferRate struct {
 func (s *Store) ExportData() (TransferDocument, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
-	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 5, ExportedAt: now(),
+	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 6, ExportedAt: now(),
 		Accounts: []Account{}, Groups: []AccountGroup{}, AccountPeriods: []TransferPeriod{}, Months: []Month{},
-		Balances: []TransferBalance{}, Rates: []TransferRate{}, Incomes: []Income{}, Expenses: []Expense{}, Settings: map[string]string{}}
+		Balances: []TransferBalance{}, Rates: []TransferRate{}, Incomes: []Income{}, Expenses: []Expense{}, RecurringExpenses: []RecurringExpenseSnapshot{}, Settings: map[string]string{}}
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return d, err
@@ -203,6 +204,10 @@ func (s *Store) ExportData() (TransferDocument, error) {
 	if err != nil {
 		return d, err
 	}
+	d.RecurringExpenses, err = readRecurringExpenses(tx)
+	if err != nil {
+		return d, err
+	}
 	return d, tx.Commit()
 }
 
@@ -226,8 +231,8 @@ func periodActive(periods []TransferPeriod, month string) bool {
 // snapshots before touching the database. It never fixes invalid input silently.
 func ValidateTransfer(d TransferDocument) error {
 	bad := func() error { return invalid("import") }
-	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 5) || !validTransferTime(d.ExportedAt) ||
-		d.Accounts == nil || (d.SchemaVersion >= 2 && d.Groups == nil) || (d.SchemaVersion >= 3 && d.Incomes == nil) || (d.SchemaVersion >= 5 && d.Expenses == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
+	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 6) || !validTransferTime(d.ExportedAt) ||
+		(d.SchemaVersion >= 6 && d.RecurringExpenses == nil) || d.Accounts == nil || (d.SchemaVersion >= 2 && d.Groups == nil) || (d.SchemaVersion >= 3 && d.Incomes == nil) || (d.SchemaVersion >= 5 && d.Expenses == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
 		return bad()
 	}
 	if len(d.Settings) != 2 || (d.Settings["language"] != "en" && d.Settings["language"] != "ru") ||
@@ -239,6 +244,19 @@ func ValidateTransfer(d TransferDocument) error {
 	}
 	if d.SchemaVersion < 5 && len(d.Expenses) > 0 {
 		return bad()
+	}
+	if d.SchemaVersion < 6 && len(d.RecurringExpenses) > 0 {
+		return bad()
+	}
+	recurringMonths := map[string]bool{}
+	for _, snapshot := range d.RecurringExpenses {
+		if recurringMonths[snapshot.Month] || snapshot.Entries == nil {
+			return bad()
+		}
+		if _, err := validateExpense(snapshot.Month, snapshot.Entries); err != nil {
+			return bad()
+		}
+		recurringMonths[snapshot.Month] = true
 	}
 	expenseMonths := map[string][]Expense{}
 	for _, entry := range d.Expenses {
@@ -412,7 +430,7 @@ func (s *Store) ImportData(d TransferDocument) error {
 		return err
 	}
 	defer tx.Rollback()
-	for _, table := range []string{"expenses", "incomes", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
+	for _, table := range []string{"recurring_expenses", "recurring_expense_months", "expenses", "incomes", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
 		if _, err = tx.Exec("DELETE FROM " + table); err != nil {
 			return err
 		}
@@ -464,6 +482,18 @@ func (s *Store) ImportData(d TransferDocument) error {
 		rate, _ := finance.ParseRate(entry.Rate)
 		if _, err = tx.Exec("INSERT INTO expenses(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", entry.Month, index, entry.Name, entry.Currency, amount, rate); err != nil {
 			return invalid("import")
+		}
+	}
+	for _, snapshot := range d.RecurringExpenses {
+		if _, err = tx.Exec("INSERT INTO recurring_expense_months(month) VALUES(?)", snapshot.Month); err != nil {
+			return invalid("import")
+		}
+		for i, entry := range snapshot.Entries {
+			amount, _ := finance.ParseMinor(entry.AmountMinor)
+			rate, _ := finance.ParseRate(entry.Rate)
+			if _, err = tx.Exec("INSERT INTO recurring_expenses(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", snapshot.Month, i, entry.Name, entry.Currency, amount, rate); err != nil {
+				return invalid("import")
+			}
 		}
 	}
 	for k, v := range d.Settings {

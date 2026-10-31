@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { captureView, state } from './state.js';
 import { api } from './api.js';
 import { t } from './messages.js';
 import {
@@ -16,7 +16,7 @@ function monthIndex(s) {
 function chart(history, source = 'capital') {
   const valid = history.filter((p) => p.complete && p.total_eur_minor != null);
   if (valid.length === 0)
-    return `<div class="empty">${t(source === 'expense' ? 'expenseEmpty' : source === 'income' ? 'incomeEmpty' : 'historyEmpty')}</div>`;
+    return `<div class="empty">${t(source === 'recurringExpense' ? 'recurringExpenseEmpty' : source === 'expense' ? 'expenseEmpty' : source === 'income' ? 'incomeEmpty' : 'historyEmpty')}</div>`;
   const W = 860,
     H = 266,
     pad = { left: 88, right: 20, top: 18, bottom: 40 },
@@ -63,10 +63,12 @@ function chart(history, source = 'capital') {
         `<circle class="chart-dot" cx="${xFor(p.month)}" cy="${yFor(Number(p.total_eur_minor) / 100)}" r="5" tabindex="0" role="img" aria-label="${escapeHTML(monthLabel(p.month))}${document.documentElement.dataset.hideAmounts === 'true' ? '' : ': ' + escapeHTML(money(p.total_eur_minor))}" data-chart-source="${source}" data-chart-index="${history.indexOf(p)}"/>`,
     )
     .join('');
-  return `<div class="chart-wrap"><svg class="history-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t(source === 'expense' ? 'expenseHistory' : source === 'income' ? 'incomeHistory' : 'history')}">${lines}${paths}${dots}${xLabels}</svg></div><p class="footer-note">${t('chartNote')}</p>`;
+  return `<div class="chart-wrap"><svg class="history-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t(source === 'recurringExpense' ? 'recurringExpenseHistory' : source === 'expense' ? 'expenseHistory' : source === 'income' ? 'incomeHistory' : 'history')}">${lines}${paths}${dots}${xLabels}</svg></div><p class="footer-note">${t('chartNote')}</p>`;
 }
 async function renderDashboard() {
+  const isCurrentView = captureView();
   const d = await api('/dashboard?month=' + encodeURIComponent(state.month));
+  if (!isCurrentView()) return;
   state.dashboard = d;
   const m = d.month;
   const delta = d.change_minor;

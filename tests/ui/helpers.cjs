@@ -1,12 +1,13 @@
 const { test: base, expect } = require('@playwright/test');
-const { spawn } = require('node:child_process');
+const { spawn, execFileSync } = require('node:child_process');
 const { mkdtemp, rm } = require('node:fs/promises');
 const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
 
 const test = base.extend({
-  appServer: async ({}, use) => {
+  authEnabled: [false, { option: true }],
+  appServer: async ({ authEnabled }, use) => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'capital-tracker-ui-'));
     const probe = net.createServer();
     await new Promise((resolve) => probe.listen(0, '127.0.0.1', resolve));
@@ -22,14 +23,33 @@ const test = base.extend({
         await exited;
       }
     };
+    const serverEnv = { ...process.env };
+    for (const key of [
+      'CAPITAL_TRACKER_USERNAME',
+      'CAPITAL_TRACKER_PASSWORD_HASH',
+      'CAPITAL_TRACKER_PUBLIC_ORIGIN',
+    ])
+      delete serverEnv[key];
+    if (authEnabled) {
+      serverEnv.CAPITAL_TRACKER_USERNAME = 'tester';
+      serverEnv.CAPITAL_TRACKER_PASSWORD_HASH = execFileSync(
+        process.env.CAPITAL_TRACKER_TEST_BINARY,
+        ['hash-password'],
+        {
+          env: {
+            ...serverEnv,
+            CAPITAL_TRACKER_PASSWORD: 'browser test password',
+          },
+          encoding: 'utf8',
+        },
+      ).trim();
+    }
     const start = async () => {
-      server = spawn(process.env.CAPITAL_TRACKER_TEST_BINARY, [
-        '--no-browser',
-        '--data-dir',
-        dir,
-        '--port',
-        String(port),
-      ]);
+      server = spawn(
+        process.env.CAPITAL_TRACKER_TEST_BINARY,
+        ['--no-browser', '--data-dir', dir, '--port', String(port)],
+        { env: serverEnv },
+      );
       server.stdout.on('data', (data) => {
         log += data;
       });
@@ -87,6 +107,7 @@ async function nav(page, name) {
   const ready = {
     Income: '#incomeForm',
     'Major expenses': '#expenseForm',
+    'Recurring expenses': '#recurringExpenseForm',
     Accounts: '#addAccountForm',
     'Monthly balances': '.status-block',
     Settings: '#themeSelect',
@@ -134,7 +155,22 @@ function accountGroup(page, name) {
   });
 }
 async function setMonth(page, month) {
-  await page.locator('.month-picker').fill(month);
+  const picker = page.locator('.month-picker');
+  if ((await picker.inputValue()) === month) return;
+  const oldContent = await page
+    .locator('#pageContent > *')
+    .first()
+    .elementHandle();
+  await picker.fill(month);
+  await picker.blur();
+  await expect
+    .poll(() =>
+      oldContent.evaluate(
+        (el) =>
+          !el.isConnected || !!document.querySelector('#confirmDialog[open]'),
+      ),
+    )
+    .toBe(true);
 }
 
 async function createGroup(page, name) {

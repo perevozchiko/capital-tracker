@@ -1,7 +1,42 @@
 export default {
+  privateServer: 'Private · password protected',
+  unauthorized: 'Your session expired. Please sign in again.',
+  invalid_credentials: 'Incorrect username or password.',
+  login_rate_limited: 'Too many sign-in attempts. Try again in a minute.',
+  recurringExpenseSharedRatesHelp:
+    'One exchange rate per currency for all recurring expense entries in this month.',
+  addRecurringExpense: 'Add recurring expense',
+  recurringExpenseAddHelp:
+    'Enter a name, amount and currency to add a recurring expense for the selected month.',
+  recurringExpenseListEmpty: 'No recurring expenses added for this month yet.',
+  removeRecurringExpense: 'Remove recurring expense',
+  recurringExpenseName: 'Name',
+  recurringExpenseNamePlaceholder: 'e.g. Rent, internet or subscriptions',
+  monthlyRecurringExpenseTotal: 'Monthly total in EUR',
+  navRecurringExpenses: 'Recurring expenses',
+  recurringExpenseEditor: 'Recurring expenses for the month',
+  recurringExpenseAmount: 'Recurring expense',
+  recurringExpenseHistory: 'Recurring expense history in EUR',
+  recurringExpenseEmpty:
+    'Save monthly recurring expenses to see how they change in EUR.',
+  recurringExpenseHelp:
+    'New months start with the last saved list. Add or remove entries and save this month independently. To change an amount, remove the entry and add it again.',
+  saveRecurringExpense: 'Save recurring expense',
+  deleteRecurringExpense: 'Delete recurring expense',
+  confirmDeleteRecurringExpense:
+    'Delete all recurring expense notes and their rates for the selected month?',
+  recurringExpenseSaved: 'Recurring expense saved.',
+  recurringExpenseDeleted: 'Recurring expense deleted.',
+  recurringExpenseNonnegative: 'Recurring expense must be zero or positive.',
+
+  recurringExpenseInherited:
+    'Copied from {month}. Save to keep a separate list for this month.',
   expenseSharedRatesHelp:
     'One exchange rate per currency for all expense entries in this month.',
   addExpense: 'Add expense',
+  expenseAddHelp:
+    'Enter a name, amount and currency to add an expense for the selected month.',
+  expenseListEmpty: 'No expenses added for this month yet.',
   removeExpense: 'Remove expense',
   expenseName: 'Name',
   expenseNamePlaceholder: 'e.g. Car, holiday or home renovation',
@@ -12,7 +47,7 @@ export default {
   expenseHistory: 'Expense history in EUR',
   expenseEmpty: 'Save monthly expenses to see how they change in EUR.',
   expenseHelp:
-    'Add each expense separately with a name, amount and currency. EUR equivalents and the monthly total update as you type. Set exchange rates in the separate block below; each rate applies to all expenses in that currency.',
+    'To correct an expense entry, remove it and add it again. Save the month to keep your changes. Each exchange rate applies to all expenses in that currency.',
   saveExpense: 'Save expense',
   deleteExpense: 'Delete expense',
   confirmDeleteExpense:
@@ -24,6 +59,9 @@ export default {
   incomeSharedRatesHelp:
     'One exchange rate per currency for all income entries in this month.',
   addIncome: 'Add income',
+  incomeAddHelp:
+    'Enter a name, amount and currency to add income for the selected month.',
+  incomeListEmpty: 'No income added for this month yet.',
   removeIncome: 'Remove income',
   incomeName: 'Name',
   incomeNamePlaceholder: 'e.g. Salary or insurance refund',
@@ -34,7 +72,7 @@ export default {
   incomeHistory: 'Income history in EUR',
   incomeEmpty: 'Save monthly income to see how it changes in EUR.',
   incomeHelp:
-    'Add each income separately with a name, amount and currency. EUR equivalents and the monthly total update as you type. Set exchange rates in the separate block below; each rate applies to all income in that currency.',
+    'To correct an income entry, remove it and add it again. Save the month to keep your changes. Each exchange rate applies to all income in that currency.',
   saveIncome: 'Save income',
   deleteIncome: 'Delete income',
   confirmDeleteIncome:
@@ -50,13 +88,13 @@ export default {
   clearAllData: 'Delete all data',
   clearDataTitle: 'Permanently delete all data?',
   clearDataWarning:
-    'This permanently deletes EVERY account, monthly balance, income note, major expense, exchange rate and account history. Language and appearance settings will reset. This cannot be undone. Export a JSON backup before continuing. Previously saved backup files are not deleted.',
+    'This permanently deletes EVERY account, monthly balance, income note, major expense, recurring expense, exchange rate and account history. Language and appearance settings will reset. This cannot be undone. Export a JSON backup before continuing. Previously saved backup files are not deleted.',
   clearDataPrompt: 'Type {phrase} to confirm the permanent deletion:',
   clearDataPhrase: 'DELETE',
   dataCleared: 'All application data has been deleted.',
   jsonData: 'JSON import and export',
   jsonDataHelp:
-    'Download a portable JSON copy of your accounts, activity periods, monthly balances, income notes, major expenses, exchange rates and settings.',
+    'Download a portable JSON copy of your accounts, activity periods, monthly balances, income notes, major expenses, recurring expenses, exchange rates and settings.',
   exportJSON: 'Export JSON',
   importJSON: 'Import JSON',
   jsonExported: 'JSON export downloaded.',
@@ -65,7 +103,7 @@ export default {
     'Import replaces your entire current data. Export your current records before importing another file.',
   confirmImportTitle: 'Replace all local data?',
   confirmImportMessage:
-    'The selected file contains {accounts} accounts and {months} months. Importing will permanently REPLACE all current accounts, history, income notes, major expenses, rates and settings. Export a backup first. Continue?',
+    'The selected file contains {accounts} accounts and {months} months. Importing will permanently REPLACE all current accounts, history, income notes, major expenses, recurring expenses, rates and settings. Export a backup first. Continue?',
   invalidJSONFile: 'This is not a supported Capital Tracker JSON file.',
   json_too_large: 'The JSON file exceeds the 8 MiB limit.',
   field_import: 'The JSON file contains invalid or inconsistent data.',

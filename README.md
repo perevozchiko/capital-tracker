@@ -129,7 +129,7 @@ go build -o CapitalTracker ./cmd/capital-tracker
 
 On Windows, use `-o CapitalTracker.exe` and run `CapitalTracker.exe`.
 
-The executable bundles the web interface and uses only a local HTTP server. It has no production Node.js dependency. The server binds loopback only; the browser UI is **not** accessible from your phone over the LAN.
+The executable bundles the web interface and uses only a local HTTP server. It has no production Node.js dependency. The server binds loopback only; for password-protected access from computers and phones through `https://fin.anasko.net`, see [Hosting](docs/HOSTING.md).
 
 <details>
 <summary><strong>What is included in the demo?</strong></summary>
@@ -176,7 +176,7 @@ npx playwright install chromium
 npm run test:ui
 ```
 
-The browser suite contains **174 Playwright scenarios**, covering account/group management, native drag-and-drop, collapse/expand controls, financial input boundaries, rate snapshots and long workflows through restart, export, deletion and import. **40 mobile layout scenarios** check large values in all five currencies, clipping, overlap and account history table visibility; they also save screenshots.
+The browser suite covers Chromium and WebKit (Chrome and Safari engines), covering account/group management, native drag-and-drop, collapse/expand controls, financial input boundaries, rate snapshots and long workflows through restart, export, deletion and import. Mobile layout scenarios check large values in all five currencies, clipping, overlap and account history table visibility; they also save screenshots.
 
 Browser tests use fresh isolated temporary databases, not your personal data. The external-provider scenario is skipped by default. To also exercise real quote loading through the browser and verify that the loaded rates are saved exactly:
 

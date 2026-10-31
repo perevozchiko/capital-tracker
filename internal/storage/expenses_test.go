@@ -160,7 +160,7 @@ func TestExpenseMigrationAndBackupVersions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.DB.Exec("DROP TABLE expenses; DELETE FROM schema_migrations WHERE version=5; PRAGMA user_version=4"); err != nil {
+	if _, err := s.DB.Exec("DROP TABLE recurring_expenses; DROP TABLE recurring_expense_months; DROP TABLE expenses; DELETE FROM schema_migrations WHERE version>=5; PRAGMA user_version=4"); err != nil {
 		t.Fatal(err)
 	}
 	s.Close()
@@ -181,7 +181,7 @@ func TestExpenseMigrationAndBackupVersions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if snapshot.SchemaVersion != 5 || !reflect.DeepEqual(snapshot.Expenses, entries) {
+	if snapshot.SchemaVersion != 6 || !reflect.DeepEqual(snapshot.Expenses, entries) {
 		t.Fatal(snapshot)
 	}
 	copy := openTest(t)

@@ -47,7 +47,7 @@ Open **Settings → JSON import and export** in the browser:
 - Import validates the format/schema version, currencies, dates, relationships and financial precision before starting a SQLite transaction. Malformed or inconsistent input is rejected; the existing data is preserved on failure. Import does not modify database migrations.
 - This is a portable application-data snapshot, **not** a replacement for the SQLite `backup` command, which remains the preferred full-database backup. JSON exports contain personal financial information and should be stored securely.
 
-JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":5}`. Older versions 1–4 can still be imported; version 1 accounts start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
+JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":6}`. Older versions 1–5 can still be imported; version 1 accounts start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
 
 ## Clearing all local data
 
@@ -71,7 +71,7 @@ Amounts in JSON are represented as **decimal strings of integer minor units**, n
 
 ## Limitations
 
-- No remote/mobile access over the LAN; no server-independent offline editing; no automatic FX updates.
+- Remote access requires the authenticated HTTPS setup in [Hosting](HOSTING.md). No server-independent offline editing or automatic FX updates.
 - There are no automatic backups, transactions or cloud sync. JSON exports/imports are manual-only.
 - Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. Windows uses the native LockFileEx advisory lock, which is also released by the OS after a crash; all platforms can leave the lock file on disk safely.
 - Built-in browser checks such as responsive layout, theme switching and browser launch need visual/manual verification on the target OS.
@@ -84,12 +84,21 @@ The canonical supported currency list is defined in `internal/finance/finance.go
 
 ## Income
 
-Open **Income** and choose a month. Click **Add income** for each payment, enter a name (for example, Salary or Insurance refund), amount and currency. Multiple payments can use the same currency. Set one exchange rate per currency in the separate **Exchange rates** block below the income list (**1 EUR = …**). It applies to every payment in that currency for the selected month. The block shows only currencies currently used in the list and is hidden for EUR-only income. Each entry shows its EUR equivalent and the total at the bottom updates as you type. Use the × button to remove a row. Rates can be entered manually or loaded with **Load latest exchange rates**, then saved with **Save income**. Saved income amounts and rates remain editable.
+Open **Income** and choose a month. In the **Add income** form at the top, enter a name (for example, Salary or Insurance refund), amount and currency, then click **Add income** or press Enter. The payment appears in the monthly income list below and the form resets for the next payment. Click **Save income** after adding entries and setting any required exchange rates to keep the month. Multiple payments can use the same currency. Set one exchange rate per currency in the separate **Exchange rates** block below the income list (**1 EUR = …**). It applies to every payment in that currency for the selected month. The block shows only currencies currently used in the list and is hidden for EUR-only income. Each entry shows its EUR equivalent and the total at the bottom updates as you type. Use the × button to remove a row. Rates can be entered manually or loaded with **Load latest exchange rates**, then saved with **Save income**. Amounts and currencies are fixed as soon as an income is added, including before saving. To correct either, remove the entry with × and add it again. Entries are displayed as plain text, like accounts. Shared exchange rates remain editable; to correct a name, remove the entry and add it again.
 
 The chart shows monthly income totals converted to EUR. Missing months break the line. **Delete income** removes only the selected month's income notes after confirmation. Income notes do not change accounts, capital snapshots, or their exchange rates; deleting a capital month does not remove income notes. JSON export/import and full data deletion include income notes.
 
 ## Major expenses
 
-Open **Major expenses** and choose a month. Use **Add expense** to enter a name (for example, Car, Holiday or Home renovation), amount and currency for each expense. Set one rate per currency in **Exchange rates**, or load rates automatically. Each row shows its EUR equivalent; the monthly total updates as you type. Click **Save expense** to save entries and rates. The chart shows saved monthly totals in EUR.
+Open **Major expenses** and choose a month. In the **Add expense** form at the top, enter a name (for example, Car, Holiday or Home renovation), amount and currency, then click **Add expense** or press Enter. The expense appears as a plain-text row below and the form resets for the next expense. To correct a name, amount or currency, remove the entry with × and add it again. Set one rate per currency in **Exchange rates**, or load rates automatically. Each row shows its EUR equivalent; the monthly total updates as you type. Click **Save expense** to save entries and rates. The chart shows saved monthly totals in EUR.
 
 Use × to remove a row, or **Delete expense** to delete the selected month after confirmation. Expenses are independent of income and capital snapshots. JSON export/import and full data deletion include expense notes. Importing a backup from versions 1–4 clears current expense notes because those backups contain none.
+
+
+## Recurring expenses
+
+Open **Recurring expenses** and choose a month. Add named expenses, amounts and currencies, set one exchange rate per currency, and click **Save recurring expense**. Entries, rates, EUR equivalents and the history chart work like Major expenses.
+
+An unsaved month starts with the list, amounts and rates from the most recent saved earlier month, even if calendar months were skipped. A message identifies the source month. Rates can be updated before saving. Opening a month does not create a saved record; save it to keep an independent monthly list. Changes to earlier months never replace an already saved later month.
+
+Remove individual entries with ×, or clear the selected month with **Delete recurring expense**. Saving an empty list keeps that month empty and stops the old list from reappearing in following unsaved months. To correct an entry, remove it and add it again. Recurring expenses are separate from income, major expenses and capital balances. JSON export/import includes saved lists and empty months; importing versions 1–5 clears recurring expenses. **Delete all data** removes them too.

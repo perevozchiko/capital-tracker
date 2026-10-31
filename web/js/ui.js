@@ -12,6 +12,8 @@ const icons = {
   monthly:
     '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15h3"/>',
   expenses: '<path d="M12 15V3m-5 5 5-5 5 5M4 17v4h16v-4"/>',
+  recurringExpenses:
+    '<path d="M20 7a8 8 0 0 0-14-2L3 8m0-5v5h5M4 17a8 8 0 0 0 14 2l3-3m0 5v-5h-5"/>',
   incomes: '<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',
   settings:
     '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.2-1.7l2-1.5-2-3.5-2.4 1A7 7 0 0 0 14 5l-.4-2.5h-4L9.2 5a7 7 0 0 0-2.4 1.3l-2.4-1-2 3.5 2 1.5a7 7 0 0 0 0 3.4l-2 1.5 2 3.5 2.4-1A7 7 0 0 0 9.2 19l.4 2.5h4L14 19a7 7 0 0 0 2.4-1.3l2.4 1 2-3.5-2-1.5A7 7 0 0 0 19 12Z"/>',
@@ -59,6 +61,7 @@ function renderNav() {
     ['monthly', 'navMonthly'],
     ['incomes', 'navIncomes'],
     ['expenses', 'navExpenses'],
+    ['recurringExpenses', 'navRecurringExpenses'],
     ['settings', 'navSettings'],
   ];
   $('#navigation').innerHTML = routes
@@ -68,7 +71,11 @@ function renderNav() {
     )
     .join('');
   document.querySelectorAll('[data-i18n]').forEach((el) => {
-    el.textContent = t(el.dataset.i18n);
+    el.textContent = t(
+      el.dataset.i18n === 'localOnly' && state.authEnabled
+        ? 'privateServer'
+        : el.dataset.i18n,
+    );
   });
 }
 function applyAmountVisibility() {
@@ -78,7 +85,9 @@ function applyAmountVisibility() {
   button.setAttribute('aria-label', t(hidden ? 'showAmounts' : 'hideAmounts'));
   button.title = t(hidden ? 'showAmounts' : 'hideAmounts');
   document
-    .querySelectorAll('[data-balance],[data-income],[data-expense]')
+    .querySelectorAll(
+      '[data-balance],[data-income],[data-expense],[data-recurring-expense]',
+    )
     .forEach((input) => {
       input.type = hidden ? 'password' : 'text';
     });
@@ -88,7 +97,9 @@ function applyAmountVisibility() {
         ? state.incomeHistory
         : node.dataset.chartSource === 'expense'
           ? state.expenseHistory
-          : state.history
+          : node.dataset.chartSource === 'recurringExpense'
+            ? state.recurringExpenseHistory
+            : state.history
     )[Number(node.dataset.chartIndex)];
     if (point)
       node.setAttribute(
@@ -115,6 +126,7 @@ function renderHeader() {
     monthly: 'navMonthly',
     incomes: 'navIncomes',
     expenses: 'navExpenses',
+    recurringExpenses: 'navRecurringExpenses',
     settings: 'navSettings',
   };
   $('#pageHeading').textContent = t(names[state.page]);
@@ -124,6 +136,7 @@ function renderHeader() {
     'monthly',
     'incomes',
     'expenses',
+    'recurringExpenses',
   ].includes(state.page)
     ? monthControls()
     : state.page === 'accounts'

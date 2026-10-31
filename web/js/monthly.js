@@ -1,4 +1,4 @@
-import { state, collapsedGroups } from './state.js';
+import { captureView, state, collapsedGroups } from './state.js';
 import { api } from './api.js';
 import { t } from './messages.js';
 import { differenceMinor } from './numbers.js';
@@ -39,6 +39,7 @@ function updateBalanceDifference(input) {
       : moneyHTML(delta, input.dataset.currency, n > 0n ? '+' : '');
 }
 async function renderMonthly() {
+  const isCurrentView = captureView();
   const previousMonth = nextMonth(state.month, -1);
   const [d, previous, groupData] = await Promise.all([
     api('/months/' + state.month),
@@ -47,6 +48,7 @@ async function renderMonthly() {
       : Promise.resolve(null),
     api('/groups?month=' + encodeURIComponent(state.month) + '&view=monthly'),
   ]);
+  if (!isCurrentView()) return;
   state.monthData = d;
   const accounts = d.editable_accounts || d.accounts;
   const balances = new Map(

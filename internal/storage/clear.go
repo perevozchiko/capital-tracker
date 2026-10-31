@@ -15,6 +15,8 @@ func (s *Store) ClearData() error {
 
 	// Children first, with no foreign-key disabling.
 	for _, table := range []string{
+		"recurring_expenses",
+		"recurring_expense_months",
 		"incomes",
 		"expenses",
 		"monthly_balances",

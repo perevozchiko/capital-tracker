@@ -1,4 +1,4 @@
-import { state, collapsedGroups } from './state.js';
+import { captureView, state, collapsedGroups } from './state.js';
 import { api } from './api.js';
 import { t } from './messages.js';
 import {
@@ -13,10 +13,12 @@ function groupSelector(selected, attribute) {
   return `<select ${attribute} aria-label="${t('moveToGroup')}"><option value="" ${selected === null ? 'selected' : ''}>${t('ungrouped')}</option>${state.groups.groups.map((g) => `<option value="${g.id}" ${selected === g.id ? 'selected' : ''}>${escapeHTML(g.name)}</option>`).join('')}</select>`;
 }
 async function renderAccounts() {
+  const isCurrentView = captureView();
   const [groupData, monthData] = await Promise.all([
     api('/groups?month=' + encodeURIComponent(state.month)),
     api('/months/' + encodeURIComponent(state.month)),
   ]);
+  if (!isCurrentView()) return;
   state.groups = groupData;
   const balances = new Map(
     monthData.balances.map((b) => [b.account_id, b.amount_minor]),

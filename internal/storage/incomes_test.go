@@ -159,7 +159,7 @@ func TestIncomeMigrationPreservesExistingData(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Recreate the version 2 schema as shipped before income notes existed.
-	if _, err := s.DB.Exec("DROP TABLE expenses; DROP TABLE incomes; DELETE FROM schema_migrations WHERE version>=3; PRAGMA user_version=2"); err != nil {
+	if _, err := s.DB.Exec("DROP TABLE recurring_expenses; DROP TABLE recurring_expense_months; DROP TABLE expenses; DROP TABLE incomes; DELETE FROM schema_migrations WHERE version>=3; PRAGMA user_version=2"); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Close(); err != nil {
@@ -224,7 +224,7 @@ func TestNamedIncomeMigrationAndLegacyBackup(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Restore the shipped version 3 income schema with a recorded monthly total.
-	if _, err := s.DB.Exec(`DROP TABLE expenses; DROP TABLE incomes; CREATE TABLE incomes(month TEXT,currency TEXT,amount_minor INTEGER,rate_scaled INTEGER,PRIMARY KEY(month,currency)); INSERT INTO incomes VALUES('2026-10','RSD',10000000,11720000000); DELETE FROM schema_migrations WHERE version>=4; PRAGMA user_version=3;`); err != nil {
+	if _, err := s.DB.Exec(`DROP TABLE recurring_expenses; DROP TABLE recurring_expense_months; DROP TABLE expenses; DROP TABLE incomes; CREATE TABLE incomes(month TEXT,currency TEXT,amount_minor INTEGER,rate_scaled INTEGER,PRIMARY KEY(month,currency)); INSERT INTO incomes VALUES('2026-10','RSD',10000000,11720000000); DELETE FROM schema_migrations WHERE version>=4; PRAGMA user_version=3;`); err != nil {
 		t.Fatal(err)
 	}
 	s.Close()

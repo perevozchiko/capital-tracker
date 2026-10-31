@@ -1,11 +1,13 @@
 const state = {
   page: 'dashboard',
+  renderID: 0,
   month: new Date().toLocaleDateString('sv-SE').slice(0, 7),
   accounts: [],
   months: [],
   history: [],
   incomeHistory: [],
   expenseHistory: [],
+  recurringExpenseHistory: [],
   settings: { language: 'en', theme: 'dark', version: '' },
   buildCommit: 'unknown',
   currencies: [],
@@ -28,3 +30,10 @@ const collapsedGroups = new Set(
 );
 
 export { state, collapsedGroups };
+
+// Late responses must not replace a newer screen or clear its unsaved edits.
+export function captureView() {
+  const { page, month, renderID } = state;
+  return () =>
+    state.page === page && state.month === month && state.renderID === renderID;
+}

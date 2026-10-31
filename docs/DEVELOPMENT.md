@@ -16,7 +16,7 @@ go build -o CapitalTracker ./cmd/capital-tracker
 
 On Windows, replace `-o CapitalTracker` with `-o CapitalTracker.exe`, and launch `CapitalTracker.exe`.
 
-The server listens on **http://127.0.0.1:8765**, opens the default browser once ready, and runs until you close the terminal or press Ctrl+C. The app only serves on the local machine; opening the URL on your phone will *not* connect to the computer. Its mobile-size UI can be tested in browser responsive device mode.
+The server listens on **http://127.0.0.1:8765**, opens the default browser once ready, and runs until you close the terminal or press Ctrl+C. By default it serves only on the local machine. For authenticated HTTPS access from computers and phones, see [Hosting](HOSTING.md).
 
 Options:
 
@@ -70,7 +70,7 @@ Browser UI tests exercise the real application in headless Chromium with an isol
 
 ```sh
 npm ci
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:ui
 ```
 
@@ -157,3 +157,5 @@ scripts/               Source checks, formatting and screenshot capture
 The interface always uses English, including dates, numbers and confirmations. Older databases and JSON snapshots with a Russian language preference remain compatible; that legacy field does not change the interface language. Account and group names entered by users are preserved.
 
 Migration scripts are embedded under [`internal/storage/migrations/`](../internal/storage/migrations/). Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1–5 are defined; migration 2 adds account groups and account membership, and migration 3 adds independent monthly income notes. Migration 4 gives income notes names and preserves multiple entries per currency. Migration 5 adds independent major expense notes. JSON exports use version 5; versions 1–4 remain importable. [`PROGRESS.md`](../PROGRESS.md) documents verification status.
+
+Browser projects cover Chromium and WebKit, plus iPhone and Android emulation for compatibility and login tests. Use `npm run test:ui -- --project=chromium` for a focused run. The Node test runner works on Windows, macOS and Linux and stores artifacts in `test-results/latest`. Set `CAPITAL_TRACKER_TEST_OUTPUT` to a different directory when running independent suites concurrently. `--last-failed` reuses the previous run’s result.

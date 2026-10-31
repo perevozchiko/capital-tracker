@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { captureView, state } from './state.js';
 import { api, request } from './api.js';
 import { t } from './messages.js';
 import { rateText, parseMoney, parseRate } from './format.js';
@@ -50,6 +50,7 @@ async function loadRates(button) {
   }
 }
 async function saveMonth() {
+  const isCurrentView = captureView();
   const inputs = [...document.querySelectorAll('[data-balance],[data-rate]')];
   const balances = [],
     rates = [];
@@ -93,18 +94,23 @@ async function saveMonth() {
     ),
   ];
   buttons.forEach((button) => (button.disabled = true));
+  const content = $('#pageContent');
+  content.inert = true;
   try {
     await request('/months/' + state.month, 'PUT', {
       balances,
       rates: requiredRates,
     });
-    state.dirty = false;
+    if (!isCurrentView()) return;
     await refresh();
+    if (!isCurrentView()) return;
+    state.dirty = false;
     await render();
     notify(t(state.monthData?.complete ? 'saved' : 'savedIncomplete'));
   } catch (e) {
     notify(t('endpointError') + ' ' + e.message, true);
   } finally {
+    if (isCurrentView()) content.inert = false;
     buttons.forEach((button) => {
       if (button.isConnected) button.disabled = false;
     });

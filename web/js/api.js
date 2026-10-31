@@ -12,6 +12,10 @@ async function api(path, options = {}) {
     },
   });
   const data = res.status === 204 ? null : await res.json().catch(() => ({}));
+  if (res.status === 401 && !path.startsWith('/auth/')) {
+    location.reload();
+    throw new Error(t('unauthorized'));
+  }
   if (!res.ok) {
     const error = data.error || {};
     throw new Error(

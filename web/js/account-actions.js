@@ -297,14 +297,16 @@ async function submitAccountEdit(form) {
   const action = dialog.dataset.editorAction,
     id = Number(dialog.dataset.id);
   const value = form.elements.namedItem('value').value;
+  if (form.inert) return;
+  form.inert = true;
   try {
     if (action === 'groupCreate' || action === 'groupRename') {
       if (action === 'groupCreate')
         await request('/groups', 'POST', { name: value });
       else await request('/groups/' + id, 'PATCH', { name: value });
-      dialog.close();
       await refresh();
       await render();
+      dialog.close();
       notify(t('groupSaved'));
       return;
     }
@@ -318,9 +320,9 @@ async function submitAccountEdit(form) {
       await request('/accounts/' + id + '/restore', 'POST', {
         start_month: value,
       });
-    dialog.close();
     await refresh();
     await render();
+    dialog.close();
     notify(
       t(
         action === 'archive'
@@ -332,6 +334,8 @@ async function submitAccountEdit(form) {
     );
   } catch (err) {
     notify(err.message || t('error'), true);
+  } finally {
+    form.inert = false;
   }
 }
 

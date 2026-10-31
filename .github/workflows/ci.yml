@@ -37,8 +37,8 @@ jobs:
         run: npm run check
       - name: Release version and archive tests
         run: python -m unittest discover -s tests -p '*release*test.py'
-      - name: Install headless Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install Chrome and Safari browser engines
+        run: npx playwright install --with-deps chromium webkit
       - name: Playwright end-to-end tests
         run: npm run test:ui
       - name: Upload browser traces when tests fail

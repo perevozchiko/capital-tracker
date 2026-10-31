@@ -10,6 +10,7 @@ import (
 )
 
 type Server struct {
+	Auth    *Auth
 	Store   *storage.Store
 	Version string
 	Commit  string
@@ -39,9 +40,20 @@ func (s *Server) Handler() http.Handler {
 	registerMonths(mux, s)
 	registerIncomes(mux, s)
 	registerExpenses(mux, s)
+	registerRecurringExpenses(mux, s)
 	registerDashboard(mux, s)
 	registerSettings(mux, s)
 	registerStatic(mux, s)
+	if s.Auth != nil {
+		return secureRequests(s.Auth.protect(mux), s.Auth.Origin)
+	}
+	mux.HandleFunc("/api/auth/status", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			fail(w, 405, "method_not_allowed", "")
+			return
+		}
+		writeJSON(w, 200, map[string]bool{"enabled": false, "authenticated": true})
+	})
 	return secureLocalRequests(mux)
 }
 

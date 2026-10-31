@@ -7,7 +7,7 @@ import (
 
 func TestMigrationDiscoveryAndConnectionPragmas(t *testing.T) {
 	paths, err := migrationsList()
-	if err != nil || len(paths) != 5 || paths[0] != "migrations/001_init.sql" || paths[1] != "migrations/002_account_groups.sql" {
+	if err != nil || len(paths) != 6 || paths[0] != "migrations/001_init.sql" || paths[1] != "migrations/002_account_groups.sql" {
 		t.Fatalf("unexpected migration list: %v %v", paths, err)
 	}
 	dataDir := filepath.Join(t.TempDir(), "data # special")

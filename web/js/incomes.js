@@ -1,19 +1,12 @@
-import { state } from './state.js';
+import { captureView, state } from './state.js';
 import { api, request } from './api.js';
 import { t } from './messages.js';
-import {
-  escapeHTML,
-  minorToInput,
-  moneyHTML,
-  parseMoney,
-  parseRate,
-} from './format.js';
+import { escapeHTML, moneyHTML, parseMoney, parseRate } from './format.js';
 import { $, notify, applyAmountVisibility } from './ui.js';
 import { chart } from './dashboard.js';
 import { showConfirm } from './dialogs.js';
 import { incomeTotal } from './income-math.js';
 
-let rowSequence = 0;
 let monthRates = new Map();
 
 function syncIncomeRates() {
@@ -22,8 +15,8 @@ function syncIncomeRates() {
     monthRates.set(input.dataset.incomeRate, input.value);
   }
   const used = new Set(
-    [...document.querySelectorAll('[data-income-currency]')]
-      .map((input) => input.value)
+    [...document.querySelectorAll('[data-income-row]')]
+      .map((row) => row.dataset.currency)
       .filter((currency) => currency !== 'EUR'),
   );
   for (const label of container.querySelectorAll('[data-income-rate-label]')) {
@@ -40,20 +33,20 @@ function syncIncomeRates() {
   }
   $('#incomeRates').hidden = used.size === 0;
 }
-function incomeRow(entry = {}) {
-  const id = ++rowSequence;
-  const currency = entry.currency || 'EUR';
-  return `<div class="income-row" data-income-row>
-    <label for="income-name-${id}">${t('incomeName')}<input id="income-name-${id}" class="editor-input" data-income-name maxlength="100" value="${escapeHTML(entry.name || '')}" placeholder="${t('incomeNamePlaceholder')}"></label>
-    <label for="income-amount-${id}">${t('incomeAmount')}<input id="income-amount-${id}" class="editor-input" data-income type="text" inputmode="decimal" autocomplete="off" value="${escapeHTML(minorToInput(entry.amount_minor))}"></label>
-    <label for="income-currency-${id}">${t('currency')}<select id="income-currency-${id}" class="editor-input" data-income-currency>${state.currencies.map((c) => `<option ${c === currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
-    <div class="income-equivalent"><span class="subtle">${t('totalEUR')}</span><strong data-income-eur>—</strong></div>
+function incomeRow(entry) {
+  return `<div class="account-row income-list-row" data-income-row data-name="${escapeHTML(entry.name)}" data-currency="${escapeHTML(entry.currency)}" data-amount-minor="${escapeHTML(entry.amount_minor)}">
+    <div class="account-main income-list-main"><strong data-income-name>${escapeHTML(entry.name)}</strong><span class="currency-tag">${escapeHTML(entry.currency)}</span></div>
+    <div class="account-balance"><strong data-income-amount>${moneyHTML(entry.amount_minor, entry.currency)}</strong><small>${t('incomeAmount')}</small></div>
+    <div class="account-balance"><strong data-income-eur>—</strong><small>${t('totalEUR')}</small></div>
     <button class="btn btn-icon" type="button" data-action="removeIncomeRow" aria-label="${t('removeIncome')}">×</button>
   </div>`;
 }
 
 async function renderIncomes() {
-  state.incomeHistory = await api('/incomes');
+  const isCurrentView = captureView();
+  const history = await api('/incomes');
+  if (!isCurrentView()) return;
+  state.incomeHistory = history;
   const month = state.incomeHistory.find((m) => m.month === state.month);
   monthRates = new Map();
   for (const entry of month?.entries || []) {
@@ -64,17 +57,20 @@ async function renderIncomes() {
     );
   }
   $('#pageContent').innerHTML =
-    `<section class="card panel"><div class="panel-heading"><h2>${t('incomeEditor')}</h2></div><p class="subtle">${t('incomeHelp')}</p><form id="incomeForm"><div class="income-fields">${(month?.entries || []).map(incomeRow).join('')}</div><button class="btn" type="button" data-action="addIncomeRow"><span aria-hidden="true">+</span> ${t('addIncome')}</button><aside id="incomeRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('incomeSharedRatesHelp')}</p><div id="incomeRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadIncomeRates">${t('loadRates')}</button><p id="incomeRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyIncomeTotal')}</span><strong id="incomeTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveIncome')}</button><button class="btn btn-danger" type="button" data-action="deleteIncome" ${month ? '' : 'disabled'}>${t('deleteIncome')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('incomeHistory')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.incomeHistory, 'income')}</section>`;
+    `<section class="card panel"><h2>${t('addIncome')}</h2><p class="caption">${t('incomeAddHelp')}</p><form id="addIncomeForm" class="form-row">
+ <div class="field"><label for="incomeName">${t('incomeName')}</label><input id="incomeName" name="name" maxlength="100" required placeholder="${t('incomeNamePlaceholder')}"></div>
+ <div class="field"><label for="incomeAmount">${t('incomeAmount')}</label><input id="incomeAmount" name="amount" data-income type="text" inputmode="decimal" autocomplete="off" required></div>
+ <div class="field"><label for="incomeCurrency">${t('currency')}</label><select id="incomeCurrency" name="currency">${state.currencies.map((c) => `<option ${c === 'EUR' ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+ <button class="btn btn-primary" type="submit">${t('addIncome')}</button></form></section>
+ <section class="card panel"><div class="panel-heading"><h2>${t('incomeEditor')}</h2></div><p class="subtle">${t('incomeHelp')}</p><form id="incomeForm"><p id="incomeListEmpty" class="caption" ${month?.entries?.length ? 'hidden' : ''}>${t('incomeListEmpty')}</p><div class="income-fields">${(month?.entries || []).map(incomeRow).join('')}</div><aside id="incomeRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('incomeSharedRatesHelp')}</p><div id="incomeRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadIncomeRates">${t('loadRates')}</button><p id="incomeRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyIncomeTotal')}</span><strong id="incomeTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveIncome')}</button><button class="btn btn-danger" type="button" data-action="deleteIncome" ${month ? '' : 'disabled'}>${t('deleteIncome')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('incomeHistory')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.incomeHistory, 'income')}</section>`;
   syncIncomeRates();
   updateIncomeTotals();
   applyAmountVisibility();
 }
 
 function readRow(row) {
-  const amount = parseMoney(row.querySelector('[data-income]').value);
-  if (amount == null || BigInt(amount) < 0n)
-    throw new Error(t('incomeNonnegative'));
-  const currency = row.querySelector('[data-income-currency]').value;
+  const amount = row.dataset.amountMinor;
+  const currency = row.dataset.currency;
   const rate =
     currency === 'EUR'
       ? '1'
@@ -82,7 +78,7 @@ function readRow(row) {
   if (!rate) throw new Error(t('invalidRate'));
   return {
     month: state.month,
-    name: row.querySelector('[data-income-name]').value.trim(),
+    name: row.dataset.name,
     currency,
     amount_minor: amount,
     rate,
@@ -111,16 +107,31 @@ function updateIncomeTotals() {
     : '—';
 }
 
-function addIncomeRow() {
-  $('#incomeForm .income-fields').insertAdjacentHTML('beforeend', incomeRow());
+function addIncomeRow(form) {
+  const name = form.elements.name.value.trim();
+  if (!name) throw new Error(t('field_name'));
+  const amount = parseMoney(form.elements.amount.value);
+  if (amount == null || BigInt(amount) < 0n)
+    throw new Error(t('incomeNonnegative'));
+  $('#incomeForm .income-fields').insertAdjacentHTML(
+    'beforeend',
+    incomeRow({
+      name,
+      amount_minor: amount,
+      currency: form.elements.currency.value,
+    }),
+  );
+  $('#incomeListEmpty').hidden = true;
   state.dirty = true;
   syncIncomeRates();
   updateIncomeTotals();
   applyAmountVisibility();
-  $('#incomeForm [data-income-row]:last-child [data-income-name]').focus();
+  form.reset();
+  form.elements.name.focus();
 }
 function removeIncomeRow(button) {
   button.closest('[data-income-row]').remove();
+  $('#incomeListEmpty').hidden = !!$('#incomeForm [data-income-row]');
   syncIncomeRates();
   state.dirty = true;
   updateIncomeTotals();
@@ -129,14 +140,9 @@ function removeIncomeRow(button) {
 document.addEventListener('input', (event) => {
   if (event.target.closest('#incomeForm')) updateIncomeTotals();
 });
-document.addEventListener('change', (event) => {
-  if (!event.target.matches('[data-income-currency]')) return;
-  syncIncomeRates();
-  state.dirty = true;
-  updateIncomeTotals();
-});
 
 async function saveIncome(form) {
+  const isCurrentView = captureView();
   const entries = [];
   for (const row of form.querySelectorAll('[data-income-row]')) {
     try {
@@ -148,15 +154,24 @@ async function saveIncome(form) {
       return;
     }
   }
-  const buttons = [...form.querySelectorAll('button')];
+  const buttons = [
+    ...form.querySelectorAll('button'),
+    ...document.querySelectorAll('#addIncomeForm button'),
+  ];
   const disabled = buttons.map((button) => button.disabled);
   buttons.forEach((button) => (button.disabled = true));
+  const addForm = $('#addIncomeForm');
+  form.inert = true;
+  addForm.inert = true;
   try {
     await request('/incomes/' + state.month, 'PUT', { entries });
+    if (!isCurrentView()) return;
     state.dirty = false;
     await renderIncomes();
     notify(t('incomeSaved'));
   } finally {
+    form.inert = false;
+    addForm.inert = false;
     buttons.forEach((button, i) => {
       if (button.isConnected) button.disabled = disabled[i];
     });

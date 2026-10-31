@@ -1,0 +1,21 @@
+[Unit]
+Description=Capital Tracker
+After=network.target
+
+[Service]
+User=capital-tracker
+Group=capital-tracker
+WorkingDirectory=/var/lib/capital-tracker
+EnvironmentFile=/etc/capital-tracker.env
+ExecStart=/usr/local/bin/capital-tracker --no-browser --data-dir /var/lib/capital-tracker --port 8765
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/capital-tracker
+
+[Install]
+WantedBy=multi-user.target
