@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # Temporary: commit genuine screenshot captures to this same-repo documentation branch
 
 # A newer push supersedes obsolete runs on the same branch or PR.
 concurrency:
@@ -22,6 +22,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
@@ -32,6 +34,19 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Capture gallery screenshots for documentation PR
+        if: github.event_name == 'pull_request' && github.head_ref == 'docs/refresh-gallery-2026' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+          python scripts/capture-demo-screenshots.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/screenshots/*.png
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs: refresh genuine Chromium screenshots'
+            git push origin HEAD:refs/heads/docs/refresh-gallery-2026
+          fi
       - run: npm ci
       - name: Go, JavaScript, formatting and unit tests
         run: npm run check
