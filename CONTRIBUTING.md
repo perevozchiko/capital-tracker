@@ -6,7 +6,7 @@ Thanks for helping improve Capital Tracker. It is an independently developed, op
 
 Read [Architecture](docs/ARCHITECTURE.md) for module ownership and accounting invariants, [Developer guide](docs/DEVELOPMENT.md) for build and release details, and [HTTP API](docs/API.md) for routes.
 
-Requirements for local development: Go 1.23+, Node.js 22+, and npm. No frontend framework, bundler or production Node runtime is needed.
+Requirements for local development: Go 1.27.3+, Node.js 22+, and npm. No frontend framework, bundler or production Node runtime is needed.
 
 ```sh
 npm ci

@@ -86,7 +86,7 @@ func Open(dataDir string) (*Store, error) {
 	}
 	if version < len(paths) && exists {
 		backup := path + ".pre-migration-" + time.Now().UTC().Format("20060102-150405")
-		if _, err = db.Exec("VACUUM INTO ?", backup); err != nil {
+		if err = backupDatabase(db, backup); err != nil {
 			return failed(fmt.Errorf("pre-migration backup: %w", err))
 		}
 	}
@@ -165,15 +165,24 @@ func (s *Store) Backup(destination string) error {
 	if e != nil {
 		return e
 	}
-	if _, e = os.Stat(abs); e == nil {
-		return errors.New("backup destination already exists")
-	}
-	if !os.IsNotExist(e) {
-		return e
-	}
 	if filepath.Clean(abs) == filepath.Clean(s.Path) {
 		return invalid("destination")
 	}
-	_, e = s.DB.Exec("VACUUM INTO ?", abs)
-	return e
+	return backupDatabase(s.DB, abs)
+}
+
+// Reserve an empty owner-only file before SQLite writes any financial data.
+// O_EXCL also refuses existing files and dangling symlinks without a stat race.
+func backupDatabase(db *sql.DB, destination string) error {
+	file, err := os.OpenFile(destination, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		return err
+	}
+	if err = file.Close(); err == nil {
+		_, err = db.Exec("VACUUM INTO ?", destination)
+	}
+	if err != nil {
+		_ = os.Remove(destination)
+	}
+	return err
 }

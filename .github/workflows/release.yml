@@ -99,6 +99,7 @@ jobs:
           test "$(python scripts/release_version.py show)" = "$RELEASE_VERSION"
           npm ci
           npm run check
+          npm run security:check
           python -m unittest discover -s tests -p '*release*test.py'
       - name: Test browser UI
         run: |

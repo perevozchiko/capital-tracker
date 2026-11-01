@@ -96,10 +96,8 @@ test('login survives server restart and reopening the browser, sign-out stays re
       (item) => item.name === 'capital_tracker_session',
     );
     expect(cookie.httpOnly).toBe(true);
-    // Chromium retains the requested 400-day cookie; WebKit caps it at 365.
-    // Require nearly a year of browser persistence without assuming that all
-    // browsers accept the server's full Max-Age.
-    expect(cookie.expires).toBeGreaterThan(Date.now() / 1000 + 360 * 86400);
+    expect(cookie.expires).toBeGreaterThan(Date.now() / 1000 + 29 * 86400);
+    expect(cookie.expires).toBeLessThanOrEqual(Date.now() / 1000 + 30 * 86400);
 
     await restartApp();
     await page.reload();

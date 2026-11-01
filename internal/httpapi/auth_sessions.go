@@ -7,12 +7,38 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
+
+const (
+	sessionCookieLifetime   = 30 * 24 * time.Hour
+	sessionIdleTimeout      = 7 * 24 * time.Hour
+	sessionActivityInterval = time.Hour
+)
+
+type sessionState struct {
+	ExpiresAt time.Time `json:"expires_at"`
+	LastSeen  time.Time `json:"last_seen"`
+}
+
+func (s sessionState) valid(now time.Time) bool {
+	return !s.LastSeen.IsZero() && now.Before(s.ExpiresAt) && now.Before(s.LastSeen.Add(sessionIdleTimeout))
+}
+
+func (s sessionState) maxAge(now time.Time) int {
+	return int((s.ExpiresAt.Sub(now) + time.Second - 1) / time.Second)
+}
+
+type savedSession struct {
+	Key string `json:"key"`
+	sessionState
+}
 
 // Session hashes are separate from the financial database and its backups.
 type savedSessions struct {
-	Credentials string   `json:"credentials"`
-	Sessions    []string `json:"sessions"`
+	Version     int            `json:"version"`
+	Credentials string         `json:"credentials"`
+	Sessions    []savedSession `json:"sessions"`
 }
 
 func sessionKey(token string) string {
@@ -22,25 +48,50 @@ func sessionKey(token string) string {
 
 // Called once at startup, after the application's data-directory lock is held.
 func (a *Auth) loadSessions() error {
-	a.sessions = make(map[string]struct{})
+	a.sessions = make(map[string]sessionState)
 	data, err := os.ReadFile(a.sessionPath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("read auth sessions: %w", err)
 	}
 	if err == nil {
+		var envelope struct {
+			Version  int             `json:"version"`
+			Sessions json.RawMessage `json:"sessions"`
+		}
+		if err := json.Unmarshal(data, &envelope); err != nil {
+			return fmt.Errorf("decode auth sessions: %w", err)
+		}
+		if envelope.Version == 0 {
+			// Legacy hashes have no trustworthy creation time. Revoke them once
+			// during upgrade instead of granting a fresh lifetime on every restart.
+			var legacy []string
+			if err := json.Unmarshal(envelope.Sessions, &legacy); err != nil {
+				return fmt.Errorf("decode legacy auth sessions: %w", err)
+			}
+			for _, key := range legacy {
+				if !validSessionKey(key) {
+					return fmt.Errorf("invalid auth session hash")
+				}
+			}
+			return a.saveSessions()
+		}
+		if envelope.Version != 1 {
+			return fmt.Errorf("unsupported auth sessions version %d", envelope.Version)
+		}
 		var saved savedSessions
 		if err := json.Unmarshal(data, &saved); err != nil {
 			return fmt.Errorf("decode auth sessions: %w", err)
 		}
 		if saved.Credentials == a.credentials {
-			for _, key := range saved.Sessions {
-				decoded, err := hex.DecodeString(key)
-				if err != nil || len(decoded) != sha256.Size {
-					return fmt.Errorf("invalid auth session hash")
+			for _, session := range saved.Sessions {
+				if !validSessionKey(session.Key) || session.LastSeen.IsZero() || !session.ExpiresAt.After(session.LastSeen) {
+					return fmt.Errorf("invalid auth session")
 				}
-				a.sessions[key] = struct{}{}
+				if session.valid(a.now()) {
+					a.sessions[session.Key] = session.sessionState
+				}
 			}
-			return nil
+			return a.saveSessions()
 		}
 	}
 	// Persist credential changes immediately so reverting credentials cannot
@@ -48,11 +99,18 @@ func (a *Auth) loadSessions() error {
 	return a.saveSessions()
 }
 
+func validSessionKey(key string) bool {
+	decoded, err := hex.DecodeString(key)
+	return err == nil && len(decoded) == sha256.Size
+}
+
 // Caller holds a.mu, or is initializing Auth before serving requests.
 func (a *Auth) saveSessions() error {
-	saved := savedSessions{Credentials: a.credentials, Sessions: make([]string, 0, len(a.sessions))}
-	for key := range a.sessions {
-		saved.Sessions = append(saved.Sessions, key)
+	saved := savedSessions{Version: 1, Credentials: a.credentials, Sessions: make([]savedSession, 0, len(a.sessions))}
+	for key, session := range a.sessions {
+		if session.valid(a.now()) {
+			saved.Sessions = append(saved.Sessions, savedSession{Key: key, sessionState: session})
+		}
 	}
 	data, err := json.Marshal(saved)
 	if err != nil {

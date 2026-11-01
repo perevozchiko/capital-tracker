@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "check": "bash scripts/check.sh",
+    "security:check": "bash scripts/security.sh",
     "test": "node --test tests/*.test.mjs",
     "test:ui": "node scripts/test-ui.mjs",
     "format": "bash scripts/format.sh",

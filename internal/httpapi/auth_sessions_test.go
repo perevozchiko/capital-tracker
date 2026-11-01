@@ -40,7 +40,7 @@ func assertSessionStatus(t *testing.T, a *Auth, cookie *http.Cookie, want bool) 
 	}
 	if want {
 		cookies := w.Result().Cookies()
-		if len(cookies) != 1 || cookies[0].Value != cookie.Value || cookies[0].MaxAge != int(sessionCookieLifetime.Seconds()) {
+		if len(cookies) != 1 || cookies[0].Value != cookie.Value || cookies[0].MaxAge <= 0 || cookies[0].MaxAge > int(sessionCookieLifetime.Seconds()) {
 			t.Fatalf("session cookie was not renewed: %v", cookies)
 		}
 	} else if len(w.Result().Cookies()) != 0 {
@@ -73,7 +73,7 @@ func TestPersistentSessionsSurviveRestartAndLogout(t *testing.T) {
 	}
 	first := login(nil)
 	second := login(nil)
-	if first.MaxAge <= int((365 * 24 * time.Hour).Seconds()) {
+	if first.MaxAge != int(sessionCookieLifetime.Seconds()) {
 		t.Fatalf("cookie is not persistent: %+v", first)
 	}
 	data, err := os.ReadFile(path)
@@ -165,9 +165,10 @@ func TestSessionsAreNotEvictedByOtherDevicesAndCorruptFilesFailClosed(t *testing
 		t.Fatal(err)
 	}
 	// Load more sessions than the former 32-device cap, then sign in again.
-	saved := savedSessions{Credentials: a.credentials}
+	saved := savedSessions{Version: 1, Credentials: a.credentials}
 	for i := 0; i < 40; i++ {
-		saved.Sessions = append(saved.Sessions, sessionKey(fmt.Sprintf("%064d", i)))
+		saved.Sessions = append(saved.Sessions, savedSession{Key: sessionKey(fmt.Sprintf("%064d", i)),
+			sessionState: sessionState{ExpiresAt: time.Now().Add(sessionCookieLifetime), LastSeen: time.Now()}})
 	}
 	data, err := json.Marshal(saved)
 	if err != nil {

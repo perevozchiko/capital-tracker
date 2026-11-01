@@ -35,6 +35,8 @@ jobs:
       - run: npm ci
       - name: Go, JavaScript, formatting and unit tests
         run: npm run check
+      - name: Known vulnerability checks
+        run: npm run security:check
       - name: Release version and archive tests
         run: python -m unittest discover -s tests -p '*release*test.py'
       - name: Install Chrome and Safari browser engines

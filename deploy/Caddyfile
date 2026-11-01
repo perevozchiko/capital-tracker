@@ -1,4 +1,7 @@
 fin.anasko.net {
     encode zstd gzip
-    reverse_proxy 127.0.0.1:8765
+    reverse_proxy 127.0.0.1:8765 {
+        # Always replace any value supplied by the visitor.
+        header_up X-Capital-Tracker-Client-IP {remote_host}
+    }
 }

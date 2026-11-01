@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/url"
+	"strconv"
 	"sync"
 	"time"
 
@@ -17,20 +18,17 @@ import (
 
 const sessionCookie = "capital_tracker_session"
 
-// Browsers cap persistent cookies at 400 days. Renew on authenticated requests;
-// the server-side session has no expiry and remains valid until sign-out.
-const sessionCookieLifetime = 400 * 24 * time.Hour
-
 type Auth struct {
 	username     string
 	passwordHash []byte
 	Origin       string
 	mu           sync.Mutex
-	sessions     map[string]struct{}
+	sessions     map[string]sessionState
 	sessionPath  string
 	credentials  string
-	attempts     int
-	window       time.Time
+	loginLimits  map[string]loginWindow
+	loginSlots   chan struct{}
+	now          func() time.Time
 }
 
 // Credentials are deployment configuration, never part of financial backups.
@@ -48,7 +46,8 @@ func NewAuth(username, hash, origin, sessionPath string) (*Auth, error) {
 			return nil, errors.New("public origin must be an HTTPS origin, e.g. https://fin.anasko.net (no trailing slash)")
 		}
 	}
-	a := &Auth{username: username, passwordHash: []byte(hash), Origin: origin, sessionPath: sessionPath}
+	a := &Auth{username: username, passwordHash: []byte(hash), Origin: origin, sessionPath: sessionPath,
+		loginLimits: make(map[string]loginWindow), loginSlots: make(chan struct{}, 2), now: time.Now}
 	fingerprint := sha256.Sum256([]byte(username + "\x00" + hash))
 	a.credentials = hex.EncodeToString(fingerprint[:])
 	if err := a.loadSessions(); err != nil {
@@ -64,11 +63,26 @@ func (a *Auth) authenticated(w http.ResponseWriter, r *http.Request) bool {
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	_, ok := a.sessions[sessionKey(cookie.Value)]
-	if ok {
-		http.SetCookie(w, a.cookie(cookie.Value, int(sessionCookieLifetime.Seconds())))
+	key := sessionKey(cookie.Value)
+	session, ok := a.sessions[key]
+	now := a.now()
+	if !ok || !session.valid(now) {
+		delete(a.sessions, key)
+		return false
 	}
-	return ok
+	// Persist activity at most once per hour, rather than fsync on every asset.
+	// A crash can shorten the idle window, never extend the absolute lifetime.
+	if now.Sub(session.LastSeen) >= sessionActivityInterval {
+		updated := session
+		updated.LastSeen = now
+		a.sessions[key] = updated
+		if err := a.saveSessions(); err != nil {
+			a.sessions[key] = session
+			return false
+		}
+	}
+	http.SetCookie(w, a.cookie(cookie.Value, session.maxAge(now)))
+	return true
 }
 
 func (a *Auth) cookie(value string, maxAge int) *http.Cookie {
@@ -97,11 +111,11 @@ func (a *Auth) protect(next http.Handler, assets fs.FS) http.Handler {
 			if cookie, err := r.Cookie(sessionCookie); err == nil {
 				a.mu.Lock()
 				key := sessionKey(cookie.Value)
-				_, existed := a.sessions[key]
+				session, existed := a.sessions[key]
 				delete(a.sessions, key)
 				if existed {
 					if err := a.saveSessions(); err != nil {
-						a.sessions[key] = struct{}{}
+						a.sessions[key] = session
 						a.mu.Unlock()
 						fail(w, 500, "internal_error", "")
 						return
@@ -148,19 +162,25 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &input) {
 		return
 	}
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	now := time.Now()
-	if now.Sub(a.window) >= time.Minute {
-		a.window = now
-		a.attempts = 0
+	client, ok := a.loginClient(r)
+	if !ok {
+		fail(w, 503, "login_proxy_configuration", "")
+		return
 	}
-	if a.attempts >= 10 {
-		w.Header().Set("Retry-After", "60")
+	if retry := a.reserveLogin(client, a.now()); retry > 0 {
+		w.Header().Set("Retry-After", strconv.Itoa(retry))
 		fail(w, 429, "login_rate_limited", "")
 		return
 	}
-	a.attempts++
+	// Bound bcrypt work without holding the mutex used by authenticated traffic.
+	select {
+	case a.loginSlots <- struct{}{}:
+		defer func() { <-a.loginSlots }()
+	default:
+		w.Header().Set("Retry-After", "1")
+		fail(w, 429, "login_rate_limited", "")
+		return
+	}
 	// Verify the password even for a wrong username to avoid a timing oracle.
 	err := bcrypt.CompareHashAndPassword(a.passwordHash, []byte(input.Password))
 	if err != nil || subtle.ConstantTimeCompare([]byte(input.Username), []byte(a.username)) != 1 {
@@ -173,24 +193,29 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	token := hex.EncodeToString(random[:])
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	// Rotate only this browser's session; other devices stay signed in.
 	var oldKey string
 	var hadOld bool
+	var oldSession sessionState
 	if old, err := r.Cookie(sessionCookie); err == nil {
 		oldKey = sessionKey(old.Value)
-		_, hadOld = a.sessions[oldKey]
+		oldSession, hadOld = a.sessions[oldKey]
 		delete(a.sessions, oldKey)
 	}
 	key := sessionKey(token)
-	a.sessions[key] = struct{}{}
+	now := a.now()
+	session := sessionState{ExpiresAt: now.Add(sessionCookieLifetime), LastSeen: now}
+	a.sessions[key] = session
 	if err := a.saveSessions(); err != nil {
 		delete(a.sessions, key)
 		if hadOld {
-			a.sessions[oldKey] = struct{}{}
+			a.sessions[oldKey] = oldSession
 		}
 		fail(w, 500, "internal_error", "")
 		return
 	}
-	http.SetCookie(w, a.cookie(token, int(sessionCookieLifetime.Seconds())))
+	http.SetCookie(w, a.cookie(token, session.maxAge(now)))
 	w.WriteHeader(http.StatusNoContent)
 }

@@ -4,7 +4,7 @@
 
 ## Build and run
 
-Install Go and build (Go 1.23 or later; GitHub Actions uses Go 1.27.3):
+Install Go and build (Go 1.27.3 or later; GitHub Actions uses Go 1.27.3). The module requires this patched minimum version and Go automatically selects it when needed:
 
 ```sh
 go mod tidy
@@ -28,7 +28,7 @@ CAPITAL_TRACKER_PORT=8766 CAPITAL_TRACKER_DATA_DIR=/some/private/directory ./Cap
 ./CapitalTracker backup --data-dir /some/private/directory /some/other/directory/backup.db
 ```
 
-Command line options override environment variables, which override defaults. The `backup` subcommand accepts `--data-dir` and the environment data directory and safely takes a consistent snapshot with SQLite `VACUUM INTO`; it refuses to replace an existing destination. Do not copy `capital.db` alone while the server is running: SQLite can keep live changes in `capital.db-wal`. Shut down the program before making manual filesystem backups, or use `backup` while it runs.
+Command line options override environment variables, which override defaults. The `backup` subcommand accepts `--data-dir` and the environment data directory and safely takes a consistent snapshot with SQLite `VACUUM INTO`; it refuses to replace an existing destination, including symlinks. On Unix, backup files are created with owner-only permissions (`0600`) before SQLite writes data, independently of the shell umask. Pre-migration backups use the same protection. Protect the backup directory with OS permissions; on Windows, restrict its ACL to your user. Existing backup files are not modified by an application update; restrict their permissions separately. Do not copy `capital.db` alone while the server is running: SQLite can keep live changes in `capital.db-wal`. Shut down the program before making manual filesystem backups, or use `backup` while it runs.
 
 Data location: macOS `~/Library/Application Support/CapitalTracker/capital.db`; Linux `${XDG_CONFIG_HOME:-~/.config}/CapitalTracker/capital.db` and Windows the standard user configuration directory. Your data is not bundled with the executable; replacing the executable will not delete your records.
 
@@ -61,7 +61,7 @@ The former separate `Browser UI tests` workflow was redundant: it ran much of th
 
 ## Download builds from GitHub Actions
 
-Run all local source checks before committing (requires Go 1.23+ and Node.js 22+):
+Run all local source checks before committing (requires Go 1.27.3+ and Node.js 22+):
 ```sh
 npm ci
 npm run check
@@ -84,7 +84,7 @@ CAPITAL_TRACKER_LIVE_RATES=1 npm run test:ui
 
 This enables an additional Playwright scenario with no quote interception: the browser loads real rates through the application, saves them into a past month, reloads the page and verifies the exact saved values and history. The live scenario is skipped by default so provider outages cannot make ordinary CI nondeterministic. Test failures retain Playwright traces under `test-results/`; view one with `npx playwright show-trace <path-to-trace.zip>`. The tests do not use the normal application database. GitHub Actions runs them on pushes and pull requests.
 
-If it reports Go formatting differences, run `gofmt -w .` once and commit the formatted files. The script checks `gofmt`, `go mod tidy -diff`, `go mod verify`, `go vet`, Go tests, syntax for every JavaScript module, JavaScript unit tests and Prettier formatting. The check command never changes source files. Use `npm run format` to format Go, JavaScript, CSS and HTML sources.
+If it reports Go formatting differences, run `gofmt -w .` once and commit the formatted files. The script checks `gofmt`, `go mod tidy -diff`, `go mod verify`, `go vet`, Go tests, syntax for every JavaScript module, JavaScript unit tests and Prettier formatting. Run `npm run security:check` to check reachable Go vulnerabilities and npm dependencies against current advisory databases (requires network access). CI and release validation run this check as well. The check command never changes source files. Use `npm run format` to format Go, JavaScript, CSS and HTML sources.
 
 **Builds are manual-only** during development: pushes, tags, and pull requests do not trigger compilation.
 

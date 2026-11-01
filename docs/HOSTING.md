@@ -2,9 +2,9 @@
 
 When authentication is configured, every new browser sees a standalone sign-in page immediately. The application HTML, scripts, styles and financial APIs are protected on the server; they are not sent to unauthenticated visitors. After signing in, the same browser opens the application directly without showing the sign-in form. Authenticated deployments disable offline asset caching and remove caches left by the local-mode service worker.
 
-The app supports one configured username and password, persistent browser sessions, sign-out and login throttling. Sign in once on each browser/device; closing the browser or restarting the server preserves access. Sessions have no server-side expiry and remain valid until you sign out. Signing out revokes that browser's session, including after a server restart; other devices stay signed in. Changing the configured username or password hash and restarting invalidates all saved sessions.
+The app supports one configured username and password, persistent browser sessions, sign-out and login throttling. Closing the browser or restarting the server preserves unexpired sessions. Sessions expire after 30 days even with continued use, or after 7 days without activity. Activity is persisted at most once per hour, so the idle window can end up to one hour earlier. Signing out revokes that browser's session, including after a server restart; other devices stay signed in. Changing the configured username or password hash and restarting invalidates all saved sessions. Upgrading from the old session format revokes existing sessions once; sign in again on each device.
 
-Browsers limit cookie lifetimes, so the app renews its persistent cookie for 400 days on each authenticated API request. Clearing cookies, using a private browsing session, or leaving the app unused beyond the browser's cookie lifetime requires signing in again. See [Chrome's cookie lifetime limit](https://developer.chrome.com/blog/cookie-max-age-expires).
+The cookie expires at the session's original 30-day deadline; API activity never extends that deadline. Clearing cookies or using a private browsing session also requires signing in again.
 
 Session token hashes are stored in `auth-sessions.json` in the application data directory, with owner-only file permissions. Keep this file across restarts. Credentials and sessions are outside SQLite and financial JSON/SQLite backups; financial data import or deletion does not sign you out. With no auth environment variables, the original local-only mode still works. Setting a public origin without valid credentials prevents startup.
 
@@ -12,7 +12,7 @@ The Go server stays on `127.0.0.1:8765`. Caddy on the same Linux machine serves 
 
 ## Install on a Linux server
 
-Build the binary for your server's CPU (amd64 or arm64):
+Build with Go 1.27.3 or newer for your server's CPU (amd64 or arm64). The module enforces the minimum patched Go version; automatic toolchain selection downloads it when necessary:
 
 ```sh
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o capital-tracker ./cmd/capital-tracker
@@ -52,7 +52,9 @@ caddy validate --config /etc/caddy/Caddyfile
 systemctl reload caddy
 ```
 
-Caddy handles certificates and HTTP-to-HTTPS redirects. The Go server validates the configured Host and HTTPS Origin, without trusting client-supplied forwarding headers. See [Caddy reverse proxy documentation](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
+Caddy handles certificates and HTTP-to-HTTPS redirects. The Go server validates the configured Host and HTTPS Origin. For login throttling, Caddy must overwrite `X-Capital-Tracker-Client-IP` with `{remote_host}`, as shown in `deploy/Caddyfile`. The app accepts this address only from a loopback connection to the configured public Host; other forwarding headers are ignored. Missing or malformed client IP headers on that proxy path return HTTP 503 on login. When upgrading an existing deployment, update and reload Caddy **before** restarting the new application binary. Other reverse proxies must set the same header from the actual connection address, replacing any visitor-supplied value. See [Caddy reverse proxy documentation](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
+
+Login allows 10 attempts per minute per source IPv4 address or IPv6 /64 subnet. An attacker on another source cannot exhaust the owner's limit. Devices sharing the same public IP share that limit. At most two password checks run concurrently; authenticated API calls do not wait for their mutex.
 
 Open `https://fin.anasko.net` and sign in. A direct request to `/api/data/export` without a session must return 401. Financial API responses are never cached. Session cookies are HttpOnly, SameSite=Strict and Secure in public mode. Password hashing uses [Go bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt).
 
