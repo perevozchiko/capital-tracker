@@ -94,6 +94,12 @@ test('monthly balances, rate loading, previous month and dashboard totals', asyn
   await nav(page, 'Dashboard');
   await expect(page.locator('.metric').first()).toContainText('200.00');
   await expect(page.locator('.history-svg')).toBeVisible();
+  // Amounts start hidden on each page load, including accessible chart labels.
+  await expect(page.locator('.chart-dot')).toHaveAttribute(
+    'aria-label',
+    'January 2025',
+  );
+  await page.getByRole('button', { name: 'Show amounts', exact: true }).click();
   await expect(page.locator('.chart-dot')).toHaveAttribute(
     'aria-label',
     'January 2025: €200.00',

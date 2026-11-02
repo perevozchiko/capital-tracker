@@ -109,6 +109,39 @@ async function assertCellReadable(cell) {
     .toBe(true);
 }
 
+// Guard against native iOS month inputs and the button sharing a grid row.
+for (const width of [320, 390, 430]) {
+  test(`account form month and submit button never overlap at ${width}px`, async ({
+    page,
+    app,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await open(page, app);
+    await nav(page, 'Accounts');
+    const layout = await page.locator('#addAccountForm').evaluate((form) => {
+      const month = form.querySelector('#accountStart').getBoundingClientRect();
+      const submit = form
+        .querySelector('button[type="submit"]')
+        .getBoundingClientRect();
+      const panel = form.closest('.card').getBoundingClientRect();
+      return {
+        monthBottom: month.bottom,
+        submitTop: submit.top,
+        submitLeft: submit.left,
+        submitRight: submit.right,
+        panelLeft: panel.left,
+        panelRight: panel.right,
+      };
+    });
+    expect(layout.submitTop).toBeGreaterThanOrEqual(layout.monthBottom + 7);
+    expect(layout.submitLeft).toBeGreaterThanOrEqual(layout.panelLeft - 1);
+    expect(layout.submitRight).toBeLessThanOrEqual(layout.panelRight + 1);
+    await page.locator('#accountName').fill('Mobile account');
+    await page.locator('#addAccountForm button[type="submit"]').click();
+    await expect(page.locator('.account-row')).toContainText('Mobile account');
+  });
+}
+
 for (const width of [320, 360, 390, 430, 844, 932]) {
   for (const currency of ['EUR', 'USD', 'RSD', 'RUB', 'TRY']) {
     test(`mobile ${width}px: 10 million ${currency} stays readable on every financial screen`, async ({

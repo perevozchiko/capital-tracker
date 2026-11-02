@@ -1237,6 +1237,15 @@ th button:hover {
   .form-row-groups .field:first-child {
     grid-column: 1/-1;
   }
+  /* At phone widths, the month picker and submit button need separate rows. */
+  .form-row-groups > .field:has(#accountStart),
+  .form-row-groups > .btn {
+    grid-column: 1 / -1;
+  }
+  .form-row-groups > .btn {
+    justify-self: stretch;
+    min-width: 0;
+  }
 }
 
 /* Compact overflow menus for accounts and groups; no inline action arrows/selectors. */
