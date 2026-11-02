@@ -113,9 +113,6 @@ function applyAmountVisibility() {
 function toggleAmountVisibility() {
   const hidden = document.documentElement.dataset.hideAmounts !== 'true';
   document.documentElement.dataset.hideAmounts = String(hidden);
-  try {
-    localStorage.setItem('capital-hide-amounts', String(hidden));
-  } catch {}
   applyAmountVisibility();
 }
 function renderHeader() {

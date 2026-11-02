@@ -70,6 +70,9 @@ for (const width of [320, 1280]) {
     await expect(page.locator('.account-balance small').first()).toHaveText(
       'Jan 2025',
     );
+    await page
+      .getByRole('button', { name: 'Show amounts', exact: true })
+      .click();
     await expect(balance(1).locator('.money-text')).toBeVisible();
     const rect = await balance(1).boundingBox();
     expect(rect.x).toBeGreaterThanOrEqual(0);
@@ -108,6 +111,7 @@ test('archived accounts display recorded balances for the selected historical mo
     '[data-group-id="archive"] .account-balance strong',
   );
   await expect(balance).toHaveText('€42.25');
+  await page.getByRole('button', { name: 'Show amounts', exact: true }).click();
   await expect(balance.locator('.money-text')).toBeVisible();
   await page.locator('#amountVisibility').click();
   await expect(balance.locator('.money-text')).toBeHidden();

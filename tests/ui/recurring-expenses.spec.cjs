@@ -69,6 +69,9 @@ for (const width of [320, 1280]) {
     await setMonth(page, '2026-11');
     await expect(rows).toHaveCount(1);
     await page
+      .getByRole('button', { name: 'Show amounts', exact: true })
+      .click();
+    await page
       .locator('[data-chart-source="recurringExpense"]')
       .first()
       .focus();

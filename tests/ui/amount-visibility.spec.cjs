@@ -8,6 +8,72 @@ const {
   action,
 } = require('./helpers.cjs');
 
+for (const storage of ['legacy preference', 'unavailable storage']) {
+  test(`every opening hides amounts with ${storage}`, async ({
+    page,
+    context,
+    app,
+  }) => {
+    await context.addInitScript((storage) => {
+      if (storage === 'unavailable storage') {
+        Object.defineProperty(window, 'localStorage', {
+          get() {
+            throw new DOMException('Storage unavailable', 'SecurityError');
+          },
+        });
+      } else {
+        localStorage.setItem('capital-hide-amounts', 'false');
+      }
+    }, storage);
+    await open(page, app);
+    const toggle = page.locator('#amountVisibility');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await nav(page, 'Accounts');
+    await createAccount(page, 'Private savings');
+    await nav(page, 'Monthly balances');
+    await saveBalances(page, '2025-01', { 1: '1234.56' });
+    await expect(page.locator('[data-balance="1"]')).toHaveAttribute(
+      'type',
+      'password',
+    );
+    await expect(page.locator('.money-text:visible')).toHaveCount(0);
+    await toggle.click();
+    await expect(page.locator('[data-balance="1"]')).toHaveAttribute(
+      'type',
+      'text',
+    );
+    await nav(page, 'Dashboard');
+    await expect(
+      page.locator('.metric-value .money-text').first(),
+    ).toBeVisible();
+    if (storage === 'legacy preference') {
+      expect(
+        await page.evaluate(() => localStorage.getItem('capital-hide-amounts')),
+      ).toBeNull();
+    }
+
+    const other = await context.newPage();
+    await open(other, app);
+    await expect(other.locator('#amountVisibility')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(other.locator('.money-text:visible')).toHaveCount(0);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await other.close();
+
+    await page.reload();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.money-text:visible')).toHaveCount(0);
+    await nav(page, 'Monthly balances');
+    await expect(page.locator('[data-balance="1"]')).toHaveAttribute(
+      'type',
+      'password',
+    );
+    await expect(page.locator('[data-balance="1"]')).toHaveValue('1234.56');
+  });
+}
+
 for (const width of [320, 1280]) {
   test(`amount visibility covers every screen and preserves edits at ${width}px`, async ({
     page,
@@ -15,6 +81,9 @@ for (const width of [320, 1280]) {
   }) => {
     await page.setViewportSize({ width, height: 850 });
     await open(page, app);
+    await page
+      .getByRole('button', { name: 'Show amounts', exact: true })
+      .click();
     await nav(page, 'Accounts');
     await createAccount(page, 'Savings');
     await nav(page, 'Monthly balances');
@@ -103,6 +172,7 @@ test('keyboard toggle restores chart labels, foreign balances and negative perce
   app,
 }) => {
   await open(page, app);
+  await page.getByRole('button', { name: 'Show amounts', exact: true }).click();
   await nav(page, 'Accounts');
   await createAccount(page, 'Dollar savings', 'USD');
   await nav(page, 'Monthly balances');
@@ -142,6 +212,6 @@ test('keyboard toggle restores chart labels, foreign balances and negative perce
   await page.locator('[data-action="saveMonth"]').click();
   await expect(page.locator('#toast')).toContainText('Month saved.');
   await page.reload();
-  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-  await expect(page.locator('.metric-value .money-text').first()).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.metric-value .money-text').first()).toBeHidden();
 });

@@ -14,9 +14,8 @@ try {
   document.documentElement.dataset.theme = 'dark';
 }
 
+// Visibility lasts only for this page. Every opening starts with amounts hidden.
+document.documentElement.dataset.hideAmounts = 'true';
 try {
-  document.documentElement.dataset.hideAmounts =
-    localStorage.getItem('capital-hide-amounts') === 'true' ? 'true' : 'false';
-} catch {
-  document.documentElement.dataset.hideAmounts = 'false';
-}
+  localStorage.removeItem('capital-hide-amounts');
+} catch {}

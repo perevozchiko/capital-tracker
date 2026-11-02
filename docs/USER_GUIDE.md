@@ -4,6 +4,8 @@
 
 Capital Tracker is a monthly snapshot tracker: enter balances at the end of each month rather than logging every transaction. The interface is English only; this guide describes the current application behavior.
 
+Amounts start hidden whenever you open or reload the app. Use the eye button to show them while working; visibility carries across screens within that page and is never saved between openings.
+
 ## Demo mode — a year of example finances
 
 To explore the app with populated screens, start it with **`--demo`**:

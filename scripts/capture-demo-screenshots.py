@@ -79,6 +79,7 @@ def main() -> None:
                         color_scheme="dark",
                     )
                     page.goto(url, wait_until="networkidle")
+                    page.get_by_role("button", name="Show amounts", exact=True).click()
                     # Choose Dark via the actual Settings UI (not a CSS mock).
                     page.locator('#navigation [data-page="settings"]').click()
                     page.locator("#themeSelect").wait_for()

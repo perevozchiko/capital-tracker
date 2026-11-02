@@ -91,6 +91,9 @@ for (const width of [320, 1280]) {
     await add(page, 'Car', '2000');
     await save(page);
     await expect(page.locator('[data-chart-source="expense"]')).toHaveCount(2);
+    await page
+      .getByRole('button', { name: 'Show amounts', exact: true })
+      .click();
     await page.locator('[data-chart-source="expense"]').last().focus();
     await expect(page.locator('#chartTooltip')).toContainText('€2,000.00');
     await page.locator('#amountVisibility').click();

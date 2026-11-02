@@ -117,6 +117,9 @@ for (const width of [320, 360, 390, 430, 844, 932]) {
     }, testInfo) => {
       await page.setViewportSize({ width, height: width > 720 ? 430 : 844 });
       await open(page, app);
+      await page
+        .getByRole('button', { name: 'Show amounts', exact: true })
+        .click();
       await nav(page, 'Accounts');
       await createGroup(page, 'Long-term savings and investment accounts');
       await page
@@ -192,6 +195,9 @@ for (const currency of ['EUR', 'USD', 'RSD', 'RUB', 'TRY']) {
     }, testInfo) => {
       await page.setViewportSize({ width: 320, height: 740 });
       await open(page, app);
+      await page
+        .getByRole('button', { name: 'Show amounts', exact: true })
+        .click();
       await nav(page, 'Accounts');
       await createAccount(page, 'Account', currency);
       await nav(page, 'Monthly balances');
