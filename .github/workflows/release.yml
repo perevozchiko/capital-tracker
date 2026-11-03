@@ -1,10 +1,11 @@
 name: Release
+run-name: Release (${{ inputs.version_bump }} / ${{ inputs.stage }})
 
 on:
   workflow_dispatch:
     inputs:
       version_bump:
-        description: "Version: Current, Patch, Minor or Major"
+        description: "Version change (next version is shown in the run summary)"
         type: choice
         required: true
         default: current
@@ -58,7 +59,17 @@ jobs:
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/$RELEASE_BRANCH"
           git fetch --tags origin
+          current="$(python scripts/release_version.py show)"
           version="$(python scripts/release_version.py plan --mode "$RELEASE_INCREMENT" --stage "$RELEASE_STAGE")"
+          {
+            printf '## Release version preview\n\n'
+            printf '| | Version |\n| --- | --- |\n'
+            printf '| Current | `%s` |\n' "$current"
+            printf '| Planned | **`%s`** |\n' "$version"
+            printf '\nVersion bump: `%s` · Stage: `%s`\n\n' "$RELEASE_INCREMENT" "$RELEASE_STAGE"
+            printf '_Calculated from the source version and Git tags at the start of the run. No version was changed at preview time._\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Release version preview::$current -> $version"
           python scripts/release_version.py apply "$version"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -216,3 +227,7 @@ jobs:
           flags=(--verify-tag --generate-notes --title "Capital Tracker $RELEASE_VERSION")
           if [[ "$RELEASE_PRERELEASE" == true ]]; then flags+=(--prerelease); fi
           gh release create "$RELEASE_VERSION" dist/* "${flags[@]}"
+          {
+            printf '## Published %s\n\n' "$RELEASE_VERSION"
+            printf '[Open release](%s/%s/releases/tag/%s)\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$RELEASE_VERSION"
+          } >> "$GITHUB_STEP_SUMMARY"
