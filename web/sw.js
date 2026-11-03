@@ -1,5 +1,5 @@
 // Bump CACHE_NAME for every frontend release. API responses are NEVER cached.
-const CACHE_NAME = 'capital-tracker-static-v21-hidden-amounts';
+const CACHE_NAME = 'capital-tracker-static-v22-updates';
 const STATIC = [
   '/',
   '/index.html',
@@ -24,6 +24,7 @@ const STATIC = [
   '/js/recurring-expenses.js',
   '/js/income-math.js',
   '/js/settings.js',
+  '/js/updates.js',
   '/js/dialogs.js',
   '/js/numbers.js',
   '/js/i18n/en.js',
@@ -46,7 +47,9 @@ self.addEventListener('activate', (event) =>
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)),
+          keys
+            .filter((k) => k.startsWith('capital-tracker-') && k !== CACHE_NAME)
+            .map((k) => caches.delete(k)),
         ),
       )
       .then(() => self.clients.claim()),

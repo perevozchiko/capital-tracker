@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>net.anasko.capital-tracker-updater</string>
+  <key>ProgramArguments</key><array>
+    <string>/opt/homebrew/bin/python3</string>
+    <string>/Users/server/capital-tracker-setup/update_agent.py</string>
+    <string>--config</string>
+    <string>/Users/server/.config/capital-tracker/update-agent.json</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>AbandonProcessGroup</key><true/>
+  <key>Umask</key><integer>63</integer>
+  <key>EnvironmentVariables</key><dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/server/bin</string>
+    <key>HOME</key><string>/Users/server</string>
+  </dict>
+  <key>StandardOutPath</key><string>/Users/server/Library/Logs/capital-tracker-updater.log</string>
+  <key>StandardErrorPath</key><string>/Users/server/Library/Logs/capital-tracker-updater-error.log</string>
+</dict></plist>

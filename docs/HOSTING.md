@@ -73,3 +73,5 @@ unset CAPITAL_TRACKER_PASSWORD CAPITAL_TRACKER_PUBLIC_ORIGIN
 ```
 
 Enter a test password of 12–72 bytes at the `read` step, then open `http://127.0.0.1:8766`. Use a private window to verify that another browser sees only the sign-in form; normal browsing preserves your existing login. This test directory is separate from your regular financial database.
+
+See [host-managed release updates](UPDATES.md) for the optional Settings → About update button, macOS/OrbStack agent, IPC security and installation contract. Updates require an explicit button click.

@@ -61,7 +61,7 @@ The former separate `Browser UI tests` workflow was redundant: it ran much of th
 
 ## Download builds from GitHub Actions
 
-Run all local source checks before committing (requires Go 1.27.3+ and Node.js 22+):
+Run all local source checks before committing (requires Go 1.27.3+, Node.js 22+ and Python 3.10+ for the macOS/Linux host updater tests):
 ```sh
 npm ci
 npm run check

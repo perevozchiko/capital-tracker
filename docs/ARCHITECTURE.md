@@ -64,3 +64,5 @@ To change the schema, add the next numbered migration. Never edit an already-rel
 - The local SQLite file and JSON exports contain sensitive financial information. They are not encrypted by Capital Tracker; use OS/disk protection and safe backups.
 
 For endpoint details, see [HTTP API](API.md). For commands, tests and packaging, see [Developer guide](DEVELOPMENT.md).
+
+See [host-managed release updates](UPDATES.md) for the optional Settings → About update button, macOS/OrbStack agent, IPC security and installation contract. Updates require an explicit button click.

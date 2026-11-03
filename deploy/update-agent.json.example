@@ -1,0 +1,8 @@
+{
+  "listen_host": "127.0.0.1",
+  "listen_port": 18765,
+  "state_dir": "/Volumes/server-ssd/server-data/services/capital-tracker/updater",
+  "key_file": "/Users/server/.config/capital-tracker/updater.key",
+  "updater_protocol": 1,
+  "updater_argv": ["/Users/server/bin/update-capital-tracker", "--agent-protocol=1"]
+}

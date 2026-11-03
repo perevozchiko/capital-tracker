@@ -7,9 +7,11 @@ import (
 
 	"github.com/perevozchiko/capital-tracker/internal/finance"
 	"github.com/perevozchiko/capital-tracker/internal/storage"
+	"github.com/perevozchiko/capital-tracker/internal/updateagent"
 )
 
 type Server struct {
+	Updater *updateagent.Client
 	Auth    *Auth
 	Store   *storage.Store
 	Version string
@@ -43,6 +45,7 @@ func (s *Server) Handler() http.Handler {
 	registerRecurringExpenses(mux, s)
 	registerDashboard(mux, s)
 	registerSettings(mux, s)
+	registerUpdates(mux, s)
 	registerStatic(mux, s)
 	if s.Auth != nil {
 		return secureRequests(s.Auth.protect(mux, s.Assets), s.Auth.Origin)

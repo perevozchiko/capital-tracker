@@ -222,6 +222,11 @@ export default {
   dark: 'Dark',
   version: 'Version',
   commit: 'Commit',
+  update_unavailable:
+    'The host update agent is unavailable. Ordinary application features remain available.',
+  update_check_failed: 'Could not check GitHub Releases. Try again later.',
+  update_release_changed:
+    'The latest release changed or is not newer. Check for updates again.',
   about:
     'All information stays on this device in a local SQLite database. No online accounts, transactions, or automatic rate downloads.',
   exactTotal: 'Only complete months have a reliable EUR total.',
