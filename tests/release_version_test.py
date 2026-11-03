@@ -74,6 +74,17 @@ class ReleaseVersionTests(unittest.TestCase):
         self.assertIn('RELEASE_INCREMENT: ${{ inputs.version_bump }}', workflow)
         self.assertNotIn('inputs.increment', workflow)
 
+    def test_release_preflight_runs_before_version_is_committed(self):
+        workflow = (PATH.parent.parent / '.github/workflows/release.yml').read_text(
+            encoding='utf-8'
+        )
+        prepare = workflow.split('  prepare:', 1)[1].split('\n  validate:', 1)[0]
+        version_write = prepare.index('python scripts/release_version.py apply')
+        self.assertLess(prepare.index('npm run check'), version_write)
+        self.assertLess(prepare.index('npm run security:check'), version_write)
+        self.assertLess(prepare.index('npm run test:ui'), version_write)
+        self.assertEqual(workflow.count('npm run test:ui'), 1)
+
     def test_real_published_alpha_continues_without_patch_bump(self):
         current = v('v0.1.5-alpha.1')
         tags = {v('v0.1.4-alpha.1'), current}
