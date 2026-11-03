@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       version_bump:
-        description: "Version change (next version is shown in the run summary)"
+        description: "Version: Current, Patch, Minor or Major"
         type: choice
         required: true
         default: current
