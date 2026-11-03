@@ -2,6 +2,7 @@ import { state } from './state.js';
 import { t } from './messages.js';
 import { escapeHTML } from './format.js';
 import { $ } from './ui.js';
+import { renderUpdatePanel } from './updates.js';
 function renderSettings() {
   const s = state.settings;
   $('#pageContent').innerHTML =
@@ -18,7 +19,8 @@ function renderSettings() {
  <p class="caption">${t('clearDataWarning')}</p>
  <button type="button" class="btn btn-danger" data-action="clearAllData">${t('clearAllData')}</button></section>
  <section class="card panel"><h2>${t('appName')}</h2><p class="caption">${t('appDescription')}</p>
- <p>${t('about')}</p><p class="caption">${t('version')}: v${escapeHTML(s.version)} · ${t('commit')}: ${escapeHTML(state.buildCommit)}</p></section>`;
+ <p>${t('about')}</p><p class="caption">${t('version')}: v${escapeHTML(s.version)} · ${t('commit')}: ${escapeHTML(state.buildCommit)}</p><div id="appUpdates"></div></section>`;
+  renderUpdatePanel();
 }
 
 export { renderSettings };

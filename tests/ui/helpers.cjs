@@ -28,6 +28,8 @@ const test = base.extend({
       'CAPITAL_TRACKER_USERNAME',
       'CAPITAL_TRACKER_PASSWORD_HASH',
       'CAPITAL_TRACKER_PUBLIC_ORIGIN',
+      'CAPITAL_TRACKER_UPDATE_AGENT_URL',
+      'CAPITAL_TRACKER_UPDATE_AGENT_KEY_FILE',
     ])
       delete serverEnv[key];
     if (authEnabled) {

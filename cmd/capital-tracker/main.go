@@ -21,6 +21,7 @@ import (
 	"github.com/perevozchiko/capital-tracker/internal/demo"
 	"github.com/perevozchiko/capital-tracker/internal/httpapi"
 	"github.com/perevozchiko/capital-tracker/internal/storage"
+	"github.com/perevozchiko/capital-tracker/internal/updateagent"
 	"github.com/perevozchiko/capital-tracker/web"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -158,7 +159,7 @@ func run() error {
 			return fmt.Errorf("initialize demo data: %w", e)
 		}
 	}
-	handler := (&httpapi.Server{Store: s, Auth: auth, Version: version, Commit: buildinfo.ShortCommit(), Assets: web.Assets}).Handler()
+	handler := (&httpapi.Server{Updater: updateagent.FromEnv(), Store: s, Auth: auth, Version: version, Commit: buildinfo.ShortCommit(), Assets: web.Assets}).Handler()
 	srv := httpapi.NewHTTPServer(net.JoinHostPort("127.0.0.1", *port), handler)
 	listener, e := net.Listen("tcp", srv.Addr)
 	if e != nil {

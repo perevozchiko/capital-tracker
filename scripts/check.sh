@@ -28,4 +28,7 @@ done < <(find web -name '*.js' -type f)
 npm test
 npm run format:check
 
+echo "==> Host update agent tests"
+python3 -m unittest discover -s tests -p '*update*test.py'
+
 echo "All checks passed."

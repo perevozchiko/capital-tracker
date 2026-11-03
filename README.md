@@ -161,6 +161,7 @@ Downloaded binaries are currently unsigned/not notarized. Verify the attached SH
 | --- | --- |
 | [User Guide](docs/USER_GUIDE.md) | Demo, groups, balances, income and expense notes, rates, backups and financial rules |
 | [Self-hosting](docs/HOSTING.md) | Optional single-user login, systemd service and HTTPS reverse proxy |\n| [Architecture](docs/ARCHITECTURE.md) | Go and browser modules, data flow, SQLite migrations, exact-money invariants, security |
+| [Application updates](docs/UPDATES.md) | Explicit update button, macOS/OrbStack host agent, protected IPC and installation contract |
 | [HTTP API](docs/API.md) | Endpoint list, JSON payloads, errors and same-origin requirements |
 | [Development and releases](docs/DEVELOPMENT.md) | Build/run options, formatting, unit and browser tests, GitHub Actions, release versions |
 | [Browser test coverage](docs/TEST_COVERAGE.md) | Scenario matrix, drag-and-drop, group visibility, large mobile balances, history persistence and live currency-provider checks |

@@ -18,12 +18,14 @@ async function api(path, options = {}) {
   }
   if (!res.ok) {
     const error = data.error || {};
-    throw new Error(
+    const failure = new Error(
       (error.reason && t('reason_' + error.reason)) ||
         (error.field && t('field_' + error.field)) ||
         t(error.code) ||
         t('error'),
     );
+    failure.status = res.status;
+    throw failure;
   }
   return data;
 }

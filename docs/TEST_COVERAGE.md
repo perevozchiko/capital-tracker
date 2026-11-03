@@ -40,3 +40,24 @@ Mobile layout scenarios save screenshots in `test-results/` for visual review an
 - Group movement and visibility change presentation and organization without changing balances or overall monthly capital.
 
 The Go finance, storage and HTTP tests additionally verify exact arithmetic, overflow, rounding, validation, rollback, security and independent snapshot persistence. Browser coverage complements these checks.
+
+## Host-managed application updates
+
+`updates.spec.cjs` covers disabled updates without an agent, explicit checks without
+installation, double clicks, temporary network errors, reconnection/version
+confirmation, reopening a tab across a server restart, rollback results, blocked
+retries after an unverified outcome, and cache cleanup. It runs in Chromium and
+WebKit; the service-worker scenario uses an active worker and verifies that update
+API responses remain network-only.
+
+`update_agent_test.py` uses temporary SQLite data to exercise the signed IPC,
+persistent replay protection, stable-release validation, concurrent requests,
+detached worker survival, interrupted workers, failed/corrupt backups, verified
+rollback and explicit retry. `update_integration_test.py` builds two actual Go test
+versions and drives the complete application → agent → updater → restarted
+application path, including a failed build, a rollback that preserves the financial
+export, and a successful retry. The deployment command is a local test fixture;
+production Docker, SSD data and the external host updater are never touched.
+
+See [the updater contract and installation guide](UPDATES.md) for server-specific
+staging checks that must accompany installation of the existing updater adapter.

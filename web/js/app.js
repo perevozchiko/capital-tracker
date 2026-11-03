@@ -1,4 +1,10 @@
 import { checkLogin, logout } from './auth.js';
+import {
+  checkUpdate,
+  startUpdate,
+  monitorUpdates,
+  updatePending,
+} from './updates.js';
 import { state } from './state.js';
 import { api, request } from './api.js';
 import { t } from './messages.js';
@@ -73,6 +79,8 @@ document.addEventListener('click', async (e) => {
     id = Number(node.dataset.id);
   try {
     if (action === 'logout') await logout();
+    else if (action === 'checkUpdate') await checkUpdate();
+    else if (action === 'startUpdate') await startUpdate();
     else if (action === 'toggleAmounts') toggleAmountVisibility();
     else if (action === 'monthPrev') await setMonth(nextMonth(state.month, -1));
     else if (action === 'monthNext') await setMonth(nextMonth(state.month, 1));
@@ -336,12 +344,14 @@ async function boot() {
     else if (state.months.length)
       state.month = state.months[state.months.length - 1].month;
     await render();
+    void monitorUpdates();
     if ('serviceWorker' in navigator)
       navigator.serviceWorker.register('/sw.js').catch(() => {});
   } catch (e) {
     $('#pageContent').innerHTML =
       `<div class="card empty"><h2>${t('error')}</h2><p>${escapeHTML(e.message)}</p><button class="btn" id="retryBtn">${t('retry')}</button></div>`;
     $('#retryBtn')?.addEventListener('click', boot);
+    if (updatePending()) setTimeout(boot, 2000);
   }
 }
 boot();

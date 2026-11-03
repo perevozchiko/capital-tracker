@@ -1,0 +1,26 @@
+# Merge these settings into the EXISTING compose.yml. Do not replace caddy/tunnel.
+# The host updater builds/pins the application image; set its actual tag here.
+services:
+  capital-tracker:
+    image: capital-tracker:YOUR_INSTALLED_VERSION
+    network_mode: service:caddy
+    user: "501:20" # Match the actual macOS server UID/GID and data permissions.
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    command: ["--no-browser", "--data-dir", "/data", "--port", "8765"]
+    environment:
+      CAPITAL_TRACKER_PUBLIC_ORIGIN: https://fin.anasko.net
+      CAPITAL_TRACKER_USERNAME: ${CAPITAL_TRACKER_USERNAME}
+      # $$ escaping is required for literal bcrypt hashes in inline YAML;
+      # use the existing protected env_file instead where already configured.
+      CAPITAL_TRACKER_PASSWORD_HASH: ${CAPITAL_TRACKER_PASSWORD_HASH}
+      CAPITAL_TRACKER_UPDATE_AGENT_URL: http://host.docker.internal:18765
+      CAPITAL_TRACKER_UPDATE_AGENT_KEY_FILE: /run/secrets/updater.key
+    volumes:
+      - /Volumes/server-ssd/server-data/services/capital-tracker/data:/data
+      - /Users/server/.config/capital-tracker/updater.key:/run/secrets/updater.key:ro
+    # No Docker socket, privileged mode, host executable or updater state mount.
+# Keep Caddy's existing reverse_proxy 127.0.0.1:8765 and trusted IP overwrite.
+# Do not publish 18765 or add a Caddy/Cloudflare route for the agent.
