@@ -1,0 +1,4 @@
+Refresh README screenshots from the current master (November 2026).
+
+To run the capture manually in the future, use Actions > Capture demo screenshots > Run workflow.
+This marker triggers the screenshot capture once when it changes.
