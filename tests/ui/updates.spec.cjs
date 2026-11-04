@@ -1,8 +1,9 @@
 const { test, expect, open, nav } = require('./helpers.cjs');
 
-async function fakeHost(context, app) {
+async function fakeHost(context, app, { installedVersion = '0.3.0' } = {}) {
   const actual = await (await fetch(app + '/api/meta')).json();
-  let version = actual.version;
+  // Simulate upgrading a known old installation, independent of the app's build version.
+  let version = installedVersion;
   let operation = null;
   let release = null;
   let checks = 0;
@@ -90,6 +91,24 @@ test('without an agent updates are disabled and ordinary settings work', async (
   ).toBeDisabled();
   await page.locator('#themeSelect').selectOption('light');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+});
+
+test('a newer installed version cannot be downgraded by the updater', async ({
+  context,
+  page,
+  app,
+}) => {
+  const host = await fakeHost(context, app, { installedVersion: '1.0.0' });
+  await open(page, app);
+  await nav(page, 'Settings');
+  await page.getByRole('button', { name: 'Check for updates' }).click();
+  await expect(page.locator('#appUpdates')).toContainText(
+    'latest stable version or a newer version',
+  );
+  await expect(
+    page.getByRole('button', { name: 'Update', exact: true }),
+  ).toBeDisabled();
+  expect(host.counts()).toEqual({ checks: 1, starts: 0 });
 });
 
 test('check never starts an update; double clicks join; reconnect confirms version and clears stale PWA cache', async ({

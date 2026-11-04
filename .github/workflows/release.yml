@@ -46,8 +46,32 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.3'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
       - name: Test release version planner before modifications
         run: python -m unittest discover -s tests -p '*release*test.py'
+      # Do not advance the source version if any existing source test is broken.
+      - name: Validate source before changing the version
+        run: |
+          npm ci
+          npm run check
+          npm run security:check
+      - name: Test browser UI before changing the version
+        run: |
+          npx playwright install --with-deps chromium webkit
+          npm run test:ui
+      - name: Upload browser traces on preflight failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-preflight-ui-results
+          path: test-results/
+          if-no-files-found: ignore
       - name: Prepare and commit the next version
         id: version
         shell: bash
@@ -112,10 +136,7 @@ jobs:
           npm run check
           npm run security:check
           python -m unittest discover -s tests -p '*release*test.py'
-      - name: Test browser UI
-        run: |
-          npx playwright install --with-deps chromium webkit
-          npm run test:ui
+      # Browser tests already passed on this source before the version-only commit.
 
   build:
     name: ${{ matrix.name }}
