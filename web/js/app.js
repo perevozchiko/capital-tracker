@@ -1,3 +1,4 @@
+import { bindChartControls } from './chart.js';
 import { checkLogin, logout } from './auth.js';
 import {
   checkUpdate,
@@ -55,6 +56,8 @@ import {
 } from './recurring-expenses.js';
 
 bindAccountDragAndDrop();
+
+bindChartControls();
 
 window
   .matchMedia('(prefers-color-scheme: dark)')

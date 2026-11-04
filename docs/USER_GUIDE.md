@@ -28,6 +28,14 @@ The example is also provided as a fully importable, versioned JSON snapshot in [
 
 On **Dashboard**, **Accounts** and **Monthly balances**, click **Current month** beside the month picker to jump to the current month in your local time zone. Switching months prompts before discarding unsaved edits. Clicking it while already in the current month preserves your edits.
 
+## History charts
+
+Dashboard, Income, Major expenses and Recurring expenses share the same chart controls. Choose **6 months**, **1 year** or **3 years** for the last 6, 12 or 36 calendar months, including the latest recorded month in that chart. **All time** shows the full history and is the default. The date range beside the buttons identifies the displayed period.
+
+Choose **Custom**, set **From month** and **To month**, then click **Apply**. Both months are included; the end month cannot precede the start month. A single month is allowed. A period without complete records displays an empty message rather than zero values.
+
+Each chart remembers its period while the page remains open. Filtering only changes the chart: it does not switch the editor month, save data, or discard unsaved income or expense entries. Hover over a point or focus it with the keyboard to inspect its month and exact EUR amount. Incomplete or missing calendar months break both the line and its shaded area. The eye button also hides chart amounts.
+
 ## Account groups
 
 On **Accounts**, choose **New group** to create named sections such as Cash and savings, Investments and Loans. The group name is unique (case-insensitive). Each group has a header that can be expanded/collapsed, renamed, moved up/down with buttons or reordered by dragging the header. The collapsed/expanded state persists in this browser.

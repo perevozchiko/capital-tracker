@@ -283,6 +283,18 @@ export default {
   retry: 'Retry',
   zeroNotMissing: 'Zero is a recorded balance',
   chartNote: 'The line stops at incomplete or missing months.',
+  chartSixMonths: '6 months',
+  chartYear: '1 year',
+  chartThreeYears: '3 years',
+  chartAll: 'All time',
+  chartCustom: 'Custom',
+  chartPeriod: 'Chart period',
+  chartFrom: 'From month',
+  chartTo: 'To month',
+  chartApply: 'Apply',
+  chartInvalidRange:
+    'The end month must be the same as or after the start month.',
+  chartRangeEmpty: 'No complete months in this period. Try another range.',
   currencyHelp:
     'One currency per account. Changes to recorded currency are not permitted.',
   totalProvisional:
