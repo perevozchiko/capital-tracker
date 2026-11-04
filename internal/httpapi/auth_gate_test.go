@@ -57,7 +57,7 @@ func TestAuthGateServesOnlySignInBeforeAuthentication(t *testing.T) {
 	for _, path := range []string{"/", "/index.html", "/login.html"} {
 		assertLogin(path, nil)
 	}
-	for _, path := range []string{"/js/app.js", "/js/auth.js", "/js/accounts.js", "/js/boot.js", "/css/app.css", "/manifest.webmanifest", "/icons/icon-192.png", "/api/data/export", "/api/settings", "/api/accounts"} {
+	for _, path := range []string{"/js/app.js", "/js/auth.js", "/js/accounts.js", "/js/boot.js", "/js/backups.js", "/css/app.css", "/manifest.webmanifest", "/icons/icon-192.png", "/api/data/export", "/api/settings", "/api/accounts", "/api/backups"} {
 		for _, method := range []string{"GET", "HEAD"} {
 			w := call(method, path, nil)
 			if w.Code != 401 || w.Header().Get("Cache-Control") != "no-store" {

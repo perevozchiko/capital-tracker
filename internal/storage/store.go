@@ -26,9 +26,11 @@ func now() string { return time.Now().UTC().Format(time.RFC3339Nano) }
 
 type Store struct {
 	// Write operations are serialized so month/account validation cannot race.
-	writeMu sync.Mutex
-	DB      *sql.DB
-	Path    string
+	writeMu     sync.Mutex
+	backupMu    sync.Mutex
+	backupError string
+	DB          *sql.DB
+	Path        string
 }
 
 func DefaultDataDir() (string, error) {

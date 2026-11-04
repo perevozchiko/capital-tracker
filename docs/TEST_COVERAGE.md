@@ -16,6 +16,8 @@ The Playwright suite runs the compiled application in Chromium against a fresh t
 
 Each scenario can contain many assertions. Counts describe concrete paths through the application, not all possible combinations of user input and external failures.
 
+`backups.spec.cjs` covers weekly startup copies, manual backups, archive navigation and JSON export, blocked editing, per-tab isolation, reload/restart, return to current data, confirmed/cancelled restoration and recovery, and missing archives at mobile and desktop widths in Chromium and WebKit. Storage/API tests also cover the exact seven-day boundary, missed weeks, persistence of the schedule after retention, the 50-copy limit, failed-copy preservation, transactional restore rollback, concurrent checks, path/symlink rejection and migration of older archives without modifying their files.
+
 ## Run every scenario, including the real currency provider
 
 ```sh

@@ -1810,6 +1810,68 @@ th button:hover {
   }
 }
 
+.backup-banner {
+  position: sticky;
+  top: 8px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  border: 2px solid var(--primary);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px #0003;
+}
+.backup-banner p {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+.backup-banner .btn {
+  flex-shrink: 0;
+}
+.backup-list {
+  max-height: 32rem;
+  overflow-y: auto;
+  margin-top: 20px;
+}
+.backup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+.backup-row .caption {
+  margin: 6px 0 0;
+}
+.backup-row .data-tools {
+  flex-shrink: 0;
+  margin: 0;
+}
+.backup-row .data-tools .btn {
+  min-width: 90px;
+}
+.backup-error {
+  color: var(--negative);
+}
+@media (max-width: 720px) {
+  .backup-banner,
+  .backup-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .backup-banner {
+    position: static;
+  }
+  .backup-banner .btn {
+    width: 100%;
+  }
+}
+
 [hidden] {
   display: none !important;
 }

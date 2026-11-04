@@ -110,7 +110,7 @@ async function nav(page, name) {
     Income: '#incomeForm',
     'Major expenses': '#expenseForm',
     'Recurring expenses': '#recurringExpenseForm',
-    Accounts: '#addAccountForm',
+    Accounts: '#pageContent [data-action="groupCreate"]',
     'Monthly balances': '.status-block',
     Settings: '#themeSelect',
     Dashboard: '#pageContent .grid-summary, #pageContent .empty',

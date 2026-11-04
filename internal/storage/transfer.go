@@ -425,6 +425,11 @@ func (s *Store) ImportData(d TransferDocument) error {
 	}
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
+	return s.importData(d)
+}
+
+// importData requires writeMu and a validated document.
+func (s *Store) importData(d TransferDocument) error {
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return err

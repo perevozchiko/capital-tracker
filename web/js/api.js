@@ -1,9 +1,15 @@
 import { t } from './messages.js';
+import { state } from './state.js';
 async function api(path, options = {}) {
+  const preview = state.snapshotID && !path.startsWith('/auth/');
+  if (preview && options.method && options.method !== 'GET') {
+    throw new Error(t('backup_read_only'));
+  }
   const res = await fetch('/api' + path, {
     ...options,
     headers: {
       Accept: 'application/json',
+      ...(preview ? { 'X-Capital-Tracker-Snapshot': state.snapshotID } : {}),
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
       ...(options.method && options.method !== 'GET'
         ? { 'X-Capital-Tracker': '1' }

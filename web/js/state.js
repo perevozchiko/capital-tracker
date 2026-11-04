@@ -1,4 +1,7 @@
 const state = {
+  snapshotID:
+    new URLSearchParams(globalThis.location?.search || '').get('backup') || '',
+  snapshot: null,
   page: 'dashboard',
   renderID: 0,
   month: new Date().toLocaleDateString('sv-SE').slice(0, 7),

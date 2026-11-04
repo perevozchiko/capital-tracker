@@ -165,6 +165,18 @@ func run() error {
 	if e != nil {
 		return fmt.Errorf("cannot listen on %s: %w", srv.Addr, e)
 	}
+	backupContext, stopBackups := context.WithCancel(context.Background())
+	backupsDone := make(chan struct{})
+	go func() {
+		defer close(backupsDone)
+		s.RunWeeklyBackups(backupContext, func(err error) {
+			fmt.Fprintln(os.Stderr, "Automatic backup:", err)
+		})
+	}()
+	defer func() {
+		stopBackups()
+		<-backupsDone
+	}()
 	errCh := make(chan error, 1)
 	go func() { errCh <- srv.Serve(listener) }()
 	url := fmt.Sprintf("http://127.0.0.1:%d", p)

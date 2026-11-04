@@ -30,6 +30,13 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET` | `/api/data/export` | Download complete application JSON snapshot |
 | `POST` | `/api/data/import` | Atomically replace data with valid exported JSON (requires `X-Capital-Tracker-Import: replace` and the regular CSRF header) |
 | `POST` | `/api/data/clear` | Erase all local app data and reset settings (requires the regular CSRF header, `X-Capital-Tracker-Clear: DELETE`, and JSON `{"confirm":"DELETE"}`) |
+| `GET` | `/api/backups` | List managed SQLite copies newest first: `backups` (`id`, `created_at`, `kind`, `size` in bytes), `limit: 50`, `next_at` (UTC or null), optional `last_error` |
+| `POST` | `/api/backups` | Create a manual copy, then retain the newest 50 managed copies; returns HTTP 201 with copy metadata |
+| `POST` | `/api/backups/{id}/restore` | Save a recovery copy and atomically replace application data; requires `X-Capital-Tracker-Restore: replace` plus the regular CSRF header; returns `ok` and `safety_backup` metadata |
+
+For archive reads, send **`X-Capital-Tracker-Snapshot: {id}`** with data `GET` requests, including JSON export. The server reads an isolated read-only copy, with authentication applied before archive access. Selection is per request; live reads without this header remain unaffected. Requests that change data with this header return HTTP 403 `backup_read_only`; quote loading and updater routes are also unavailable in preview. `/api/backups`, `/api/meta` and auth status remain live. A missing/pruned copy returns HTTP 404 `backup_not_found`, never live financial data as a fallback. Archive responses use `Cache-Control: no-store`.
+
+Backup IDs must be server-issued filenames, not filesystem paths. Weekly timing and retention metadata live outside application tables, so restoring data does not reset the automatic schedule. Restore returns an error without replacing data if its recovery copy cannot be saved, and replacement errors roll back the transaction. All managed copy types share the 50-copy limit.
 
 Example full monthly replacement:
 
