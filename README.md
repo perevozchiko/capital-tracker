@@ -8,7 +8,7 @@
 
 <p><strong>Know what you own. Track how it grows.</strong></p>
 
-<p>A lightweight, local-first net-worth tracker.<br>Update your account balances once a month — without recording every purchase.</p>
+<p>A lightweight, local-first net-worth tracker<br>.Update your account balances once a month — without recording every purchase.</p>
 
 <p><a href="#screenshots">Explore screenshots</a> · <a href="#quick-start">Quick start</a> · <a href="#downloads">Downloads</a> · <a href="#documentation">Documentation</a></p>
 
