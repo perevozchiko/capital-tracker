@@ -24,6 +24,9 @@ on:
 permissions:
   contents: read
 
+# Release jobs must not read or write shared Actions caches.
+cache-mode: none
+
 concurrency:
   group: capital-tracker-release
   cancel-in-progress: false
