@@ -98,7 +98,7 @@ test('presets use inclusive calendar months and preserve data and tooltip indice
   expect(after).toEqual(before);
 });
 
-test('custom ranges validate order, include endpoints, and handle single and empty months', async ({
+test('charts connect across missing and incomplete months; custom ranges handle endpoints, single and empty months', async ({
   page,
   app,
 }) => {
@@ -112,8 +112,20 @@ test('custom ranges validate order, include endpoints, and handle single and emp
     ['2025-07', '18000'],
   ]);
   await open(page, app);
-  await expect(page.locator('.curve')).toHaveCount(2);
-  await expect(page.locator('.chart-area')).toHaveCount(2);
+  await expect(page.locator('.curve')).toHaveCount(1);
+  await expect(page.locator('.chart-area')).toHaveCount(1);
+  await expect(page.locator('.chart-dot')).toHaveCount(6);
+  const connectedPoints = await page
+    .locator('.chart-dot')
+    .evaluateAll((dots) =>
+      dots
+        .map(
+          (dot, index) =>
+            `${index ? 'L' : 'M'}${dot.getAttribute('cx')},${dot.getAttribute('cy')}`,
+        )
+        .join(' '),
+    );
+  await expect(page.locator('.curve')).toHaveAttribute('d', connectedPoints);
   await applyRange(page, '2025-01', '2025-02');
   await expect(page.locator('.chart-dot')).toHaveCount(2);
   await expect(page.locator('.chart-range')).toHaveText('Jan 2025 – Feb 2025');
@@ -187,6 +199,8 @@ for (const [screen, prefix, endpoint] of [
     ).json();
     await period(page, '6 months').click();
     await expect(page.locator('.chart-dot')).toHaveCount(2);
+    await expect(page.locator('.curve')).toHaveCount(1);
+    await expect(page.locator('.chart-area')).toHaveCount(1);
     await applyRange(page, '2024-12', '2024-12');
     await expect(page.locator('.chart-dot')).toHaveCount(1);
     await expect(page.locator(`#${prefix}Form`)).toContainText('Unsaved note');

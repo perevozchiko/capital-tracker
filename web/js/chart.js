@@ -85,32 +85,18 @@ function chartSVG(history, source, range) {
     return `<line class="gridline" x1="${pad.left}" x2="${W - pad.right}" y1="${y}" y2="${y}"/><text class="money-axis" x="${pad.left - 14}" y="${y + 4}" text-anchor="end">${formatter.format(value)} €</text>`;
   }).join('');
 
-  // Split both the line and fill at incomplete and absent calendar months.
-  const segments = [];
-  let previous;
-  for (const point of visible) {
-    if (!point.complete || point.total_eur_minor == null) {
-      previous = null;
-      continue;
-    }
-    if (!previous || monthIndex(point.month) - monthIndex(previous.month) !== 1)
-      segments.push([]);
-    segments.at(-1).push(point);
-    previous = point;
-  }
+  // Connect recorded values across missing or incomplete calendar months.
+  const line = valid
+    .map(
+      (p, i) =>
+        `${i ? 'L' : 'M'}${xFor(p.month)},${yFor(Number(p.total_eur_minor) / 100)}`,
+    )
+    .join(' ');
   const gradientID = `chart-fill-${source}`;
-  const paths = segments
-    .filter((segment) => segment.length > 1)
-    .map((segment) => {
-      const line = segment
-        .map(
-          (p, i) =>
-            `${i ? 'L' : 'M'}${xFor(p.month)},${yFor(Number(p.total_eur_minor) / 100)}`,
-        )
-        .join(' ');
-      return `<path class="chart-area" fill="url(#${gradientID})" d="${line} L${xFor(segment.at(-1).month)},${baseline} L${xFor(segment[0].month)},${baseline} Z"/><path class="curve" d="${line}"/>`;
-    })
-    .join('');
+  const paths =
+    valid.length > 1
+      ? `<path class="chart-area" fill="url(#${gradientID})" d="${line} L${xFor(valid.at(-1).month)},${baseline} L${xFor(valid[0].month)},${baseline} Z"/><path class="curve" d="${line}"/>`
+      : '';
   // Evenly spaced calendar labels remain legible for long and sparse histories.
   const labelCount = Math.min(narrow ? 3 : 6, span + 1);
   const labels = Array.from({ length: labelCount }, (_, i) => {

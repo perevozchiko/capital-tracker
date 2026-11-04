@@ -1,5 +1,5 @@
 // Bump CACHE_NAME for every frontend release. API responses are NEVER cached.
-const CACHE_NAME = 'capital-tracker-static-v24-backups';
+const CACHE_NAME = 'capital-tracker-static-v25-connected-charts';
 const STATIC = [
   '/',
   '/index.html',
