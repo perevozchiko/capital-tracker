@@ -2,10 +2,6 @@ name: Capture demo screenshots
 
 on:
   workflow_dispatch:
-  push:
-    branches: [master]
-    paths:
-      - .github/screenshot-refresh-request
 
 permissions:
   contents: write

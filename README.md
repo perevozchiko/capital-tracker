@@ -8,7 +8,7 @@
 
 <p><strong>Know what you own. Track how it grows.</strong></p>
 
-<p>A lightweight, local-first net-worth tracker<br>.Update your account balances once a month — without recording every purchase.</p>
+<p>A lightweight, local-first net-worth tracker<br>Update your account balances once a month — without recording every purchase.</p>
 
 <p><a href="#screenshots">Explore screenshots</a> · <a href="#quick-start">Quick start</a> · <a href="#downloads">Downloads</a> · <a href="#documentation">Documentation</a></p>
 
@@ -26,7 +26,7 @@ Capital Tracker is independently developed open-source software, not affiliated 
 
 ## Screenshots
 
-<p align="center"><strong>Real Chromium captures from the application — not renders or mockups.</strong><br>
+<p align="center"><strong>Real Chromium captures from the latest app (refreshed November 2026) — not renders or mockups.</strong><br>
 Dark theme · isolated, fictional 12-month demo · October 2025–September 2026.<br>
 Click any image to open the original full-size PNG.</p>
 
