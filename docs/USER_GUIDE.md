@@ -34,7 +34,7 @@ Dashboard, Income, Major expenses and Recurring expenses share the same chart co
 
 Choose **Custom**, set **From month** and **To month**, then click **Apply**. Both months are included; the end month cannot precede the start month. A single month is allowed. A period without complete records displays an empty message rather than zero values.
 
-Each chart remembers its period while the page remains open. Filtering only changes the chart: it does not switch the editor month, save data, or discard unsaved income or expense entries. Hover over a point or focus it with the keyboard to inspect its month and exact EUR amount. Incomplete or missing calendar months break both the line and its shaded area. The eye button also hides chart amounts.
+Each chart remembers its period while the page remains open. Filtering only changes the chart: it does not switch the editor month, save data, or discard unsaved income or expense entries. Hover over a point or focus it with the keyboard to inspect its month and exact EUR amount. The line and shaded area connect all complete recorded points across missing or incomplete calendar months. Gaps retain their calendar spacing without adding data points or saved values for those months. The eye button also hides chart amounts.
 
 ## Account groups
 
@@ -108,7 +108,7 @@ The canonical supported currency list is defined in `internal/finance/finance.go
 
 Open **Income** and choose a month. In the **Add income** form at the top, enter a name (for example, Salary or Insurance refund), amount and currency, then click **Add income** or press Enter. The payment appears in the monthly income list below and the form resets for the next payment. Click **Save income** after adding entries and setting any required exchange rates to keep the month. Multiple payments can use the same currency. Set one exchange rate per currency in the separate **Exchange rates** block below the income list (**1 EUR = …**). It applies to every payment in that currency for the selected month. The block shows only currencies currently used in the list and is hidden for EUR-only income. Each entry shows its EUR equivalent and the total at the bottom updates as you type. Use the × button to remove a row. Rates can be entered manually or loaded with **Load latest exchange rates**, then saved with **Save income**. Amounts and currencies are fixed as soon as an income is added, including before saving. To correct either, remove the entry with × and add it again. Entries are displayed as plain text, like accounts. Shared exchange rates remain editable; to correct a name, remove the entry and add it again.
 
-The chart shows monthly income totals converted to EUR. Missing months break the line. **Delete income** removes only the selected month's income notes after confirmation. Income notes do not change accounts, capital snapshots, or their exchange rates; deleting a capital month does not remove income notes. JSON export/import and full data deletion include income notes.
+The chart shows monthly income totals converted to EUR, connecting recorded points across missing months. **Delete income** removes only the selected month's income notes after confirmation. Income notes do not change accounts, capital snapshots, or their exchange rates; deleting a capital month does not remove income notes. JSON export/import and full data deletion include income notes.
 
 ## Major expenses
 

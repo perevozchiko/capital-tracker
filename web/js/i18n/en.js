@@ -316,7 +316,7 @@ export default {
   loading: 'Loading…',
   retry: 'Retry',
   zeroNotMissing: 'Zero is a recorded balance',
-  chartNote: 'The line stops at incomplete or missing months.',
+  chartNote: 'The line connects complete months across gaps in the data.',
   chartSixMonths: '6 months',
   chartYear: '1 year',
   chartThreeYears: '3 years',
