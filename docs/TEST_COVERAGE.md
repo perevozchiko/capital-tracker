@@ -16,6 +16,8 @@ The Playwright suite runs the compiled application in Chromium against a fresh t
 
 Each scenario can contain many assertions. Counts describe concrete paths through the application, not all possible combinations of user input and external failures.
 
+`backups.spec.cjs` covers weekly startup copies, manual backups, archive navigation and JSON export, blocked editing, per-tab isolation, reload/restart, return to current data, confirmed/cancelled restoration and recovery, and missing archives at mobile and desktop widths in Chromium and WebKit. Storage/API tests also cover the exact seven-day boundary, missed weeks, persistence of the schedule after retention, the 50-copy limit, failed-copy preservation, transactional restore rollback, concurrent checks, path/symlink rejection and migration of older archives without modifying their files.
+
 ## Run every scenario, including the real currency provider
 
 ```sh
@@ -32,6 +34,12 @@ npm run test:ui -- --workers=4
 Mobile layout scenarios save screenshots in `test-results/` for visual review and assert that monetary values remain readable on one line, balance inputs fit their values, group captions do not overlap totals, and tables scroll inside their own containers. Failures retain Playwright traces in `test-results/`. Replay a trace with `npx playwright show-trace <trace.zip>`.
 
 ## Financial invariants
+
+`chart-periods.spec.cjs` checks inclusive 6/12/36-month periods, custom range
+validation, a single month, empty ranges, line/fill gaps and exact tooltip values
+after filtering. It also verifies unchanged financial exports, hidden amounts,
+unsaved income/expense editors, and 320/1280-pixel layouts in both themes. These
+scenarios run in Chromium and WebKit with isolated temporary databases.
 
 - Saving a month uses the values already displayed in the editor; it does not fetch a newer quote.
 - Each month retains its own exchange-rate snapshot. New quotes, organizational changes, restart and export/import cannot silently revalue existing history.

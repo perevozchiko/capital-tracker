@@ -20,7 +20,17 @@ type Server struct {
 }
 
 func (s *Server) Handler() http.Handler {
+	mux := s.routes()
+	handler := s.backupView(mux)
+	if s.Auth != nil {
+		return secureRequests(s.Auth.protect(handler, s.Assets), s.Auth.Origin)
+	}
+	return secureLocalRequests(handler)
+}
+
+func (s *Server) routes() *http.ServeMux {
 	mux := http.NewServeMux()
+	registerBackups(mux, s)
 	registerTransfer(mux, s)
 	registerGroups(mux, s)
 	registerRates(mux)
@@ -47,9 +57,6 @@ func (s *Server) Handler() http.Handler {
 	registerSettings(mux, s)
 	registerUpdates(mux, s)
 	registerStatic(mux, s)
-	if s.Auth != nil {
-		return secureRequests(s.Auth.protect(mux, s.Assets), s.Auth.Origin)
-	}
 	mux.HandleFunc("/api/auth/status", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			fail(w, 405, "method_not_allowed", "")
@@ -57,7 +64,7 @@ func (s *Server) Handler() http.Handler {
 		}
 		writeJSON(w, 200, map[string]bool{"enabled": false, "authenticated": true})
 	})
-	return secureLocalRequests(mux)
+	return mux
 }
 
 func NewHTTPServer(addr string, handler http.Handler) *http.Server {

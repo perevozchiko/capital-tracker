@@ -1,4 +1,38 @@
 export default {
+  backups: 'Backups',
+  backupsHelp:
+    'Automatic backup every 7 days. Keeps the 50 newest copies, including manual and recovery copies. The oldest is removed after a new copy is saved.',
+  backupOfflineHelp:
+    'If the app is closed when a backup is due, it runs on the next launch. Copies are stored with your app data.',
+  nextBackup: 'Next automatic backup',
+  backupSoon: 'On this launch',
+  createBackup: 'Back up now',
+  refreshBackups: 'Refresh list',
+  viewBackup: 'View',
+  restoreBackup: 'Restore',
+  backupsEmpty:
+    'No backups yet. The first automatic copy is created when the app starts.',
+  backupCreated: 'Backup created.',
+  backupPreview: 'Archive · read only',
+  backupPreviewHelp:
+    'You are viewing an older copy. Your current data is safe. Browse any section, then return when you are ready.',
+  returnToCurrent: 'Return to current data',
+  backupRestoreFromCurrent:
+    'To restore a copy permanently, return to current data and open Settings → Backups.',
+  backupViewing: 'Viewing now',
+  backupKind_automatic: 'Automatic',
+  backupKind_manual: 'Manual',
+  'backupKind_before-restore': 'Current data saved before restore',
+  restoreBackupConfirm:
+    'Replace current data with the copy from {date}? The app will first save your current data as a recovery copy. To undo this restore, restore that recovery copy from Settings → Backups.',
+  backupRestored:
+    'Backup restored. Your previous data is saved in Settings → Backups as a recovery copy.',
+  backup_read_only:
+    'This archive is read only. Return to current data to make changes.',
+  backup_not_found:
+    'This backup is no longer available. It may have been removed by the 50-copy limit. Return to current data to choose another copy.',
+  backup_failed:
+    'The last backup could not be completed. Check free disk space and access to the data folder, then try Back up now.',
   privateServer: 'Private · password protected',
   unauthorized: 'Your session expired. Please sign in again.',
   invalid_credentials: 'Incorrect username or password.',
@@ -283,6 +317,18 @@ export default {
   retry: 'Retry',
   zeroNotMissing: 'Zero is a recorded balance',
   chartNote: 'The line stops at incomplete or missing months.',
+  chartSixMonths: '6 months',
+  chartYear: '1 year',
+  chartThreeYears: '3 years',
+  chartAll: 'All time',
+  chartCustom: 'Custom',
+  chartPeriod: 'Chart period',
+  chartFrom: 'From month',
+  chartTo: 'To month',
+  chartApply: 'Apply',
+  chartInvalidRange:
+    'The end month must be the same as or after the start month.',
+  chartRangeEmpty: 'No complete months in this period. Try another range.',
   currencyHelp:
     'One currency per account. Changes to recorded currency are not permitted.',
   totalProvisional:

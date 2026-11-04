@@ -28,6 +28,14 @@ The example is also provided as a fully importable, versioned JSON snapshot in [
 
 On **Dashboard**, **Accounts** and **Monthly balances**, click **Current month** beside the month picker to jump to the current month in your local time zone. Switching months prompts before discarding unsaved edits. Clicking it while already in the current month preserves your edits.
 
+## History charts
+
+Dashboard, Income, Major expenses and Recurring expenses share the same chart controls. Choose **6 months**, **1 year** or **3 years** for the last 6, 12 or 36 calendar months, including the latest recorded month in that chart. **All time** shows the full history and is the default. The date range beside the buttons identifies the displayed period.
+
+Choose **Custom**, set **From month** and **To month**, then click **Apply**. Both months are included; the end month cannot precede the start month. A single month is allowed. A period without complete records displays an empty message rather than zero values.
+
+Each chart remembers its period while the page remains open. Filtering only changes the chart: it does not switch the editor month, save data, or discard unsaved income or expense entries. Hover over a point or focus it with the keyboard to inspect its month and exact EUR amount. Incomplete or missing calendar months break both the line and its shaded area. The eye button also hides chart amounts.
+
 ## Account groups
 
 On **Accounts**, choose **New group** to create named sections such as Cash and savings, Investments and Loans. The group name is unique (case-insensitive). Each group has a header that can be expanded/collapsed, renamed, moved up/down with buttons or reordered by dragging the header. The collapsed/expanded state persists in this browser.
@@ -39,6 +47,18 @@ Each group header displays its **exact EUR subtotal** for the selected month (wh
 Group membership is **organizational and current**, not a historical dimension: moving a previously recorded account changes which group's past-month subtotal includes its balances, but never changes the account history or the overall monthly net worth. Deleting a group only moves its accounts to **Ungrouped**; it does not delete accounts, balances or history. Old databases migrate automatically to schema version 2, retaining all accounts in Ungrouped until you organize them. A pre-migration SQLite backup is made automatically.
 
 **Monthly balances** displays the same ordered groups and **Ungrouped**, with EUR subtotals for the selected month. There is no Archive section: accounts active in the selected month appear in their assigned groups, even if they were archived later. Accounts inactive in the selected month are omitted. Groups are collapsible, and the collapsed state is shared with Accounts. Both screens provide **Collapse all** and **Expand all** buttons for all groups displayed on that screen. Their state survives reload and application restart; using the buttons does not discard unsaved editor values. There is no group/account reordering, dragging, renaming or deletion on this screen: balance values and unsaved exchange rates are editable. Accounts are also offered before their first activity month so you can backfill history. Saving a balance there moves that account’s first activity month back; leaving it blank keeps its start unchanged. Accounts inside an archived gap have no editable balance row. Saved monthly exchange rates are fixed and remain unchanged when balances are edited.
+
+## Automatic backups and viewing older data
+
+Open **Settings → Backups**. The app creates a full SQLite copy on its first launch, then every **7 days** while running. If the app was closed or the computer asleep when a copy was due, it creates one on the next launch or within a minute after waking. Missed weeks do not create duplicate copies. **Back up now** makes an extra copy without changing the weekly schedule. The panel shows dates, copy types, sizes and the next scheduled time.
+
+The app keeps the **50 newest copies in total**, including manual copies and recovery copies made before restoration. It removes the oldest only after saving a complete new copy. These files live in the `backups` folder beside `capital.db`; exported JSON, CLI backups, pre-migration copies and updater backups are managed separately.
+
+Choose **View** beside any copy to browse its accounts, groups, balances, income, expenses and charts. A persistent **Archive · read only** banner shows the copy's date. Editing, imports, deletion and app updates are disabled, while navigation, month selection, charts and JSON export remain available. **Return to current data** immediately opens the live data again. Preview selection is per browser tab and survives reload; it never replaces the live database or changes what other tabs see. Copies from older compatible schemas are migrated in a disposable temporary directory, preserving the original archive.
+
+To continue working from an older copy, return to live data and choose **Settings → Backups → Restore**. After confirmation, the app first saves the exact current state as **Current data saved before restore**, then replaces application data in one transaction. To undo a restore, restore that recovery copy. A failed safety backup prevents restoration; a failed replacement rolls back. Recovery copies follow the same 50-copy limit.
+
+Automatic copies stay on the same device as the database. They are not cloud sync and do not protect against losing that device. Copies contain financial data and exclude deployment credentials and login sessions.
 
 ## JSON import and export
 
@@ -74,7 +94,7 @@ Amounts in JSON are represented as **decimal strings of integer minor units**, n
 ## Limitations
 
 - Remote access requires the authenticated HTTPS setup in [Hosting](HOSTING.md). No server-independent offline editing or automatic FX updates.
-- There are no automatic backups, transactions or cloud sync. JSON exports/imports are manual-only.
+- There is no transaction ledger or cloud sync. JSON exports/imports are manual-only; automatic SQLite backups run every 7 days when the app is running.
 - Concurrent launching on the same data directory is prevented with a lock file; on macOS/Linux, an OS advisory lock releases automatically when the process exits, including after a crash; the lock file may safely remain. Windows uses the native LockFileEx advisory lock, which is also released by the OS after a crash; all platforms can leave the lock file on disk safely.
 - Built-in browser checks such as responsive layout, theme switching and browser launch need visual/manual verification on the target OS.
 

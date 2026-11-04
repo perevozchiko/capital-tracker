@@ -3,12 +3,14 @@ import { t } from './messages.js';
 import { escapeHTML } from './format.js';
 import { $ } from './ui.js';
 import { renderUpdatePanel } from './updates.js';
+import { renderBackupPanel } from './backups.js';
 function renderSettings() {
   const s = state.settings;
   $('#pageContent').innerHTML =
     `<section class="card panel"><h2>${t('preferences')}</h2>
  <div class="settings-row"><div><strong>${t('theme')}</strong></div>
  <select id="themeSelect">${['system', 'light', 'dark'].map((v) => `<option value="${v}" ${s.theme === v ? 'selected' : ''}>${t(v)}</option>`).join('')}</select></div></section>
+ <section class="card panel" id="backupPanel"><h2>${t('backups')}</h2><p>${t('loading')}</p></section>
  <section class="card panel"><h2>${t('jsonData')}</h2><p class="caption">${t('jsonDataHelp')}</p>
  <div class="data-tools">
  <button class="btn btn-primary" type="button" data-action="exportJSON">${t('exportJSON')}</button>
@@ -20,7 +22,8 @@ function renderSettings() {
  <button type="button" class="btn btn-danger" data-action="clearAllData">${t('clearAllData')}</button></section>
  <section class="card panel"><h2>${t('appName')}</h2><p class="caption">${t('appDescription')}</p>
  <p>${t('about')}</p><p class="caption">${t('version')}: v${escapeHTML(s.version)} · ${t('commit')}: ${escapeHTML(state.buildCommit)}</p><div id="appUpdates"></div></section>`;
-  renderUpdatePanel();
+  if (!state.snapshotID) renderUpdatePanel();
+  void renderBackupPanel();
 }
 
 export { renderSettings };

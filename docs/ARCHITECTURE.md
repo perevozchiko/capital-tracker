@@ -54,6 +54,10 @@ The browser is an **untrusted client**. All persisted values and state transitio
 
 `internal/storage/store.go` opens SQLite through `database/sql` using the pure-Go driver, enables foreign keys and WAL, and restricts it to one connection. Mutations are serialized and use transactions for atomicity. Migrations are embedded from `internal/storage/migrations/NNN_name.sql`; numbering must be contiguous. Existing databases receive a pre-migration backup, while an unknown or newer schema is rejected.
 
+`internal/storage/backups.go` manages full SQLite snapshots in the data directory's `backups` subfolder. The CLI starts a cancellable scheduler after opening/seeding the database, checks at startup and each minute, and waits for it to stop before closing storage. Automatic copies run every seven days, using persisted scheduling metadata independent of restored application data. Snapshots are published by renaming completed owner-only `VACUUM INTO` files; only then are copies beyond the newest 50 removed. A backup mutex serializes creation, retention, archive reads and restoration; operations needing both locks acquire the backup mutex before the write mutex. External/CLI, migration and updater copies are outside this retention policy.
+
+Archive reads use per-request selection through `X-Capital-Tracker-Snapshot`, behind existing authentication and origin checks. Current-schema archives open as immutable read-only SQLite connections. Older schemas migrate a disposable copy without modifying the original file. No server-wide active database is switched. Restore exports and validates the archive, then holds the live write lock across creating a recovery snapshot and importing application data transactionally. Credentials, login sessions, schema migrations and the weekly schedule are never imported from financial archives.
+
 To change the schema, add the next numbered migration. Never edit an already-released migration. Extend the relevant storage tests, API tests, and the portable JSON schema/compatibility rules when necessary.
 
 ## Security boundaries

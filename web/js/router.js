@@ -10,6 +10,7 @@ import { renderIncomes } from './incomes.js';
 import { renderExpenses } from './expenses.js';
 import { renderRecurringExpenses } from './recurring-expenses.js';
 import { renderSettings } from './settings.js';
+import { applyBackupPreview } from './backups.js';
 
 async function navigate(page) {
   if (!(await confirmClean())) return;
@@ -44,7 +45,10 @@ async function render() {
       await renderRecurringExpenses();
     else renderSettings();
   } finally {
-    if (state.renderID === renderID) content.inert = false;
+    if (state.renderID === renderID) {
+      applyBackupPreview();
+      content.inert = false;
+    }
   }
 }
 async function refresh() {

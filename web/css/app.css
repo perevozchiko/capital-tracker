@@ -374,6 +374,82 @@ th button:hover {
   padding: 3px 5px;
   margin-left: 6px;
 }
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.chart-periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.chart-period {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  min-height: 36px;
+  cursor: pointer;
+}
+.chart-period:hover {
+  background: var(--primarySoft);
+  color: var(--text);
+}
+.chart-period[aria-pressed='true'] {
+  background: var(--primarySoft);
+  color: var(--primary);
+  border-color: var(--border);
+}
+.chart-period:focus-visible,
+.chart-dot:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.chart-range {
+  font-variant-numeric: tabular-nums;
+}
+.chart-custom-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.chart-custom-range[hidden] {
+  display: none;
+}
+.chart-custom-range .field {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.chart-custom-range input {
+  width: 100%;
+  min-width: 0;
+}
+.chart-custom-range .btn {
+  min-height: 40px;
+}
+.chart-empty {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+}
 .chart-wrap {
   width: 100%;
   position: relative;
@@ -391,6 +467,18 @@ th button:hover {
 .history-svg .gridline {
   stroke: var(--chartGrid);
   stroke-width: 1;
+  stroke-dasharray: 3 6;
+}
+.chart-gradient-top {
+  stop-color: var(--primary);
+  stop-opacity: 0.22;
+}
+.chart-gradient-bottom {
+  stop-color: var(--primary);
+  stop-opacity: 0.01;
+}
+.chart-area {
+  pointer-events: none;
 }
 .history-svg .curve {
   stroke: var(--primary);
@@ -402,8 +490,26 @@ th button:hover {
 .history-svg .chart-dot {
   fill: var(--surface);
   stroke: var(--primary);
-  stroke-width: 3;
+  stroke-width: 2.5;
   cursor: crosshair;
+}
+.history-svg .chart-dot:hover,
+.history-svg .chart-dot:focus {
+  fill: var(--primary);
+  stroke-width: 5;
+}
+@media (max-width: 540px) {
+  .chart-periods {
+    width: 100%;
+    gap: 2px;
+  }
+  .chart-period {
+    flex: 1 1 auto;
+    padding: 8px 6px;
+  }
+  .history-svg {
+    overflow: hidden;
+  }
 }
 .chart-tooltip {
   position: fixed;
@@ -1701,6 +1807,68 @@ th button:hover {
   select,
   textarea {
     font-size: 16px;
+  }
+}
+
+.backup-banner {
+  position: sticky;
+  top: 8px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  border: 2px solid var(--primary);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px #0003;
+}
+.backup-banner p {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+.backup-banner .btn {
+  flex-shrink: 0;
+}
+.backup-list {
+  max-height: 32rem;
+  overflow-y: auto;
+  margin-top: 20px;
+}
+.backup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+.backup-row .caption {
+  margin: 6px 0 0;
+}
+.backup-row .data-tools {
+  flex-shrink: 0;
+  margin: 0;
+}
+.backup-row .data-tools .btn {
+  min-width: 90px;
+}
+.backup-error {
+  color: var(--negative);
+}
+@media (max-width: 720px) {
+  .backup-banner,
+  .backup-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .backup-banner {
+    position: static;
+  }
+  .backup-banner .btn {
+    width: 100%;
   }
 }
 

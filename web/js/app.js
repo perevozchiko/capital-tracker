@@ -1,3 +1,4 @@
+import { bindChartControls } from './chart.js';
 import { checkLogin, logout } from './auth.js';
 import {
   checkUpdate,
@@ -20,6 +21,14 @@ import { showConfirm } from './dialogs.js';
 import { navigate, setMonth, render, refresh, mutation } from './router.js';
 import { updateBalanceDifference } from './monthly.js';
 import { exportJSON, importJSON, clearAllData } from './data-actions.js';
+import {
+  createBackup,
+  previewBackup,
+  restoreBackup,
+  renderBackupPanel,
+  loadBackupPreview,
+  backupActionAllowed,
+} from './backups.js';
 import { loadRates, saveMonth } from './monthly-actions.js';
 import {
   saveAssignments,
@@ -56,6 +65,8 @@ import {
 
 bindAccountDragAndDrop();
 
+bindChartControls();
+
 window
   .matchMedia('(prefers-color-scheme: dark)')
   .addEventListener('change', () => {
@@ -78,7 +89,15 @@ document.addEventListener('click', async (e) => {
   const action = node.dataset.action,
     id = Number(node.dataset.id);
   try {
-    if (action === 'logout') await logout();
+    if (state.snapshotID && !backupActionAllowed(action)) return;
+    if (action === 'exitBackup') location.assign('/');
+    else if (action === 'createBackup') await createBackup(node);
+    else if (action === 'previewBackup')
+      await previewBackup(node.dataset.backupId);
+    else if (action === 'restoreBackup')
+      await restoreBackup(node.dataset.backupId, node);
+    else if (action === 'reloadBackups') await renderBackupPanel();
+    else if (action === 'logout') await logout();
     else if (action === 'checkUpdate') await checkUpdate();
     else if (action === 'startUpdate') await startUpdate();
     else if (action === 'toggleAmounts') toggleAmountVisibility();
@@ -144,6 +163,10 @@ document.addEventListener('click', async (e) => {
   }
 });
 document.addEventListener('submit', async (e) => {
+  if (state.snapshotID && !e.target.matches('.chart-custom-range')) {
+    e.preventDefault();
+    return;
+  }
   if (e.target.id === 'addExpenseForm') {
     e.preventDefault();
     try {
@@ -331,6 +354,7 @@ document.addEventListener('focusout', (e) => {
 async function boot() {
   try {
     if (!(await checkLogin())) return;
+    await loadBackupPreview();
     const [settings, metadata] = await Promise.all([
       api('/settings'),
       api('/meta'),
@@ -344,12 +368,16 @@ async function boot() {
     else if (state.months.length)
       state.month = state.months[state.months.length - 1].month;
     await render();
-    void monitorUpdates();
+    if (new URLSearchParams(location.search).has('restored')) {
+      notify(t('backupRestored'));
+      history.replaceState(null, '', '/');
+    }
+    if (!state.snapshotID) void monitorUpdates();
     if ('serviceWorker' in navigator)
       navigator.serviceWorker.register('/sw.js').catch(() => {});
   } catch (e) {
     $('#pageContent').innerHTML =
-      `<div class="card empty"><h2>${t('error')}</h2><p>${escapeHTML(e.message)}</p><button class="btn" id="retryBtn">${t('retry')}</button></div>`;
+      `<div class="card empty"><h2>${t('error')}</h2><p>${escapeHTML(e.message)}</p><button class="btn" id="retryBtn">${t('retry')}</button>${state.snapshotID ? `<button class="btn btn-primary" data-action="exitBackup">${t('returnToCurrent')}</button>` : ''}</div>`;
     $('#retryBtn')?.addEventListener('click', boot);
     if (updatePending()) setTimeout(boot, 2000);
   }

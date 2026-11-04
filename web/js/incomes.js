@@ -3,7 +3,7 @@ import { api, request } from './api.js';
 import { t } from './messages.js';
 import { escapeHTML, moneyHTML, parseMoney, parseRate } from './format.js';
 import { $, notify, applyAmountVisibility } from './ui.js';
-import { chart } from './dashboard.js';
+import { chart } from './chart.js';
 import { showConfirm } from './dialogs.js';
 import { incomeTotal } from './income-math.js';
 
@@ -62,7 +62,7 @@ async function renderIncomes() {
  <div class="field"><label for="incomeAmount">${t('incomeAmount')}</label><input id="incomeAmount" name="amount" data-income type="text" inputmode="decimal" autocomplete="off" required></div>
  <div class="field"><label for="incomeCurrency">${t('currency')}</label><select id="incomeCurrency" name="currency">${state.currencies.map((c) => `<option ${c === 'EUR' ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
  <button class="btn btn-primary" type="submit">${t('addIncome')}</button></form></section>
- <section class="card panel"><div class="panel-heading"><h2>${t('incomeEditor')}</h2></div><p class="subtle">${t('incomeHelp')}</p><form id="incomeForm"><p id="incomeListEmpty" class="caption" ${month?.entries?.length ? 'hidden' : ''}>${t('incomeListEmpty')}</p><div class="income-fields">${(month?.entries || []).map(incomeRow).join('')}</div><aside id="incomeRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('incomeSharedRatesHelp')}</p><div id="incomeRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadIncomeRates">${t('loadRates')}</button><p id="incomeRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyIncomeTotal')}</span><strong id="incomeTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveIncome')}</button><button class="btn btn-danger" type="button" data-action="deleteIncome" ${month ? '' : 'disabled'}>${t('deleteIncome')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('incomeHistory')}</h2><span class="subtle">${t('historyRange')}</span></div>${chart(state.incomeHistory, 'income')}</section>`;
+ <section class="card panel"><div class="panel-heading"><h2>${t('incomeEditor')}</h2></div><p class="subtle">${t('incomeHelp')}</p><form id="incomeForm"><p id="incomeListEmpty" class="caption" ${month?.entries?.length ? 'hidden' : ''}>${t('incomeListEmpty')}</p><div class="income-fields">${(month?.entries || []).map(incomeRow).join('')}</div><aside id="incomeRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('incomeSharedRatesHelp')}</p><div id="incomeRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadIncomeRates">${t('loadRates')}</button><p id="incomeRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyIncomeTotal')}</span><strong id="incomeTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveIncome')}</button><button class="btn btn-danger" type="button" data-action="deleteIncome" ${month ? '' : 'disabled'}>${t('deleteIncome')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('incomeHistory')}</h2></div>${chart(state.incomeHistory, 'income')}</section>`;
   syncIncomeRates();
   updateIncomeTotals();
   applyAmountVisibility();
