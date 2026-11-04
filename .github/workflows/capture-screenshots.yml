@@ -5,7 +5,7 @@ on:
   push:
     branches: [master]
     paths:
-      - .github/workflows/capture-screenshots.yml
+      - .github/screenshot-refresh-request
 
 permissions:
   contents: write
@@ -38,4 +38,4 @@ jobs:
             exit 0
           fi
           git commit -m "docs: capture real dark-theme application screenshots"
-          git push
+          git push origin HEAD:refs/heads/master
