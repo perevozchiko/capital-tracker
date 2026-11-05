@@ -11,6 +11,11 @@ function renderSettings() {
  <div class="settings-row"><div><strong>${t('theme')}</strong></div>
  <select id="themeSelect">${['system', 'light', 'dark'].map((v) => `<option value="${v}" ${s.theme === v ? 'selected' : ''}>${t(v)}</option>`).join('')}</select></div></section>
  <section class="card panel" id="backupPanel"><h2>${t('backups')}</h2><p>${t('loading')}</p></section>
+ <section class="card panel"><h2>${t('spreadsheetExport')}</h2><p class="caption">${t('spreadsheetExportHelp')}</p>
+ <div class="data-tools">
+ <button class="btn btn-primary" type="button" data-action="exportExcel">${t('exportExcel')}</button>
+ <button class="btn" type="button" data-action="exportCSV">${t('exportCSV')}</button>
+ </div></section>
  <section class="card panel"><h2>${t('jsonData')}</h2><p class="caption">${t('jsonDataHelp')}</p>
  <div class="data-tools">
  <button class="btn btn-primary" type="button" data-action="exportJSON">${t('exportJSON')}</button>

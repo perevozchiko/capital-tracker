@@ -101,7 +101,7 @@ Click any image to open the original full-size PNG.</p>
 - **Income:** named sources such as salary and freelance work, each in its original currency. See EUR equivalents, shared rates for entries in the same currency/month, and monthly income history.
 - **Major expenses:** record occasional large purchases with names, currencies, EUR equivalents, totals and a separate history chart.
 - **Recurring expenses:** keep a monthly list of regular costs. An unsaved month inherits the latest earlier saved snapshot; saving the month freezes its own list. View EUR totals and historical trends.
-- **Privacy & backups:** use it locally without an account; optionally deploy your own HTTPS server with single-user password login and revocable sessions. Automatic weekly backups retain the newest 50 copies. Browse older data without changing the current database, or restore a copy with a recovery backup. JSON export/import and manual SQLite backups are also available.
+- **Privacy & backups:** use it locally without an account; optionally deploy your own HTTPS server with single-user password login and revocable sessions. Automatic weekly backups retain the newest 50 copies. Browse older data without changing the current database, or restore a copy with a recovery backup. JSON export/import, CSV and Excel (.xlsx) reports with historical exchange-rate references, and manual SQLite backups are also available.
 - **Responsive PWA:** desktop and phone layouts, Dark/Light/System themes, hide/show amounts, and an English interface. Stored money uses integer minor units and exact fixed-point FX rates.
 
 Income, major expenses and recurring expenses are **independent notes**, not bank transactions. They do not automatically change account balances or net worth.
