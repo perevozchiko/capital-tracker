@@ -1,18 +1,18 @@
 :root {
   color-scheme: dark;
-  --bg: #0e1421;
-  --surface: #182133;
-  --surface2: #202b3f;
-  --text: #edf2ff;
-  --muted: #9faec5;
-  --border: #303d54;
-  --primary: #7c9fff;
-  --primarySoft: #283955;
-  --positive: #57c69c;
-  --negative: #ff8b97;
+  --bg: #141b25;
+  --surface: #1c2937;
+  --surface2: #233345;
+  --text: #f0f5fa;
+  --muted: #a1b2c4;
+  --border: #344658;
+  --primary: #8bc8f5;
+  --primarySoft: #2a4155;
+  --positive: #95ddbe;
+  --negative: #ff9c9d;
   --shadow: none;
-  --input: #1d293c;
-  --chartGrid: #314159;
+  --input: #1a2734;
+  --chartGrid: #354a5c;
 }
 :root[data-theme='light'] {
   color-scheme: light;
@@ -1906,4 +1906,593 @@ th button:hover {
 
 [hidden] {
   display: none !important;
+}
+
+
+/* Family Finance visual system.
+   A quiet month-end household money journal, not a trading terminal.
+   Layout overrides only: existing event handlers and finance logic stay intact. */
+:root {
+  --family-hero-start: #2a4860;
+  --family-hero-end: #203448;
+  --family-hero-border: #456783;
+  --family-soft: #233547;
+  --family-line: #3d5267;
+  --family-highlight: #b6ddfa;
+}
+:root[data-theme='light'] {
+  --family-hero-start: #e3f0fb;
+  --family-hero-end: #eef6fc;
+  --family-hero-border: #cadde9;
+  --family-soft: #eaf4fa;
+  --family-line: #cddfed;
+  --family-highlight: #1c6499;
+  --primary: #226ba4;
+  --primarySoft: #e4f1fa;
+  --positive: #187d5c;
+  --negative: #c94853;
+  --bg: #f4f7fa;
+  --surface2: #eef4f9;
+  --border: #dce6ee;
+}
+body {
+  letter-spacing: -.08px;
+}
+.sidebar {
+  width: 226px;
+  padding: 28px 14px;
+}
+.brand {
+  gap: 12px;
+  padding: 0 9px 31px;
+}
+.brand img {
+  width: 36px;
+  height: 36px;
+  padding: 5px;
+  border-radius: 11px;
+  background: var(--family-soft);
+}
+.brand strong {
+  font-size: 15px;
+  letter-spacing: -.4px;
+}
+.brand small {
+  font-size: 11px;
+  margin-top: 3px;
+}
+.nav-item {
+  min-height: 45px;
+  padding: 12px;
+  border-radius: 11px;
+  font-weight: 560;
+}
+.nav-item.active {
+  background: var(--primarySoft);
+  color: var(--primary);
+  font-weight: 690;
+}
+.nav-item svg {
+  width: 19px;
+  height: 19px;
+}
+.app-main {
+  padding-left: clamp(20px, 3.1vw, 50px);
+  padding-right: clamp(20px, 3.1vw, 50px);
+}
+.topbar,
+#pageContent,
+.backup-banner {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.topbar {
+  min-height: 100px;
+}
+.topbar h1 {
+  font-size: clamp(22px, 2vw, 30px);
+  letter-spacing: -1.05px;
+}
+.topbar .eyebrow {
+  letter-spacing: 1.8px;
+  font-size: 10px;
+}
+.card {
+  border-radius: 17px;
+}
+.panel {
+  padding: 23px 25px;
+  margin-bottom: 17px;
+}
+.btn {
+  border-radius: 10px;
+  min-height: 40px;
+}
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #102333;
+  font-weight: 750;
+}
+:root[data-theme='light'] .btn-primary {
+  color: #fff;
+}
+:root[data-theme='dark'] .btn-primary:hover {
+  background: #b0ddfc;
+}
+.month-switch label {
+  min-width: 136px;
+}
+.month-switch .btn {
+  width: 36px;
+}
+.metric {
+  min-height: 0;
+  padding: 27px;
+}
+.family-summary {
+  grid-template-columns: minmax(0, 1.43fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 17px;
+}
+.family-summary .card {
+  min-width: 0;
+}
+.family-summary .overline {
+  margin-bottom: 15px;
+  letter-spacing: 1.5px;
+}
+.family-total {
+  background: linear-gradient(120deg, var(--family-hero-start), var(--family-hero-end));
+  border-color: var(--family-hero-border);
+}
+.family-total > .metric-value {
+  font-size: clamp(29px, 3.2vw, 48px);
+  letter-spacing: -1.7px;
+  font-weight: 740;
+  overflow-wrap: anywhere;
+  margin-bottom: 14px;
+}
+.family-total-month {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.family-total-month .subtle {
+  color: var(--muted);
+}
+.family-past {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 25px;
+  padding-top: 18px;
+  border-top: 1px solid var(--family-line);
+}
+.family-past > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.family-past span:first-child {
+  color: var(--muted);
+  font-size: 12px;
+}
+.family-past strong {
+  display: block;
+  min-width: 0;
+  font-size: clamp(15px, 1.6vw, 20px);
+  letter-spacing: -.5px;
+  overflow-wrap: anywhere;
+}
+.family-change {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.family-change > .metric-secondary {
+  font-size: clamp(22px, 2.1vw, 29px);
+  font-weight: 730;
+  letter-spacing: -.8px;
+  overflow-wrap: anywhere;
+  line-height: 1.32;
+}
+.family-change > .subtle {
+  margin-top: 3px;
+  line-height: 1.6;
+}
+.family-explainer {
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: auto;
+}
+.family-history .panel-heading {
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.family-history .history-svg {
+  min-height: 200px;
+}
+.family-group-section {
+  margin-top: 23px;
+  margin-bottom: 19px;
+}
+.family-group-section .panel-heading {
+  margin-bottom: 13px;
+}
+.family-group-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.family-group-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 15px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  min-width: 0;
+  transition: background .15s, border-color .15s;
+}
+.family-group-card:hover {
+  background: var(--surface2);
+  border-color: var(--primary);
+}
+.family-group-card:focus-visible,
+.mobile-bottom-item:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+.family-group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 650;
+}
+.family-group-title > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.family-group-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  background: #324c60;
+  color: #b5def7;
+  border-radius: 11px;
+  font-size: 18px;
+}
+.family-group-1 .family-group-icon {
+  background: #494330;
+  color: #f0d39f;
+}
+.family-group-2 .family-group-icon {
+  background: #2b4940;
+  color: #aadfc5;
+}
+.family-group-value {
+  font-size: clamp(20px, 2.1vw, 27px);
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.8px;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.family-group-note {
+  color: var(--muted);
+  font-size: 11px;
+}
+.family-next-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  background: var(--family-soft);
+  border: 1px solid var(--family-line);
+  border-radius: 15px;
+  padding: 18px 19px;
+  margin-bottom: 20px;
+}
+.family-next-icon {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  border-radius: 11px;
+  background: var(--primarySoft);
+  color: var(--primary);
+  font-size: 20px;
+  font-weight: 740;
+}
+.family-next-step strong {
+  font-size: 13px;
+}
+.family-next-step .subtle {
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.family-month-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(205px, .9fr);
+  align-items: center;
+  gap: 26px;
+  padding: 23px;
+  background: var(--family-soft);
+  border: 1px solid var(--family-line);
+  border-radius: 16px;
+  margin-bottom: 19px;
+}
+.family-month-status-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.family-month-status .overline {
+  margin-bottom: 0;
+}
+.family-month-main .inline-status {
+  color: var(--muted);
+  margin-top: 11px;
+}
+.family-month-main .metric-value {
+  margin-bottom: 0;
+}
+.family-month-progress {
+  min-width: 0;
+}
+.family-month-progress-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  margin-bottom: 11px;
+}
+.family-month-progress-count span {
+  color: var(--muted);
+}
+.family-month-progress-count strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.family-progress-bar {
+  border-radius: 20px;
+  height: 8px;
+  background: var(--border);
+  overflow: hidden;
+}
+.family-progress-bar > span {
+  display: block;
+  background: var(--primary);
+  height: 100%;
+  border-radius: inherit;
+}
+.family-month-progress .subtle {
+  margin-top: 9px;
+}
+.editor-grid {
+  grid-template-columns: minmax(0, 1.7fr) minmax(250px, .85fr);
+  gap: 15px;
+}
+.editor-grid > .card {
+  align-self: start;
+}
+.monthly-group {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.monthly-group .account-group-head {
+  background: var(--surface2);
+}
+.monthly-group .account-group-body {
+  background: var(--surface);
+}
+.editor-input {
+  min-height: 41px;
+  border-radius: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.editor-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primarySoft);
+}
+.editor-footer {
+  gap: 14px;
+  padding-top: 16px;
+  padding-bottom: 17px;
+}
+.panel-heading h2,
+.family-group-section h2 {
+  font-size: 15px;
+  letter-spacing: -.25px;
+}
+.account-mark {
+  border-radius: 11px;
+}
+.account-group {
+  border-radius: 13px;
+}
+.app-dialog {
+  border-radius: 18px;
+}
+.mobile-bottom-nav {
+  display: none;
+}
+@media (max-width: 1080px) {
+  .family-group-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 720px) {
+  .app-main {
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  }
+  .topbar {
+    min-height: 78px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-bottom: 15px;
+    column-gap: 8px;
+  }
+  .topbar h1 {
+    font-size: 23px;
+  }
+  .topbar .eyebrow {
+    font-size: 9px;
+  }
+  .topbar .mobile-menu {
+    border: 1px solid var(--border);
+    border-radius: 11px;
+  }
+  .family-summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 11px;
+  }
+  .family-total,
+  .family-change {
+    padding: 21px 19px;
+  }
+  .family-total > .metric-value {
+    font-size: clamp(25px, 8vw, 41px);
+  }
+  .family-past {
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+  .family-past strong {
+    font-size: clamp(15px, 4.5vw, 20px);
+  }
+  .family-change .metric-secondary {
+    font-size: clamp(23px, 6vw, 29px);
+  }
+  .family-explainer {
+    margin-top: 14px;
+  }
+  .family-history.panel {
+    padding: 18px 15px;
+  }
+  .family-group-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .family-group-card {
+    padding: 15px;
+    gap: 7px;
+  }
+  .family-group-value {
+    font-size: 23px;
+  }
+  .family-next-step {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .family-next-step .btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .family-month-status {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 18px;
+  }
+  .family-month-progress {
+    border-top: 1px solid var(--border);
+    padding-top: 15px;
+  }
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 80;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 8px max(6px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    box-shadow: 0 -6px 24px #080f1833;
+  }
+  .mobile-bottom-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    justify-content: center;
+    padding: 6px 2px;
+    min-height: 51px;
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    color: var(--muted);
+    font-weight: 590;
+    font-size: 10px;
+    line-height: 1.2;
+    min-width: 0;
+    cursor: pointer;
+  }
+  .mobile-bottom-item svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.85;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex: none;
+  }
+  .mobile-bottom-item.active {
+    color: var(--primary);
+    background: var(--primarySoft);
+  }
+  .mobile-bottom-item > span {
+    max-width: 100%;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  .toast {
+    bottom: calc(85px + env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 370px) {
+  .family-past {
+    gap: 8px;
+  }
+  .family-total > .metric-value {
+    font-size: 26px;
+  }
+  .family-change > .metric-secondary {
+    font-size: 23px;
+  }
+  .family-next-step {
+    padding: 14px;
+  }
+  .family-month-status {
+    padding: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .family-group-card {
+    transition: none;
+  }
 }
