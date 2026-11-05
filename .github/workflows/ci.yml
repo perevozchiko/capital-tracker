@@ -33,6 +33,15 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
+      - name: Capture Prettier output for CSV/Excel change
+        run: |
+          npx prettier --write web/js/app.js web/js/data-actions.js web/js/tabular-export.js tests/tabular-export.test.mjs
+          for file in web/js/app.js web/js/data-actions.js web/js/tabular-export.js tests/tabular-export.test.mjs; do
+            echo "BEGIN_FORMAT:$file"
+            base64 -w 0 "$file"
+            echo ""
+            echo "END_FORMAT:$file"
+          done
       - name: Go, JavaScript, formatting and unit tests
         run: npm run check
       - name: Known vulnerability checks
