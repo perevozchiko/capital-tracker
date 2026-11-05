@@ -190,6 +190,8 @@ export default {
   familyAccountsRemaining: 'accounts still need a balance',
   familyAccountsAll: 'All account balances recorded',
   familyMore: 'More',
+  familyHome: 'Home',
+  familyMonthly: 'Monthly',
   selectedMonth: 'Selected month',
   totalNetWorth: 'Total family balance',
   monthlyChange: 'Monthly change',
