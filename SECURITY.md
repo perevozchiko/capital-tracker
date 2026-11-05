@@ -11,7 +11,7 @@ No guaranteed response or support timeframe is offered.
 ## Security model
 
 - The server listens on loopback only, with Host and Origin protections and a custom header for mutations.
-- Public deployments use revocable sessions with a 30-day absolute lifetime and a 7-day idle timeout, plus source-based login throttling and bounded password-check concurrency. See [Hosting](docs/HOSTING.md) for the required proxy client-IP header.
+- Public deployments use revocable sessions. The sign-in form remembers the device by default with a 180-day lifetime renewed during use; unchecking that option retains a 30-day absolute lifetime and 7-day idle timeout. Source-based login throttling and bounded password-check concurrency apply to both. See [Hosting](docs/HOSTING.md) for the required proxy client-IP header.
 - Builds require Go 1.27.3 or newer; CI and releases scan reachable Go dependencies and npm advisories.
 - On Unix, SQLite backups are created owner-only (`0600`) before financial data is written; Windows deployments must protect the backup directory ACL.
 - A database lock prevents two application processes from writing the same data directory.

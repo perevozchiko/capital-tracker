@@ -727,6 +727,9 @@ th button:hover {
 .mobile-menu {
   display: none;
 }
+.menu-backdrop {
+  display: none;
+}
 .inline-status {
   margin-top: 11px;
   font-size: 12px;
@@ -767,9 +770,22 @@ th button:hover {
     transform: translateX(-102%);
     transition: transform 0.16s;
     box-shadow: 12px 0 30px #0002;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
   }
   .sidebar.show {
     transform: translateX(0);
+  }
+  body.menu-open {
+    overflow: hidden;
+  }
+  .menu-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 98;
+    background: #0006;
+    touch-action: pan-y;
   }
   .app-main {
     padding: 0 15px 32px;
@@ -789,11 +805,24 @@ th button:hover {
   }
   .mobile-menu {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
     border: 0;
     background: var(--surface);
     color: var(--text);
     border-radius: 8px;
-    padding: 8px 11px;
+    padding: 10px;
+  }
+  .mobile-menu svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
   }
   .grid-summary {
     grid-template-columns: 1fr;
@@ -1067,6 +1096,9 @@ th button:hover {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
   .app-dialog[open] {
     animation: none;
   }

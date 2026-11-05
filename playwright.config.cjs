@@ -11,12 +11,20 @@ module.exports = defineConfig({
     { name: 'webkit', use: { browserName: 'webkit' } },
     {
       name: 'iphone',
-      testMatch: ['**/browser-compat.spec.cjs', '**/auth.spec.cjs'],
+      testMatch: [
+        '**/browser-compat.spec.cjs',
+        '**/auth.spec.cjs',
+        '**/mobile-menu.spec.cjs',
+      ],
       use: { ...devices['iPhone 13'] },
     },
     {
       name: 'android',
-      testMatch: ['**/browser-compat.spec.cjs', '**/auth.spec.cjs'],
+      testMatch: [
+        '**/browser-compat.spec.cjs',
+        '**/auth.spec.cjs',
+        '**/mobile-menu.spec.cjs',
+      ],
       use: { ...devices['Pixel 7'] },
     },
   ],

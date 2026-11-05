@@ -15,6 +15,7 @@ form.addEventListener('submit', async (event) => {
       body: JSON.stringify({
         username: form.elements.username.value,
         password: form.elements.password.value,
+        remember: form.elements.remember.checked,
       }),
     });
     if (!response.ok) {
@@ -26,7 +27,8 @@ form.addEventListener('submit', async (event) => {
             : 'Unable to sign in. Please try again.';
       return;
     }
-    form.elements.password.value = '';
+    // Keep the submitted fields intact until navigation so password managers
+    // can offer to save them and provide Face ID/Touch ID AutoFill next time.
     location.replace('/');
   } catch {
     error.textContent =

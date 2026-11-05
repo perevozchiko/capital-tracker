@@ -11,6 +11,9 @@ test('login protects financial data, survives reload and sign-out revokes access
   expect(html).not.toContain('id="sidebar"');
   expect(html).not.toContain('/js/app.js');
   await expect(page.locator('#loginForm')).toBeVisible();
+  await expect(
+    page.getByLabel('Keep me signed in on this device'),
+  ).toBeChecked();
   await expect(page.locator('#sidebar')).toHaveCount(0);
   for (const asset of ['/js/app.js', '/css/app.css', '/manifest.webmanifest'])
     expect((await page.request.get(app + asset)).status()).toBe(401);
@@ -79,58 +82,68 @@ test('sign-in is visible without JavaScript and stays usable on small screens', 
   }
 });
 
-test('login survives server restart and reopening the browser, sign-out stays revoked', async ({
-  browser,
-  app,
-  restartApp,
-}) => {
-  let context = await browser.newContext();
-  try {
-    let page = await context.newPage();
-    await page.goto(app);
-    await page.locator('#loginUsername').fill('tester');
-    await page.locator('#loginPassword').fill('browser test password');
-    await page.locator('#loginForm button').click();
-    await expect(page.locator('#logoutButton')).toBeVisible();
-    const cookie = (await context.cookies()).find(
-      (item) => item.name === 'capital_tracker_session',
-    );
-    expect(cookie.httpOnly).toBe(true);
-    expect(cookie.expires).toBeGreaterThan(Date.now() / 1000 + 29 * 86400);
-    expect(cookie.expires).toBeLessThanOrEqual(Date.now() / 1000 + 30 * 86400);
+for (const remember of [true, false]) {
+  test(`login (remember=${remember}) survives server restart and reopening the browser, sign-out stays revoked`, async ({
+    browser,
+    app,
+    restartApp,
+  }) => {
+    let context = await browser.newContext();
+    try {
+      let page = await context.newPage();
+      await page.goto(app);
+      await page
+        .getByLabel('Keep me signed in on this device')
+        .setChecked(remember);
+      await page.locator('#loginUsername').fill('tester');
+      await page.locator('#loginPassword').fill('browser test password');
+      await page.locator('#loginForm button').click();
+      await expect(page.locator('#logoutButton')).toBeVisible();
+      const cookie = (await context.cookies()).find(
+        (item) => item.name === 'capital_tracker_session',
+      );
+      expect(cookie.httpOnly).toBe(true);
+      const lifetime = remember ? 180 : 30;
+      expect(cookie.expires).toBeGreaterThan(
+        Date.now() / 1000 + (lifetime - 1) * 86400,
+      );
+      expect(cookie.expires).toBeLessThanOrEqual(
+        Date.now() / 1000 + lifetime * 86400 + 1,
+      );
 
-    await restartApp();
-    await page.reload();
-    await expect(page.locator('#logoutButton')).toBeVisible();
-    await expect(page.locator('#loginForm')).toHaveCount(0);
-    expect((await context.request.get(app + '/api/data/export')).status()).toBe(
-      200,
-    );
+      await restartApp();
+      await page.reload();
+      await expect(page.locator('#logoutButton')).toBeVisible();
+      await expect(page.locator('#loginForm')).toHaveCount(0);
+      expect(
+        (await context.request.get(app + '/api/data/export')).status(),
+      ).toBe(200);
 
-    // Reopen with only cookies that a normal browser persists to disk.
-    const saved = await context.storageState();
-    saved.cookies = saved.cookies.filter((item) => item.expires > 0);
-    await context.close();
-    context = await browser.newContext({ storageState: saved });
-    page = await context.newPage();
-    await page.goto(app);
-    await expect(page.locator('#logoutButton')).toBeVisible();
-    await expect(page.locator('#loginForm')).toHaveCount(0);
-    await page.locator('#logoutButton').click();
-    await expect(page.locator('#loginForm')).toBeVisible();
+      // Reopen with only cookies that a normal browser persists to disk.
+      const saved = await context.storageState();
+      saved.cookies = saved.cookies.filter((item) => item.expires > 0);
+      await context.close();
+      context = await browser.newContext({ storageState: saved });
+      page = await context.newPage();
+      await page.goto(app);
+      await expect(page.locator('#logoutButton')).toBeVisible();
+      await expect(page.locator('#loginForm')).toHaveCount(0);
+      await page.locator('#logoutButton').click();
+      await expect(page.locator('#loginForm')).toBeVisible();
 
-    await restartApp();
-    // Replaying the previously valid cookie must fail after sign-out/restart.
-    await context.addCookies(saved.cookies);
-    await page.reload();
-    await expect(page.locator('#loginForm')).toBeVisible();
-    expect((await context.request.get(app + '/api/data/export')).status()).toBe(
-      401,
-    );
-  } finally {
-    await context.close();
-  }
-});
+      await restartApp();
+      // Replaying the previously valid cookie must fail after sign-out/restart.
+      await context.addCookies(saved.cookies);
+      await page.reload();
+      await expect(page.locator('#loginForm')).toBeVisible();
+      expect(
+        (await context.request.get(app + '/api/data/export')).status(),
+      ).toBe(401);
+    } finally {
+      await context.close();
+    }
+  });
+}
 
 test.describe('authentication with service workers enabled', () => {
   test.use({ serviceWorkers: 'allow' });

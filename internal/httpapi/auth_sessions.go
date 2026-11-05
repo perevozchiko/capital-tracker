@@ -13,16 +13,18 @@ import (
 const (
 	sessionCookieLifetime   = 30 * 24 * time.Hour
 	sessionIdleTimeout      = 7 * 24 * time.Hour
+	rememberedLifetime      = 180 * 24 * time.Hour
 	sessionActivityInterval = time.Hour
 )
 
 type sessionState struct {
 	ExpiresAt time.Time `json:"expires_at"`
 	LastSeen  time.Time `json:"last_seen"`
+	Remember  bool      `json:"remember,omitempty"`
 }
 
 func (s sessionState) valid(now time.Time) bool {
-	return !s.LastSeen.IsZero() && now.Before(s.ExpiresAt) && now.Before(s.LastSeen.Add(sessionIdleTimeout))
+	return !s.LastSeen.IsZero() && now.Before(s.ExpiresAt) && (s.Remember || now.Before(s.LastSeen.Add(sessionIdleTimeout)))
 }
 
 func (s sessionState) maxAge(now time.Time) int {

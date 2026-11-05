@@ -88,3 +88,101 @@ func TestLegacySessionsAreRevokedOnceOnUpgrade(t *testing.T) {
 	}
 	assertSessionStatus(t, a, login.Result().Cookies()[0], true)
 }
+
+func TestRememberedDeviceRenewsAcrossMonthsAndRestarts(t *testing.T) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(sessionTestPassword), bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "sessions.json")
+	a, err := NewAuth("tester", string(hash), "", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now().UTC().Truncate(time.Second)
+	now := start
+	a.now = func() time.Time { return now }
+	w := sessionRequest(a, "POST", "/api/auth/login", rememberedTestLogin, nil)
+	if w.Code != 204 {
+		t.Fatalf("login: %d", w.Code)
+	}
+	cookie := w.Result().Cookies()[0]
+	if cookie.MaxAge != int(rememberedLifetime.Seconds()) || !cookie.Expires.Equal(start.Add(rememberedLifetime)) || !cookie.HttpOnly {
+		t.Fatalf("remembered cookie: %+v", cookie)
+	}
+	key := sessionKey(cookie.Value)
+	// Each gap exceeds both old limits. Continued use must work beyond the
+	// original six-month deadline, including when sessions are reloaded.
+	for _, days := range []int{45, 150, 250, 365} {
+		now = start.Add(time.Duration(days) * 24 * time.Hour)
+		w = sessionRequest(a, "GET", "/api/auth/status", "", cookie)
+		if w.Code != 200 || len(w.Result().Cookies()) != 1 || w.Result().Cookies()[0].MaxAge != int(rememberedLifetime.Seconds()) {
+			t.Fatalf("remembered device expired after %d days: %d %s", days, w.Code, w.Body.String())
+		}
+		if !a.sessions[key].ExpiresAt.Equal(now.Add(rememberedLifetime)) {
+			t.Fatal("deadline did not slide")
+		}
+		a, err = NewAuth("tester", string(hash), "", path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		a.now = func() time.Time { return now }
+		assertSessionStatus(t, a, cookie, true)
+		if !a.sessions[key].Remember {
+			t.Fatal("restart lost remembered-device choice")
+		}
+	}
+	deadline := a.sessions[key].ExpiresAt
+	now = now.Add(sessionActivityInterval - time.Second)
+	w = sessionRequest(a, "GET", "/api/auth/status", "", cookie)
+	if !a.sessions[key].ExpiresAt.Equal(deadline) || w.Result().Cookies()[0].MaxAge != int(deadline.Sub(now).Seconds()) {
+		t.Fatal("requests inside the activity interval must keep the saved deadline")
+	}
+	now = deadline
+	assertSessionStatus(t, a, cookie, false)
+	a, err = NewAuth("tester", string(hash), "", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a.now = func() time.Time { return now }
+	assertSessionStatus(t, a, cookie, false)
+}
+
+func TestRememberedRenewalWriteFailureDoesNotExtendSession(t *testing.T) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(sessionTestPassword), bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "sessions.json")
+	a, err := NewAuth("tester", string(hash), "", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now().UTC()
+	a.now = func() time.Time { return now }
+	w := sessionRequest(a, "POST", "/api/auth/login", rememberedTestLogin, nil)
+	if w.Code != 204 {
+		t.Fatalf("login: %d", w.Code)
+	}
+	cookie := w.Result().Cookies()[0]
+	key := sessionKey(cookie.Value)
+	original := a.sessions[key]
+	now = now.Add(45 * 24 * time.Hour)
+	a.sessionPath = filepath.Join(t.TempDir(), "missing", "sessions.json")
+	assertSessionStatus(t, a, cookie, false)
+	if a.sessions[key] != original {
+		t.Fatal("failed persistence extended session in memory")
+	}
+	a, err = NewAuth("tester", string(hash), "", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a.now = func() time.Time { return now }
+	if a.sessions[key] != original {
+		t.Fatal("failed persistence changed saved session")
+	}
+	assertSessionStatus(t, a, cookie, true)
+	if !a.sessions[key].ExpiresAt.Equal(now.Add(rememberedLifetime)) {
+		t.Fatal("renewal did not recover")
+	}
+}
