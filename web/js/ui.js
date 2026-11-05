@@ -6,7 +6,7 @@ import { showConfirm } from './dialogs.js';
 const $ = (selector) => document.querySelector(selector);
 const icons = {
   dashboard:
-    '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+    '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
   accounts:
     '<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/>',
   monthly:
@@ -70,6 +70,19 @@ function renderNav() {
         `<button class="nav-item ${state.page === key ? 'active' : ''}" data-page="${key}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
     )
     .join('');
+  // Mobile quick navigation keeps the less frequently used screens in the drawer.
+  $('#mobileBottomNav').innerHTML =
+    [
+      ['dashboard', 'navDashboard'],
+      ['monthly', 'navMonthly'],
+      ['accounts', 'navAccounts'],
+    ]
+      .map(
+        ([key, label]) =>
+          `<button type="button" class="mobile-bottom-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(key === 'dashboard' ? 'familyHome' : key === 'monthly' ? 'familyMonthly' : label)}</span></button>`,
+      )
+      .join('') +
+    `<button type="button" class="mobile-bottom-item ${!['dashboard', 'monthly', 'accounts'].includes(state.page) ? 'active' : ''}" data-action="mobileMore" aria-label="${t('familyMore')}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>${t('familyMore')}</span></button>`;
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     el.textContent = t(
       el.dataset.i18n === 'localOnly' && state.authEnabled
@@ -105,7 +118,10 @@ function applyAmountVisibility() {
       node.setAttribute(
         'aria-label',
         monthLabel(point.month) +
-          (hidden ? '' : ': ' + money(point.total_eur_minor)),
+          (hidden ? '' : ': ' + money(point.total_eur_minor)) +
+          (node.dataset.chartDecreased === 'true'
+            ? ' · ' + t('chartDecrease')
+            : ''),
       );
   });
   $('#chartTooltip').hidden = true;

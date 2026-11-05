@@ -159,6 +159,45 @@ test('charts connect across missing and incomplete months; custom ranges handle 
   );
 });
 
+test('decreases follow complete recorded values across gaps and range boundaries', async ({
+  page,
+  app,
+}) => {
+  await seedCapital(page, app, [
+    ['2025-01', '10000'],
+    ['2025-02', '9000'],
+    ['2025-03', null],
+    ['2025-05', '8000'],
+    ['2025-06', '8000'],
+    ['2025-07', '-1000'],
+    ['2025-08', '-500'],
+  ]);
+  await open(page, app);
+  const decreased = page.locator('.chart-dot-decreased');
+  await expect(decreased).toHaveCount(3);
+  await expect(page.locator('.history-svg path')).toHaveCount(2);
+  await expect(decreased.first()).toHaveAttribute(
+    'aria-label',
+    'February 2025 · Lower than previous recorded month',
+  );
+  await decreased.first().focus();
+  await expect(page.locator('#chartTooltip')).toContainText(
+    'Lower than previous recorded month',
+  );
+  await expect(page.locator('#chartTooltip .money-text')).toBeHidden();
+  await page.getByRole('button', { name: 'Show amounts', exact: true }).click();
+  await expect(decreased.first()).toHaveAttribute(
+    'aria-label',
+    'February 2025: €90.00 · Lower than previous recorded month',
+  );
+  await applyRange(page, '2025-05', '2025-06');
+  await expect(decreased).toHaveCount(1);
+  await expect(decreased).toHaveAttribute('aria-label', /May 2025/);
+  await applyRange(page, '2025-07', '2025-08');
+  await expect(decreased).toHaveCount(1);
+  await expect(decreased).toHaveAttribute('aria-label', /July 2025/);
+});
+
 for (const [screen, prefix, endpoint] of [
   ['Income', 'income', 'incomes'],
   ['Major expenses', 'expense', 'expenses'],
@@ -177,7 +216,7 @@ for (const [screen, prefix, endpoint] of [
               month,
               name: 'Saved note',
               currency: 'EUR',
-              amount_minor: '12345',
+              amount_minor: month === '2024-12' ? '12345' : '10000',
               rate: '1',
             },
           ],
@@ -199,10 +238,16 @@ for (const [screen, prefix, endpoint] of [
     ).json();
     await period(page, '6 months').click();
     await expect(page.locator('.chart-dot')).toHaveCount(2);
+    await expect(page.locator('.chart-dot-decreased')).toHaveCount(1);
+    await expect(page.locator('.chart-dot-decreased')).toHaveAttribute(
+      'aria-label',
+      'July 2025 · Lower than previous recorded month',
+    );
     await expect(page.locator('.curve')).toHaveCount(1);
     await expect(page.locator('.chart-area')).toHaveCount(1);
     await applyRange(page, '2024-12', '2024-12');
     await expect(page.locator('.chart-dot')).toHaveCount(1);
+    await expect(page.locator('.chart-dot-decreased')).toHaveCount(0);
     await expect(page.locator(`#${prefix}Form`)).toContainText('Unsaved note');
     await expect(page.locator('.month-picker')).toHaveValue('2026-01');
     expect(await editor.evaluate((node) => node.isConnected)).toBe(true);

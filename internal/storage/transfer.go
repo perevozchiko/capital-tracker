@@ -54,7 +54,7 @@ type TransferRate struct {
 func (s *Store) ExportData() (TransferDocument, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
-	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 6, ExportedAt: now(),
+	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 7, ExportedAt: now(),
 		Accounts: []Account{}, Groups: []AccountGroup{}, AccountPeriods: []TransferPeriod{}, Months: []Month{},
 		Balances: []TransferBalance{}, Rates: []TransferRate{}, Incomes: []Income{}, Expenses: []Expense{}, RecurringExpenses: []RecurringExpenseSnapshot{}, Settings: map[string]string{}}
 	tx, err := s.DB.Begin()
@@ -231,7 +231,7 @@ func periodActive(periods []TransferPeriod, month string) bool {
 // snapshots before touching the database. It never fixes invalid input silently.
 func ValidateTransfer(d TransferDocument) error {
 	bad := func() error { return invalid("import") }
-	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 6) || !validTransferTime(d.ExportedAt) ||
+	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 7) || !validTransferTime(d.ExportedAt) ||
 		(d.SchemaVersion >= 6 && d.RecurringExpenses == nil) || d.Accounts == nil || (d.SchemaVersion >= 2 && d.Groups == nil) || (d.SchemaVersion >= 3 && d.Incomes == nil) || (d.SchemaVersion >= 5 && d.Expenses == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
 		return bad()
 	}
@@ -254,6 +254,9 @@ func ValidateTransfer(d TransferDocument) error {
 			return bad()
 		}
 		if _, err := validateExpense(snapshot.Month, snapshot.Entries); err != nil {
+			return bad()
+		}
+		if (d.SchemaVersion < 7 && len(snapshot.Groups) > 0) || validateRecurringExpenseGroups(snapshot.Entries, snapshot.Groups) != nil {
 			return bad()
 		}
 		recurringMonths[snapshot.Month] = true
@@ -435,7 +438,7 @@ func (s *Store) importData(d TransferDocument) error {
 		return err
 	}
 	defer tx.Rollback()
-	for _, table := range []string{"recurring_expenses", "recurring_expense_months", "expenses", "incomes", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
+	for _, table := range []string{"recurring_expense_group_members", "recurring_expense_groups", "recurring_expenses", "recurring_expense_months", "expenses", "incomes", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
 		if _, err = tx.Exec("DELETE FROM " + table); err != nil {
 			return err
 		}
@@ -499,6 +502,9 @@ func (s *Store) importData(d TransferDocument) error {
 			if _, err = tx.Exec("INSERT INTO recurring_expenses(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", snapshot.Month, i, entry.Name, entry.Currency, amount, rate); err != nil {
 				return invalid("import")
 			}
+		}
+		if err := writeRecurringExpenseGroups(tx, snapshot); err != nil {
+			return invalid("import")
 		}
 	}
 	for k, v := range d.Settings {

@@ -41,8 +41,17 @@ function rangeFor(history, selection) {
 }
 
 function chartSVG(history, source, range) {
+  let previous = null;
   const visible = history
-    .map((point, index) => ({ ...point, index }))
+    .map((point, index) => {
+      const complete = point.complete && point.total_eur_minor != null;
+      const decreased =
+        complete &&
+        previous != null &&
+        BigInt(point.total_eur_minor) < BigInt(previous.total_eur_minor);
+      if (complete) previous = point;
+      return { ...point, index, decreased };
+    })
     .filter((point) => point.month >= range.from && point.month <= range.to);
   const valid = visible.filter((p) => p.complete && p.total_eur_minor != null);
   if (!valid.length)
@@ -108,7 +117,7 @@ function chartSVG(history, source, range) {
   const dots = valid
     .map(
       (p) =>
-        `<circle class="chart-dot" cx="${xFor(p.month)}" cy="${yFor(Number(p.total_eur_minor) / 100)}" r="4.5" tabindex="0" role="img" aria-label="${escapeHTML(monthLabel(p.month))}${document.documentElement.dataset.hideAmounts === 'true' ? '' : ': ' + escapeHTML(money(p.total_eur_minor))}" data-chart-source="${source}" data-chart-index="${p.index}"/>`,
+        `<circle class="chart-dot${p.decreased ? ' chart-dot-decreased' : ''}" cx="${xFor(p.month)}" cy="${yFor(Number(p.total_eur_minor) / 100)}" r="${p.decreased ? 5.5 : 4.5}" tabindex="0" role="img" aria-label="${escapeHTML(monthLabel(p.month))}${document.documentElement.dataset.hideAmounts === 'true' ? '' : ': ' + escapeHTML(money(p.total_eur_minor))}${p.decreased ? ' · ' + t('chartDecrease') : ''}" data-chart-source="${source}" data-chart-index="${p.index}" data-chart-decreased="${p.decreased}"/>`,
     )
     .join('');
   const title = t(
@@ -120,7 +129,7 @@ function chartSVG(history, source, range) {
           ? 'incomeHistory'
           : 'history',
   );
-  return `<div class="chart-wrap"><svg class="history-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}"><defs><linearGradient id="${gradientID}" x1="0" y1="0" x2="0" y2="1"><stop class="chart-gradient-top" offset="0%"/><stop class="chart-gradient-bottom" offset="100%"/></linearGradient></defs>${grid}${paths}${dots}${labels}</svg></div><p class="footer-note">${t('chartNote')}</p>`;
+  return `<div class="chart-wrap"><svg class="history-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}"><defs><linearGradient id="${gradientID}" x1="0" y1="0" x2="0" y2="1"><stop class="chart-gradient-top" offset="0%"/><stop class="chart-gradient-bottom" offset="100%"/></linearGradient></defs>${grid}${paths}${dots}${labels}</svg></div>${valid.some((p) => p.decreased) ? `<p class="chart-decrease-legend"><span aria-hidden="true"></span>${t('chartDecrease')}</p>` : ''}<p class="footer-note">${t('chartNote')}</p>`;
 }
 
 function chart(history, source = 'capital') {

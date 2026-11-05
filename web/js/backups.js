@@ -21,6 +21,7 @@ const previewActions = new Set([
   'toggleGroup',
   'groupCollapseAll',
   'groupExpandAll',
+  'recurringGroupToggle',
 ]);
 
 export const backupActionAllowed = (action) => previewActions.has(action);

@@ -91,6 +91,10 @@ document.addEventListener('click', async (e) => {
   const action = node.dataset.action,
     id = Number(node.dataset.id);
   try {
+    if (action === 'mobileMore') {
+      $('#mobileMenu').click();
+      return;
+    }
     if (state.snapshotID && !backupActionAllowed(action)) return;
     if (action === 'exitBackup') location.assign('/');
     else if (action === 'createBackup') await createBackup(node);
@@ -325,7 +329,7 @@ function pointTooltip(node, event) {
   )[Number(node.dataset.chartIndex)];
   if (!p) return;
   const tooltip = $('#chartTooltip');
-  tooltip.innerHTML = `${escapeHTML(monthLabel(p.month))} · ${moneyHTML(p.total_eur_minor)}`;
+  tooltip.innerHTML = `${escapeHTML(monthLabel(p.month))} · ${moneyHTML(p.total_eur_minor)}${node.dataset.chartDecreased === 'true' ? `<br>${t('chartDecrease')}` : ''}`;
   tooltip.hidden = false;
   const rect = node.getBoundingClientRect();
   const clientX = event?.clientX || rect.left + rect.width / 2;
