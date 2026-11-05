@@ -71,22 +71,31 @@ func (a *Auth) authenticated(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 	// Persist activity at most once per hour, rather than fsync on every asset.
-	// A crash can shorten the idle window, never extend the absolute lifetime.
+	// Remembered devices get a sliding lifetime; regular sessions keep their
+	// original absolute deadline. Only acknowledge a renewal after saving it.
 	if now.Sub(session.LastSeen) >= sessionActivityInterval {
 		updated := session
 		updated.LastSeen = now
+		if session.Remember {
+			updated.ExpiresAt = now.Add(rememberedLifetime)
+		}
 		a.sessions[key] = updated
 		if err := a.saveSessions(); err != nil {
 			a.sessions[key] = session
 			return false
 		}
+		session = updated
 	}
 	http.SetCookie(w, a.cookie(cookie.Value, session.maxAge(now)))
 	return true
 }
 
 func (a *Auth) cookie(value string, maxAge int) *http.Cookie {
-	return &http.Cookie{Name: sessionCookie, Value: value, Path: "/", HttpOnly: true, Secure: a.Origin != "", SameSite: http.SameSiteStrictMode, MaxAge: maxAge}
+	expires := a.now().Add(time.Duration(maxAge) * time.Second)
+	if maxAge < 0 {
+		expires = time.Unix(1, 0)
+	}
+	return &http.Cookie{Name: sessionCookie, Value: value, Path: "/", HttpOnly: true, Secure: a.Origin != "", SameSite: http.SameSiteStrictMode, MaxAge: maxAge, Expires: expires}
 }
 
 func (a *Auth) protect(next http.Handler, assets fs.FS) http.Handler {
@@ -157,6 +166,7 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
+		Remember bool   `json:"remember"`
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 4096)
 	if !readJSON(w, r, &input) {
@@ -207,6 +217,10 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 	key := sessionKey(token)
 	now := a.now()
 	session := sessionState{ExpiresAt: now.Add(sessionCookieLifetime), LastSeen: now}
+	if input.Remember {
+		session.Remember = true
+		session.ExpiresAt = now.Add(rememberedLifetime)
+	}
 	a.sessions[key] = session
 	if err := a.saveSessions(); err != nil {
 		delete(a.sessions, key)

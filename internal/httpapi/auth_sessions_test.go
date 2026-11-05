@@ -18,6 +18,7 @@ import (
 
 const sessionTestPassword = "persistent test password"
 const sessionTestLogin = `{"username":"tester","password":"persistent test password"}`
+const rememberedTestLogin = `{"username":"tester","password":"persistent test password","remember":true}`
 
 func sessionRequest(a *Auth, method, path, body string, cookie *http.Cookie) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(method, "http://127.0.0.1:8765"+path, strings.NewReader(body))
@@ -40,7 +41,7 @@ func assertSessionStatus(t *testing.T, a *Auth, cookie *http.Cookie, want bool) 
 	}
 	if want {
 		cookies := w.Result().Cookies()
-		if len(cookies) != 1 || cookies[0].Value != cookie.Value || cookies[0].MaxAge <= 0 || cookies[0].MaxAge > int(sessionCookieLifetime.Seconds()) {
+		if len(cookies) != 1 || cookies[0].Value != cookie.Value || cookies[0].MaxAge <= 0 || cookies[0].MaxAge > int(rememberedLifetime.Seconds()) {
 			t.Fatalf("session cookie was not renewed: %v", cookies)
 		}
 	} else if len(w.Result().Cookies()) != 0 {

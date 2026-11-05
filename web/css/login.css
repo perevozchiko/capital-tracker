@@ -69,6 +69,22 @@ button:disabled {
   opacity: 0.6;
   cursor: wait;
 }
+.remember-device {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.remember-device input {
+  flex: none;
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  accent-color: #7c9fff;
+}
 #loginError {
   color: #ff8b97;
   font-size: 14px;
