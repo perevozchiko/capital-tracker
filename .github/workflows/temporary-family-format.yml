@@ -1,0 +1,35 @@
+name: Temporary formatting for family finance design
+
+on:
+  push:
+    branches:
+      - design/family-finance
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: design/family-finance
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Format new UI files
+        run: npx prettier --write web/css/app.css web/index.html web/js/dashboard.js web/js/i18n/en.js tests/ui/family-finance-design.spec.cjs
+      - name: Commit formatted changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/css/app.css web/index.html web/js/dashboard.js web/js/i18n/en.js tests/ui/family-finance-design.spec.cjs
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "style: format family-finance UI files with Prettier"
+          git push origin HEAD:refs/heads/design/family-finance
