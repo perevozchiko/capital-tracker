@@ -91,6 +91,10 @@ document.addEventListener('click', async (e) => {
   const action = node.dataset.action,
     id = Number(node.dataset.id);
   try {
+    if (action === 'mobileMore') {
+      $('#mobileMenu').click();
+      return;
+    }
     if (state.snapshotID && !backupActionAllowed(action)) return;
     if (action === 'exitBackup') location.assign('/');
     else if (action === 'createBackup') await createBackup(node);
