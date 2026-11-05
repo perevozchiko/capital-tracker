@@ -1,7 +1,7 @@
 package buildinfo
 
 // Version is the sole authoritative application version.
-const Version = "1.1.0"
+const Version = "1.2.0"
 
 // Commit is set at build time and needs no Git at runtime.
 var Commit = "unknown"
