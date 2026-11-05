@@ -126,6 +126,13 @@ export default {
   clearDataPrompt: 'Type {phrase} to confirm the permanent deletion:',
   clearDataPhrase: 'DELETE',
   dataCleared: 'All application data has been deleted.',
+  spreadsheetExport: 'Spreadsheet export',
+  spreadsheetExportHelp:
+    'Export monthly balances to CSV or Excel. Excel includes a separate Rates sheet with your saved historical exchange rates, referenced by the EUR formulas. These files are for reporting; use JSON to back up and restore data.',
+  exportCSV: 'Export CSV',
+  exportExcel: 'Export Excel',
+  csvExported: 'CSV export downloaded.',
+  excelExported: 'Excel export downloaded.',
   jsonData: 'JSON import and export',
   jsonDataHelp:
     'Download a portable JSON copy of your accounts, activity periods, monthly balances, income notes, major expenses, recurring expenses, exchange rates and settings.',

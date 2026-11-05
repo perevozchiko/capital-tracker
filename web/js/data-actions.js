@@ -4,6 +4,7 @@ import { t } from './messages.js';
 import { $, notify, confirmClean, themeApply } from './ui.js';
 import { showConfirm, showTypedConfirm } from './dialogs.js';
 import { render, refresh } from './router.js';
+import { buildCSV, buildExcel } from './tabular-export.js';
 
 async function exportJSON() {
   try {
@@ -27,6 +28,32 @@ async function exportJSON() {
     notify(err.message || t('error'), true);
   }
 }
+async function exportTabular(format) {
+  try {
+    const snapshot = await api('/data/export');
+    const file = format === 'xlsx'
+      ? buildExcel(snapshot)
+      : new Blob([buildCSV(snapshot)], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(file);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download =
+      'capital-tracker-' +
+      new Date().toISOString().replace(/[:.]/g, '-') +
+      '.' + format;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    notify(t(format === 'xlsx' ? 'excelExported' : 'csvExported'));
+  } catch (err) {
+    notify(err.message || t('error'), true);
+  }
+}
+
+const exportCSV = () => exportTabular('csv');
+const exportExcel = () => exportTabular('xlsx');
+
 async function importJSON(file) {
   if (!file) return;
   try {
@@ -115,4 +142,4 @@ async function clearAllData() {
   notify(t('dataCleared'));
 }
 
-export { exportJSON, importJSON, clearAllData };
+export { exportJSON, exportCSV, exportExcel, importJSON, clearAllData };

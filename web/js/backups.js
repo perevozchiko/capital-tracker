@@ -12,6 +12,8 @@ const previewActions = new Set([
   'previewBackup',
   'reloadBackups',
   'exportJSON',
+  'exportCSV',
+  'exportExcel',
   'logout',
   'toggleAmounts',
   'monthPrev',
