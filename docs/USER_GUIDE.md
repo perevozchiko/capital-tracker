@@ -71,7 +71,7 @@ Open **Settings → JSON import and export** in the browser:
 - Import validates the format/schema version, currencies, dates, relationships and financial precision before starting a SQLite transaction. Malformed or inconsistent input is rejected; the existing data is preserved on failure. Import does not modify database migrations.
 - This is a portable application-data snapshot, **not** a replacement for the SQLite `backup` command, which remains the preferred full-database backup. JSON exports contain personal financial information and should be stored securely.
 
-JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":6}`. Older versions 1–5 can still be imported; version 1 accounts start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
+JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":7}`. Older versions 1–6 can still be imported; version 1 accounts start in **Ungrouped**. Versions 1–6 have no recurring-expense groups, so their recurring entries start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
 
 ## Clearing all local data
 
@@ -122,6 +122,8 @@ Use × to remove a row, or **Delete expense** to delete the selected month after
 ## Recurring expenses
 
 Open **Recurring expenses** and choose a month. Add named expenses, amounts and currencies, set one exchange rate per currency, and click **Save recurring expense**. Entries, rates, EUR equivalents and the history chart work like Major expenses.
+
+Regular expenses support separate groups with EUR subtotals. Use **New group**, choose a group when adding an expense, and drag expenses between groups or drag group headers to change their order. The ⋮ menus also offer group selection and move up/down controls for touch and keyboard use. Groups can be renamed, collapsed or deleted; deleting a group moves its expenses to **Ungrouped**. Use **Save recurring expense** to save amounts, groups and their order together for the selected month. Other saved months remain unchanged, while future unsaved months inherit the latest earlier snapshot. Group subtotals round once per group, so their sum can differ from the once-rounded monthly total by a cent.
 
 An unsaved month starts with the list, amounts and rates from the most recent saved earlier month, even if calendar months were skipped. A message identifies the source month. Rates can be updated before saving. Opening a month does not create a saved record; save it to keep an independent monthly list. Changes to earlier months never replace an already saved later month.
 

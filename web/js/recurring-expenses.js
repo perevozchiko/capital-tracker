@@ -6,6 +6,15 @@ import { $, notify, applyAmountVisibility } from './ui.js';
 import { chart } from './chart.js';
 import { showConfirm } from './dialogs.js';
 import { incomeTotal as recurringExpenseTotal } from './income-math.js';
+import {
+  renderRecurringExpenseGroups,
+  recurringExpenseGroupDialog,
+  refreshRecurringExpenseGroups,
+  readRecurringExpenseGroups,
+  bindRecurringExpenseGroups,
+} from './recurring-expense-groups.js';
+
+bindRecurringExpenseGroups(updateRecurringExpenseTotals);
 
 let monthRates = new Map();
 
@@ -39,11 +48,11 @@ function syncRecurringExpenseRates() {
   $('#recurringExpenseRates').hidden = used.size === 0;
 }
 function recurringExpenseRow(entry) {
-  return `<div class="account-row income-list-row" data-recurring-expense-row data-name="${escapeHTML(entry.name)}" data-currency="${escapeHTML(entry.currency)}" data-amount-minor="${escapeHTML(entry.amount_minor)}">
-    <div class="account-main income-list-main"><strong data-recurring-expense-name>${escapeHTML(entry.name)}</strong><span class="currency-tag">${escapeHTML(entry.currency)}</span></div>
+  return `<div class="account-row income-list-row" data-recurring-expense-row draggable="true" data-name="${escapeHTML(entry.name)}" data-currency="${escapeHTML(entry.currency)}" data-amount-minor="${escapeHTML(entry.amount_minor)}">
+    <div class="account-main income-list-main"><span class="drag-handle" title="${t('recurringExpenseDrag')}" aria-hidden="true">⠿</span><strong data-recurring-expense-name>${escapeHTML(entry.name)}</strong><span class="currency-tag">${escapeHTML(entry.currency)}</span></div>
     <div class="account-balance"><strong data-recurring-expense-amount>${moneyHTML(entry.amount_minor, entry.currency)}</strong><small>${t('recurringExpenseAmount')}</small></div>
     <div class="account-balance"><strong data-recurring-expense-eur>—</strong><small>${t('totalEUR')}</small></div>
-    <button class="btn btn-icon" type="button" data-action="removeRecurringExpenseRow" aria-label="${t('removeRecurringExpense')}">×</button>
+    <div class="recurring-row-actions"><details class="account-actions-menu" name="recurring-actions"><summary aria-label="${t('recurringExpenseActions')}">⋮</summary><div class="action-menu-content"><label class="menu-move-label">${t('moveToGroup')}<select data-recurring-move aria-label="${t('moveToGroup')}"></select></label><button type="button" data-recurring-action="rowUp">${t('reorderUp')}</button><button type="button" data-recurring-action="rowDown">${t('reorderDown')}</button></div></details><button class="btn btn-icon" type="button" data-action="removeRecurringExpenseRow" aria-label="${t('removeRecurringExpense')}">×</button></div>
   </div>`;
 }
 
@@ -67,8 +76,10 @@ async function renderRecurringExpenses() {
  <div class="field"><label for="recurringExpenseName">${t('recurringExpenseName')}</label><input id="recurringExpenseName" name="name" maxlength="100" required placeholder="${t('recurringExpenseNamePlaceholder')}"></div>
  <div class="field"><label for="recurringExpenseAmount">${t('recurringExpenseAmount')}</label><input id="recurringExpenseAmount" name="amount" data-recurring-expense type="text" inputmode="decimal" autocomplete="off" required></div>
  <div class="field"><label for="recurringExpenseCurrency">${t('currency')}</label><select id="recurringExpenseCurrency" name="currency">${state.currencies.map((c) => `<option ${c === 'EUR' ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+ <div class="field"><label for="recurringExpenseGroup">${t('group')}</label><select id="recurringExpenseGroup" name="group"></select></div>
  <button class="btn btn-primary" type="submit">${t('addRecurringExpense')}</button></form></section>
- <section class="card panel"><div class="panel-heading"><h2>${t('recurringExpenseEditor')}</h2></div><p class="subtle">${t('recurringExpenseHelp')}</p>${month.inherited_from ? `<p class="caption">${t('recurringExpenseInherited').replace('{month}', escapeHTML(month.inherited_from))}</p>` : ''}<form id="recurringExpenseForm"><p id="recurringExpenseListEmpty" class="caption" ${month?.entries?.length ? 'hidden' : ''}>${t('recurringExpenseListEmpty')}</p><div class="income-fields">${(month?.entries || []).map(recurringExpenseRow).join('')}</div><aside id="recurringExpenseRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('recurringExpenseSharedRatesHelp')}</p><div id="recurringExpenseRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadRecurringExpenseRates">${t('loadRates')}</button><p id="recurringExpenseRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyRecurringExpenseTotal')}</span><strong id="recurringExpenseTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveRecurringExpense')}</button><button class="btn btn-danger" type="button" data-action="deleteRecurringExpense" ${month.entries.length ? '' : 'disabled'}>${t('deleteRecurringExpense')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('recurringExpenseHistory')}</h2></div>${chart(state.recurringExpenseHistory, 'recurringExpense')}</section>`;
+ <section class="card panel"><div class="panel-heading"><h2>${t('recurringExpenseEditor')}</h2><button type="button" class="btn btn-small btn-primary" data-recurring-action="create">+ ${t('createGroup')}</button></div><p class="subtle">${t('recurringExpenseHelp')}</p><p class="caption">${t('recurringExpenseGroupsHelp')}</p>${month.inherited_from ? `<p class="caption">${t('recurringExpenseInherited').replace('{month}', escapeHTML(month.inherited_from))}</p>` : ''}<form id="recurringExpenseForm"><p id="recurringExpenseListEmpty" class="caption" ${month?.entries?.length ? 'hidden' : ''}>${t('recurringExpenseListEmpty')}</p><div class="income-fields">${renderRecurringExpenseGroups(month.entries || [], month.groups || [], recurringExpenseRow)}</div><aside id="recurringExpenseRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('recurringExpenseSharedRatesHelp')}</p><div id="recurringExpenseRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadRecurringExpenseRates">${t('loadRates')}</button><p id="recurringExpenseRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyRecurringExpenseTotal')}</span><strong id="recurringExpenseTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveRecurringExpense')}</button><button class="btn btn-danger" type="button" data-action="deleteRecurringExpense" ${month.entries.length ? '' : 'disabled'}>${t('deleteRecurringExpense')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('recurringExpenseHistory')}</h2></div>${chart(state.recurringExpenseHistory, 'recurringExpense')}</section>${recurringExpenseGroupDialog()}`;
+  refreshRecurringExpenseGroups();
   syncRecurringExpenseRates();
   updateRecurringExpenseTotals();
   applyAmountVisibility();
@@ -111,6 +122,18 @@ function updateRecurringExpenseTotals() {
   $('#recurringExpenseTotal').innerHTML = complete
     ? moneyHTML(recurringExpenseTotal(entries))
     : '—';
+  for (const group of form.querySelectorAll('[data-recurring-group]')) {
+    try {
+      const members = [
+        ...group.querySelectorAll('[data-recurring-expense-row]'),
+      ].map(readRow);
+      group.querySelector('[data-recurring-group-total]').innerHTML = moneyHTML(
+        recurringExpenseTotal(members),
+      );
+    } catch {
+      group.querySelector('[data-recurring-group-total]').textContent = '—';
+    }
+  }
 }
 
 function addRecurringExpenseRow(form) {
@@ -119,8 +142,11 @@ function addRecurringExpenseRow(form) {
   const amount = parseMoney(form.elements.amount.value);
   if (amount == null || BigInt(amount) < 0n)
     throw new Error(t('recurringExpenseNonnegative'));
-  $('#recurringExpenseForm .income-fields').insertAdjacentHTML(
-    'beforeend',
+  const group = [...document.querySelectorAll('[data-recurring-group]')].find(
+    (group) => group.dataset.recurringGroup === form.elements.group.value,
+  );
+  group.querySelector('[data-recurring-group-empty]').insertAdjacentHTML(
+    'beforebegin',
     recurringExpenseRow({
       name,
       amount_minor: amount,
@@ -129,14 +155,18 @@ function addRecurringExpenseRow(form) {
   );
   $('#recurringExpenseListEmpty').hidden = true;
   state.dirty = true;
+  refreshRecurringExpenseGroups();
   syncRecurringExpenseRates();
   updateRecurringExpenseTotals();
   applyAmountVisibility();
+  const selectedGroup = form.elements.group.value;
   form.reset();
+  form.elements.group.value = selectedGroup;
   form.elements.name.focus();
 }
 function removeRecurringExpenseRow(button) {
   button.closest('[data-recurring-expense-row]').remove();
+  refreshRecurringExpenseGroups();
   $('#recurringExpenseListEmpty').hidden = !!$(
     '#recurringExpenseForm [data-recurring-expense-row]',
   );
@@ -173,7 +203,10 @@ async function saveRecurringExpense(form) {
   form.inert = true;
   addForm.inert = true;
   try {
-    await request('/recurring-expenses/' + state.month, 'PUT', { entries });
+    await request('/recurring-expenses/' + state.month, 'PUT', {
+      entries,
+      groups: readRecurringExpenseGroups(),
+    });
     if (!isCurrentView()) return;
     state.dirty = false;
     await renderRecurringExpenses();

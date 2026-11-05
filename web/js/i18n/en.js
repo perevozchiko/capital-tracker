@@ -154,6 +154,17 @@ export default {
   groupHelp:
     'Give each group a distinct name (for example, Savings, Investments or Loans).',
   groupTotalEUR: 'Subtotal in EUR',
+  recurringExpenseGroupsHelp:
+    'Drag expenses between groups or drag group headers to reorder them. Use ⋮ for more actions. Save to keep this month’s groups and order.',
+  recurringExpenseDropHere: 'Drop recurring expenses here.',
+  recurringExpenseDrag: 'Drag recurring expense to another group',
+  recurringExpenseActions: 'Recurring expense actions',
+  recurringExpenseCount: '{count} expenses',
+  recurringExpenseSingle: '1 expense',
+  recurringExpenseDeleteGroupWarning:
+    'Delete this group? Its expenses will move to Ungrouped. Save the month to keep this change.',
+  field_groups:
+    'Use distinct group names and assign each expense to at most one group.',
   toggleGroup: 'Collapse or expand group',
   collapseAllGroups: 'Collapse all',
   expandAllGroups: 'Expand all',

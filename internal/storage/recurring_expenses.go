@@ -8,13 +8,16 @@ import (
 )
 
 type RecurringExpenseSnapshot struct {
-	Month   string    `json:"month"`
-	Entries []Expense `json:"entries"`
+	Month   string                  `json:"month"`
+	Entries []Expense               `json:"entries"`
+	Groups  []RecurringExpenseGroup `json:"groups,omitempty"`
 }
 
 type RecurringExpenseMonth struct {
 	ExpenseMonth
-	InheritedFrom string `json:"inherited_from,omitempty"`
+	InheritedFrom          string                       `json:"inherited_from,omitempty"`
+	Groups                 []RecurringExpenseGroupTotal `json:"groups"`
+	UngroupedTotalEURMinor string                       `json:"ungrouped_total_eur_minor"`
 }
 
 func readRecurringExpenses(q interface {
@@ -42,7 +45,18 @@ func readRecurringExpenses(q interface {
 			m.Entries = append(m.Entries, Expense{Month: month, Currency: currency.String, AmountMinor: strconv.FormatInt(amount.Int64, 10), Rate: finance.RateString(rate.Int64), Name: name.String})
 		}
 	}
-	return snapshots, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	rows.Close()
+	groups, err := readRecurringExpenseGroups(q)
+	if err != nil {
+		return nil, err
+	}
+	for i := range snapshots {
+		snapshots[i].Groups = groups[snapshots[i].Month]
+	}
+	return snapshots, nil
 }
 
 func recurringExpenseTotal(snapshot RecurringExpenseSnapshot) (ExpenseMonth, error) {
@@ -55,7 +69,7 @@ func recurringExpenseTotal(snapshot RecurringExpenseSnapshot) (ExpenseMonth, err
 }
 
 func (s *Store) RecurringExpenses() ([]ExpenseMonth, error) {
-	snapshots, err := readRecurringExpenses(s.DB)
+	snapshots, err := s.recurringExpenseSnapshots()
 	if err != nil {
 		return nil, err
 	}
@@ -70,22 +84,38 @@ func (s *Store) RecurringExpenses() ([]ExpenseMonth, error) {
 	return months, nil
 }
 
+func (s *Store) recurringExpenseSnapshots() ([]RecurringExpenseSnapshot, error) {
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	return readRecurringExpenses(tx)
+}
+
 // Unsaved months inherit the most recent earlier snapshot, including an empty one.
 // Reading never creates records; saving freezes only the selected month.
 func (s *Store) RecurringExpense(month string) (RecurringExpenseMonth, error) {
 	if !finance.ValidMonth(month) {
 		return RecurringExpenseMonth{}, invalid("month")
 	}
-	months, err := s.RecurringExpenses()
+	snapshots, err := s.recurringExpenseSnapshots()
 	if err != nil {
 		return RecurringExpenseMonth{}, err
 	}
-	result := RecurringExpenseMonth{ExpenseMonth: ExpenseMonth{Month: month, Entries: []Expense{}, TotalEURMinor: "0", Complete: true}}
-	for _, previous := range months {
+	result := RecurringExpenseMonth{ExpenseMonth: ExpenseMonth{Month: month, Entries: []Expense{}, TotalEURMinor: "0", Complete: true}, Groups: []RecurringExpenseGroupTotal{}, UngroupedTotalEURMinor: "0"}
+	for _, previous := range snapshots {
 		if previous.Month > month {
 			break
 		}
-		result.ExpenseMonth = previous
+		result.ExpenseMonth, err = recurringExpenseTotal(previous)
+		if err != nil {
+			return RecurringExpenseMonth{}, err
+		}
+		result.Groups, result.UngroupedTotalEURMinor, err = recurringExpenseGroupTotals(previous)
+		if err != nil {
+			return RecurringExpenseMonth{}, err
+		}
 		result.Month = month
 		result.InheritedFrom = ""
 		if previous.Month != month {
@@ -99,10 +129,18 @@ func (s *Store) RecurringExpense(month string) (RecurringExpenseMonth, error) {
 }
 
 func (s *Store) PutRecurringExpense(month string, entries []Expense) error {
+	return s.PutRecurringExpenseSnapshot(RecurringExpenseSnapshot{Month: month, Entries: entries})
+}
+
+func (s *Store) PutRecurringExpenseSnapshot(snapshot RecurringExpenseSnapshot) error {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
+	month, entries := snapshot.Month, snapshot.Entries
 	values, err := validateExpense(month, entries)
 	if err != nil {
+		return err
+	}
+	if err := validateRecurringExpenseGroups(entries, snapshot.Groups); err != nil {
 		return err
 	}
 	tx, err := s.DB.Begin()
@@ -116,10 +154,16 @@ func (s *Store) PutRecurringExpense(month string, entries []Expense) error {
 	if _, err = tx.Exec("DELETE FROM recurring_expenses WHERE month=?", month); err != nil {
 		return err
 	}
+	if _, err = tx.Exec("DELETE FROM recurring_expense_groups WHERE month=?", month); err != nil {
+		return err
+	}
 	for i, entry := range entries {
 		if _, err = tx.Exec("INSERT INTO recurring_expenses(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", month, i, entry.Name, entry.Currency, values[i].Amount, values[i].Rate); err != nil {
 			return err
 		}
+	}
+	if err := writeRecurringExpenseGroups(tx, snapshot); err != nil {
+		return err
 	}
 	return tx.Commit()
 }

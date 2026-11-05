@@ -32,7 +32,7 @@ func TestRecurringExpenseAPI(t *testing.T) {
 		}
 		return out.Body.String()
 	}
-	payload := `{"entries":[{"month":"2026-01","name":"Car","currency":"USD","amount_minor":"11000","rate":"1.1"}]}`
+	payload := `{"entries":[{"month":"2026-01","name":"Car","currency":"USD","amount_minor":"11000","rate":"1.1"}],"groups":[{"name":"Transport","entry_positions":[0]}]}`
 	call("GET", "/recurring-expenses", "", false, 200)
 	call("PUT", "/recurring-expenses/2026-01", payload, false, 403)
 	call("PUT", "/recurring-expenses/2026-01", payload, true, 204)
@@ -43,6 +43,9 @@ func TestRecurringExpenseAPI(t *testing.T) {
 	inherited := call("GET", "/recurring-expenses/2026-02", "", false, 200)
 	if !strings.Contains(inherited, `"inherited_from":"2026-01"`) || !strings.Contains(inherited, `"month":"2026-02"`) {
 		t.Fatal(inherited)
+	}
+	if !strings.Contains(inherited, `"groups":[{"name":"Transport","entry_positions":[0],"total_eur_minor":"10000"}]`) || !strings.Contains(inherited, `"ungrouped_total_eur_minor":"0"`) {
+		t.Fatalf("group membership or totals not inherited: %s", inherited)
 	}
 	call("GET", "/recurring-expenses/2026-13", "", false, 422)
 	call("PUT", "/recurring-expenses/2026-01", `{"entries":null}`, true, 422)
@@ -82,6 +85,10 @@ func TestRecurringExpenseAPIRejectsInvalidWritesAtomically(t *testing.T) {
 		{"unknown entry field", `{"entries":[{"month":"2026-01","currency":"EUR","amount_minor":"1","rate":"1","name":"Rent","extra":1}]}`, 400},
 		{"wrong entry month", `{"entries":[{"month":"2026-02","currency":"EUR","amount_minor":"1","rate":"1","name":"Rent"}]}`, 422},
 		{"invalid rate", `{"entries":[{"month":"2026-01","currency":"USD","amount_minor":"1","rate":"0","name":"Rent"}]}`, 422},
+		{"unknown group field", `{"entries":[],"groups":[{"name":"Home","entry_positions":[],"extra":1}]}`, 400},
+		{"missing group positions", `{"entries":[],"groups":[{"name":"Home"}]}`, 422},
+		{"unknown group member", `{"entries":[],"groups":[{"name":"Home","entry_positions":[0]}]}`, 422},
+		{"duplicate group names", `{"entries":[],"groups":[{"name":"Home","entry_positions":[]},{"name":"home","entry_positions":[]}]}`, 422},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
