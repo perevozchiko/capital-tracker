@@ -31,16 +31,18 @@ async function exportJSON() {
 async function exportTabular(format) {
   try {
     const snapshot = await api('/data/export');
-    const file = format === 'xlsx'
-      ? buildExcel(snapshot)
-      : new Blob([buildCSV(snapshot)], { type: 'text/csv;charset=utf-8' });
+    const file =
+      format === 'xlsx'
+        ? buildExcel(snapshot)
+        : new Blob([buildCSV(snapshot)], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(file);
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download =
       'capital-tracker-' +
       new Date().toISOString().replace(/[:.]/g, '-') +
-      '.' + format;
+      '.' +
+      format;
     document.body.append(anchor);
     anchor.click();
     anchor.remove();

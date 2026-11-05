@@ -28,27 +28,48 @@ function zipEntries(bytes) {
     const size = data.readUInt32LE(offset + 18);
     const length = data.readUInt16LE(offset + 26);
     const extra = data.readUInt16LE(offset + 28);
-    const filename = data.subarray(offset + 30, offset + 30 + length).toString('utf8');
+    const filename = data
+      .subarray(offset + 30, offset + 30 + length)
+      .toString('utf8');
     const start = offset + 30 + length + extra;
     entries.set(filename, data.subarray(start, start + size).toString('utf8'));
     offset = start + size;
   }
-  assert.equal(data.readUInt32LE(offset), 0x02014b50, 'ZIP has a central directory');
+  assert.equal(
+    data.readUInt32LE(offset),
+    0x02014b50,
+    'ZIP has a central directory',
+  );
   return entries;
 }
 
 test('CSV exports exact balances and historical rates without executing names', () => {
   const text = buildCSV(snapshot);
   assert.ok(text.startsWith('\uFEFFmonth,account_id,'));
-  assert.match(text, /"2026-01",1,"'=Evil account","Savings <local>","RSD",123\.45,117\.20000000,1\.05/);
-  assert.match(text, /"2026-01",2,"Cash & more","","EUR",-1\.25,1\.00000000,-1\.25/);
-  assert.match(text, /"2026-02",1,"'=Evil account","Savings <local>","RSD",237\.00,118\.50000000,2\.00/);
-  assert.match(text, /"2026-03",1,"'=Evil account","Savings <local>","RSD",100\.00,,/);
+  assert.match(
+    text,
+    /"2026-01",1,"'=Evil account","Savings <local>","RSD",123\.45,117\.20000000,1\.05/,
+  );
+  assert.match(
+    text,
+    /"2026-01",2,"Cash & more","","EUR",-1\.25,1\.00000000,-1\.25/,
+  );
+  assert.match(
+    text,
+    /"2026-02",1,"'=Evil account","Savings <local>","RSD",237\.00,118\.50000000,2\.00/,
+  );
+  assert.match(
+    text,
+    /"2026-03",1,"'=Evil account","Savings <local>","RSD",100\.00,,/,
+  );
 });
 
 test('Excel workbook has separate Rates sheet and linked formulas', async () => {
   const blob = buildExcel(snapshot);
-  assert.equal(blob.type, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  assert.equal(
+    blob.type,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  );
   const parts = zipEntries(await blob.arrayBuffer());
   assert.equal(parts.size, 7);
   assert.match(parts.get('xl/workbook.xml'), /sheet name="Balances"/);

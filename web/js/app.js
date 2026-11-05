@@ -21,7 +21,13 @@ import { $, notify, themeApply, toggleAmountVisibility } from './ui.js';
 import { showConfirm } from './dialogs.js';
 import { navigate, setMonth, render, refresh, mutation } from './router.js';
 import { updateBalanceDifference } from './monthly.js';
-import { exportJSON, exportCSV, exportExcel, importJSON, clearAllData } from './data-actions.js';
+import {
+  exportJSON,
+  exportCSV,
+  exportExcel,
+  importJSON,
+  clearAllData,
+} from './data-actions.js';
 import {
   createBackup,
   previewBackup,

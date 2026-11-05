@@ -26,21 +26,22 @@ function eurMinor(amountMinor, rateScaled) {
 function rowsFromSnapshot(snapshot) {
   const accounts = new Map(snapshot.accounts.map((a) => [a.id, a]));
   const groups = new Map(snapshot.groups.map((g) => [g.id, g.name]));
-  const rates = new Map(snapshot.rates.map((r) => [
-    r.month + '|' + r.currency, r.rate_scaled,
-  ]));
+  const rates = new Map(
+    snapshot.rates.map((r) => [r.month + '|' + r.currency, r.rate_scaled]),
+  );
   const balances = snapshot.balances.map((balance) => {
     const account = accounts.get(balance.account_id);
     if (!account) throw new Error('Export contains an unknown account');
-    const rate = account.currency === 'EUR'
-      ? RATE_SCALE.toString()
-      : rates.get(balance.month + '|' + account.currency);
+    const rate =
+      account.currency === 'EUR'
+        ? RATE_SCALE.toString()
+        : rates.get(balance.month + '|' + account.currency);
     const converted = rate ? eurMinor(balance.amount_minor, rate) : null;
     return {
       month: balance.month,
       accountID: account.id,
       account: account.name,
-      group: account.group_id == null ? '' : (groups.get(account.group_id) || ''),
+      group: account.group_id == null ? '' : groups.get(account.group_id) || '',
       currency: account.currency,
       amount: decimal(balance.amount_minor, 2),
       rate: rate ? decimal(rate, 8) : '',
@@ -73,30 +74,35 @@ export function buildCSV(snapshot) {
     'month,account_id,account,group,currency,balance,rate_per_eur,eur_equivalent',
   ];
   for (const row of balances) {
-    lines.push([
-      csvText(row.month),
-      csvNumber(row.accountID),
-      csvText(row.account),
-      csvText(row.group),
-      csvText(row.currency),
-      csvNumber(row.amount),
-      csvNumber(row.rate),
-      csvNumber(row.eur),
-    ].join(','));
+    lines.push(
+      [
+        csvText(row.month),
+        csvNumber(row.accountID),
+        csvText(row.account),
+        csvText(row.group),
+        csvText(row.currency),
+        csvNumber(row.amount),
+        csvNumber(row.rate),
+        csvNumber(row.eur),
+      ].join(','),
+    );
   }
   return '\uFEFF' + lines.join('\r\n') + '\r\n';
 }
 
 function xml(value) {
-  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 }
 
 function columnName(column) {
   let out = '';
   for (let n = column; n > 0; n = Math.floor((n - 1) / 26)) {
-    out = String.fromCharCode(65 + (n - 1) % 26) + out;
+    out = String.fromCharCode(65 + ((n - 1) % 26)) + out;
   }
   return out;
 }
@@ -106,36 +112,84 @@ function cell(reference, entry) {
   const style = entry.style == null ? '' : ' s="' + entry.style + '"';
   if (entry.formula != null) {
     const cached = entry.cached == null ? '' : String(entry.cached);
-    return '<c r="' + reference + '"' + style + '><f>' +
-      xml(entry.formula) + '</f><v>' + xml(cached) + '</v></c>';
+    return (
+      '<c r="' +
+      reference +
+      '"' +
+      style +
+      '><f>' +
+      xml(entry.formula) +
+      '</f><v>' +
+      xml(cached) +
+      '</v></c>'
+    );
   }
   if (entry.number != null) {
-    return '<c r="' + reference + '"' + style + '><v>' +
-      xml(entry.number) + '</v></c>';
+    return (
+      '<c r="' +
+      reference +
+      '"' +
+      style +
+      '><v>' +
+      xml(entry.number) +
+      '</v></c>'
+    );
   }
-  return '<c r="' + reference + '"' + style +
+  return (
+    '<c r="' +
+    reference +
+    '"' +
+    style +
     ' t="inlineStr"><is><t xml:space="preserve">' +
-    xml(entry.text ?? '') + '</t></is></c>';
+    xml(entry.text ?? '') +
+    '</t></is></c>'
+  );
 }
 
 function worksheet(headers, rows, widths) {
   if (rows.length >= 1048576) throw new Error('Excel row limit exceeded');
-  let result = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+  let result =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
     '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
-    '<cols>' + widths.map((w, index) =>
-      '<col min="' + (index + 1) + '" max="' + (index + 1) +
-      '" width="' + w + '" customWidth="1"/>').join('') + '</cols>' +
-    '<sheetData><row r="1">' + headers.map((heading, index) =>
-      cell(columnName(index + 1) + '1', { text: heading, style: 1 })).join('') + '</row>';
+    '<cols>' +
+    widths
+      .map(
+        (w, index) =>
+          '<col min="' +
+          (index + 1) +
+          '" max="' +
+          (index + 1) +
+          '" width="' +
+          w +
+          '" customWidth="1"/>',
+      )
+      .join('') +
+    '</cols>' +
+    '<sheetData><row r="1">' +
+    headers
+      .map((heading, index) =>
+        cell(columnName(index + 1) + '1', { text: heading, style: 1 }),
+      )
+      .join('') +
+    '</row>';
   rows.forEach((entries, index) => {
     const number = index + 2;
-    result += '<row r="' + number + '">' + entries.map((entry, column) =>
-      cell(columnName(column + 1) + number, entry)).join('') + '</row>';
+    result +=
+      '<row r="' +
+      number +
+      '">' +
+      entries
+        .map((entry, column) => cell(columnName(column + 1) + number, entry))
+        .join('') +
+      '</row>';
   });
   const lastRow = rows.length + 1;
-  result += '</sheetData><autoFilter ref="A1:' +
-    columnName(headers.length) + lastRow + '"/></worksheet>';
+  result +=
+    '</sheetData><autoFilter ref="A1:' +
+    columnName(headers.length) +
+    lastRow +
+    '"/></worksheet>';
   return result;
 }
 
@@ -208,13 +262,32 @@ function zip(files) {
 export function buildExcel(snapshot) {
   const { balances, rateRows } = rowsFromSnapshot(snapshot);
   const rateEnd = Math.max(2, rateRows.length + 1);
-  const range = (column) => 'Rates!$' + column + '$2:$' + column + '$' + rateEnd;
+  const range = (column) =>
+    'Rates!$' + column + '$2:$' + column + '$' + rateEnd;
   const entries = balances.map((entry, index) => {
     const row = index + 2;
-    const f = 'IF(D' + row + '="EUR",1,IF(COUNTIFS(' +
-      range('A') + ',A' + row + ',' + range('B') + ',D' + row +
-      ')=0,"",SUMIFS(' + range('C') + ',' +
-      range('A') + ',A' + row + ',' + range('B') + ',D' + row + ')))';
+    const f =
+      'IF(D' +
+      row +
+      '="EUR",1,IF(COUNTIFS(' +
+      range('A') +
+      ',A' +
+      row +
+      ',' +
+      range('B') +
+      ',D' +
+      row +
+      ')=0,"",SUMIFS(' +
+      range('C') +
+      ',' +
+      range('A') +
+      ',A' +
+      row +
+      ',' +
+      range('B') +
+      ',D' +
+      row +
+      ')))';
     const eurFormula = 'IF(F' + row + '="","",E' + row + '/F' + row + ')';
     return [
       { text: entry.month },
@@ -223,8 +296,11 @@ export function buildExcel(snapshot) {
       { text: entry.currency },
       { number: entry.amount, style: 2 },
       { formula: f, cached: entry.rate || null, style: 3 },
-      { formula: eurFormula, cached: entry.rate ?
-        Number(entry.amount) / Number(entry.rate) : null, style: 2 },
+      {
+        formula: eurFormula,
+        cached: entry.rate ? Number(entry.amount) / Number(entry.rate) : null,
+        style: 2,
+      },
     ];
   });
   const rateEntries = rateRows.map((entry) => [
@@ -233,7 +309,8 @@ export function buildExcel(snapshot) {
     { number: entry.rate, style: 3 },
   ]);
   const sheets = {
-    '[Content_Types].xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '[Content_Types].xml':
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
       '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
       '<Default Extension="xml" ContentType="application/xml"/>' +
@@ -242,23 +319,27 @@ export function buildExcel(snapshot) {
       '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
       '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
       '</Types>',
-    '_rels/.rels': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '_rels/.rels':
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
       '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
       '</Relationships>',
-    'xl/workbook.xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    'xl/workbook.xml':
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
       'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
       '<sheets><sheet name="Balances" sheetId="1" r:id="rId1"/>' +
       '<sheet name="Rates" sheetId="2" r:id="rId2"/></sheets>' +
       '<calcPr calcId="0" fullCalcOnLoad="1" forceFullCalc="1"/></workbook>',
-    'xl/_rels/workbook.xml.rels': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    'xl/_rels/workbook.xml.rels':
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
       '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
       '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>' +
       '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
       '</Relationships>',
-    'xl/styles.xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    'xl/styles.xml':
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
       '<numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0.00"/>' +
       '<numFmt numFmtId="165" formatCode="0.00000000"/></numFmts>' +
@@ -274,12 +355,22 @@ export function buildExcel(snapshot) {
       '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" applyNumberFormat="1"/></cellXfs>' +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>',
     'xl/worksheets/sheet1.xml': worksheet(
-      ['Month', 'Account', 'Group', 'Currency', 'Balance', 'Rate per EUR', 'EUR equivalent'],
-      entries, [14, 30, 24, 13, 20, 20, 22],
+      [
+        'Month',
+        'Account',
+        'Group',
+        'Currency',
+        'Balance',
+        'Rate per EUR',
+        'EUR equivalent',
+      ],
+      entries,
+      [14, 30, 24, 13, 20, 20, 22],
     ),
     'xl/worksheets/sheet2.xml': worksheet(
       ['Month', 'Currency', 'Currency per 1 EUR'],
-      rateEntries, [16, 16, 25],
+      rateEntries,
+      [16, 16, 25],
     ),
   };
   return zip(sheets);
