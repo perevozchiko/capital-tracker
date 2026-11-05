@@ -2077,7 +2077,7 @@ body {
   flex-direction: column;
   gap: 7px;
 }
-.family-past span:first-child {
+.family-past > div > span:first-child {
   color: var(--muted);
   font-size: 12px;
 }
