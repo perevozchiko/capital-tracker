@@ -5,32 +5,27 @@ test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 async function swipe(page, points, selector = 'body', cancel = false) {
   await page.locator(selector).evaluate(
     (target, { points, cancel }) => {
-      const touch = ([x, y], identifier = 1) =>
-        new Touch({
-          identifier,
-          target,
-          clientX: x,
-          clientY: y,
+      // WebKit exposes Touch but does not allow constructing it. Dispatch the
+      // same event data in every engine; the CDP case below covers native input.
+      const touch = ([x, y]) => ({
+        identifier: 1,
+        target,
+        clientX: x,
+        clientY: y,
+      });
+      const dispatch = (type, touches, changedTouches) => {
+        const event = new Event(type, { bubbles: true, cancelable: true });
+        Object.defineProperties(event, {
+          touches: { value: touches },
+          changedTouches: { value: changedTouches },
         });
+        target.dispatchEvent(event);
+      };
       for (let index = 0; index < points.length; index++) {
         const item = touch(points[index]);
-        target.dispatchEvent(
-          new TouchEvent(index ? 'touchmove' : 'touchstart', {
-            bubbles: true,
-            cancelable: true,
-            touches: [item],
-            changedTouches: [item],
-          }),
-        );
+        dispatch(index ? 'touchmove' : 'touchstart', [item], [item]);
       }
-      target.dispatchEvent(
-        new TouchEvent(cancel ? 'touchcancel' : 'touchend', {
-          bubbles: true,
-          cancelable: true,
-          touches: [],
-          changedTouches: [touch(points.at(-1))],
-        }),
-      );
+      dispatch(cancel ? 'touchcancel' : 'touchend', [], [touch(points.at(-1))]);
     },
     { points, cancel },
   );
