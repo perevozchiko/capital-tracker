@@ -50,7 +50,7 @@ test('Excel workbook has separate Rates sheet and linked formulas', async () => 
   const blob = buildExcel(snapshot);
   assert.equal(blob.type, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   const parts = zipEntries(await blob.arrayBuffer());
-  assert.equal(parts.size, 6);
+  assert.equal(parts.size, 7);
   assert.match(parts.get('xl/workbook.xml'), /sheet name="Balances"/);
   assert.match(parts.get('xl/workbook.xml'), /sheet name="Rates"/);
   assert.match(parts.get('xl/workbook.xml'), /fullCalcOnLoad="1"/);
