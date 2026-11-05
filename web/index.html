@@ -34,6 +34,12 @@
           A clear view of your capital
         </div>
       </aside>
+      <div
+        id="menuBackdrop"
+        class="menu-backdrop"
+        hidden
+        aria-hidden="true"
+      ></div>
       <div class="app-main">
         <header class="topbar">
           <div class="topbar-heading">
@@ -42,8 +48,12 @@
               id="mobileMenu"
               class="mobile-menu"
               aria-label="Menu"
+              aria-controls="sidebar"
+              aria-expanded="false"
             >
-              ☰
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
             <div>
               <span class="eyebrow" id="sectionEyebrow"></span>

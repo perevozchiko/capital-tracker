@@ -1,4 +1,5 @@
 import { bindChartControls } from './chart.js';
+import { bindMobileMenu } from './mobile-menu.js';
 import { checkLogin, logout } from './auth.js';
 import {
   checkUpdate,
@@ -66,6 +67,7 @@ import {
 bindAccountDragAndDrop();
 
 bindChartControls();
+bindMobileMenu();
 
 window
   .matchMedia('(prefers-color-scheme: dark)')
@@ -311,9 +313,6 @@ $('#accountDialog').addEventListener('click', (e) => {
 $('#accountDialog').addEventListener('cancel', (event) => {
   if ($('#editAccountForm').inert) event.preventDefault();
 });
-$('#mobileMenu').addEventListener('click', () =>
-  $('#sidebar').classList.toggle('show'),
-);
 function pointTooltip(node, event) {
   const p = (
     node.dataset.chartSource === 'income'

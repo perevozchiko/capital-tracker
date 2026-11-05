@@ -1,4 +1,5 @@
 import { state } from './state.js';
+import { closeMobileMenu } from './mobile-menu.js';
 import { api } from './api.js';
 import { t } from './messages.js';
 import { validMonth } from './format.js';
@@ -17,7 +18,7 @@ async function navigate(page) {
   state.page = page;
   state.selectedAccount = null;
   render().catch((e) => notify(e.message, true));
-  $('#sidebar').classList.remove('show');
+  closeMobileMenu();
 }
 async function setMonth(month) {
   if (!validMonth(month)) {
