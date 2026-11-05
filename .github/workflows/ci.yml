@@ -42,6 +42,7 @@ jobs:
             echo ""
             echo "END_FORMAT:$file"
           done
+          exit 1  # one-off formatting capture; removed with the formatted files
       - name: Go, JavaScript, formatting and unit tests
         run: npm run check
       - name: Known vulnerability checks
