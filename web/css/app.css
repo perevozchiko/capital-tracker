@@ -346,6 +346,10 @@ th:first-child {
   background: var(--surface2);
   z-index: 3;
 }
+/* History has two columns: let dates scroll so they cannot cover large amounts. */
+.account-history-table td:first-child {
+  position: static;
+}
 tr:last-child td {
   border-bottom: 0;
 }
@@ -497,6 +501,26 @@ th button:hover {
 .history-svg .chart-dot:focus {
   fill: var(--primary);
   stroke-width: 5;
+}
+.history-svg .chart-dot-decreased,
+.history-svg .chart-dot-decreased:hover,
+.history-svg .chart-dot-decreased:focus {
+  fill: var(--negative);
+  stroke: var(--negative);
+}
+.chart-decrease-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.chart-decrease-legend span {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--negative);
 }
 @media (max-width: 540px) {
   .chart-periods {

@@ -118,7 +118,10 @@ function applyAmountVisibility() {
       node.setAttribute(
         'aria-label',
         monthLabel(point.month) +
-          (hidden ? '' : ': ' + money(point.total_eur_minor)),
+          (hidden ? '' : ': ' + money(point.total_eur_minor)) +
+          (node.dataset.chartDecreased === 'true'
+            ? ' · ' + t('chartDecrease')
+            : ''),
       );
   });
   $('#chartTooltip').hidden = true;

@@ -40,7 +40,7 @@ async function renderDashboard() {
       : '—';
   const comparison =
     delta != null
-      ? `${t('comparedLastMonth')}: ${escapeHTML(monthLabel(d.previous.month))}`
+      ? `${t('comparedLastMonth')}: ${escapeHTML(monthLabel(d.previous.month))} · ${previousBalance}`
       : t('noPrevious');
 
   const groups = groupData

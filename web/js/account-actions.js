@@ -381,7 +381,7 @@ async function accountAction(action, id) {
           .join('')
       : `<tr><td colspan="2">${t('historicalEmpty')}</td></tr>`;
     $('#pageContent').innerHTML =
-      `<section class="card panel"><div class="panel-heading"><h2>${escapeHTML(account.name)} · ${t('balanceHistory')}</h2><button class="btn btn-small" data-page="accounts">${t('earlier')}</button></div><p class="caption">${t('accountHistoricalNote')}</p><div class="table-scroll"><table><tbody>${content}</tbody></table></div></section>`;
+      `<section class="card panel"><div class="panel-heading"><h2>${escapeHTML(account.name)} · ${t('balanceHistory')}</h2><button class="btn btn-small" data-page="accounts">${t('earlier')}</button></div><p class="caption">${t('accountHistoricalNote')}</p><div class="table-scroll"><table class="account-history-table"><tbody>${content}</tbody></table></div></section>`;
   }
   if (action === 'up' || action === 'down') {
     const items = orderedAssignments(),

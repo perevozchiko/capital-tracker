@@ -288,7 +288,7 @@
     {
       "account_id": 3,
       "month": "2026-01",
-      "amount_minor": "996000",
+      "amount_minor": "920000",
       "updated_at": "2026-01-31T18:00:00.000Z"
     },
     {
@@ -324,7 +324,7 @@
     {
       "account_id": 3,
       "month": "2026-02",
-      "amount_minor": "1023000",
+      "amount_minor": "935000",
       "updated_at": "2026-02-28T18:00:00.000Z"
     },
     {
@@ -468,7 +468,7 @@
     {
       "account_id": 3,
       "month": "2026-06",
-      "amount_minor": "1097000",
+      "amount_minor": "950000",
       "updated_at": "2026-06-30T18:00:00.000Z"
     },
     {
@@ -534,7 +534,7 @@
     {
       "account_id": 2,
       "month": "2026-08",
-      "amount_minor": "760000",
+      "amount_minor": "590000",
       "updated_at": "2026-08-31T18:00:00.000Z"
     },
     {

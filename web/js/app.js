@@ -329,7 +329,7 @@ function pointTooltip(node, event) {
   )[Number(node.dataset.chartIndex)];
   if (!p) return;
   const tooltip = $('#chartTooltip');
-  tooltip.innerHTML = `${escapeHTML(monthLabel(p.month))} · ${moneyHTML(p.total_eur_minor)}`;
+  tooltip.innerHTML = `${escapeHTML(monthLabel(p.month))} · ${moneyHTML(p.total_eur_minor)}${node.dataset.chartDecreased === 'true' ? `<br>${t('chartDecrease')}` : ''}`;
   tooltip.hidden = false;
   const rect = node.getBoundingClientRect();
   const clientX = event?.clientX || rect.left + rect.width / 2;

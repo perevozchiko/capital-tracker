@@ -26,7 +26,7 @@ test('family dashboard uses actual saved balances, groups and privacy settings',
 
   await nav(page, 'Dashboard');
   await expect(page.locator('.family-total')).toContainText('1,150.00');
-  await expect(page.locator('.family-change')).toContainText('+150.00');
+  await expect(page.locator('.family-change')).toContainText('+€150.00');
   await expect(page.locator('.family-group-grid')).toContainText(
     'Family savings',
   );

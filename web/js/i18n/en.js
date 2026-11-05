@@ -336,6 +336,7 @@ export default {
   retry: 'Retry',
   zeroNotMissing: 'Zero is a recorded balance',
   chartNote: 'The line connects complete months across gaps in the data.',
+  chartDecrease: 'Lower than previous recorded month',
   chartSixMonths: '6 months',
   chartYear: '1 year',
   chartThreeYears: '3 years',
