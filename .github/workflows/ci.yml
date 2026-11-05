@@ -1,21 +1,25 @@
-name: CI (manual build checks)
+name: CI
 
-# CI is opt-in: changing branches or opening a PR does not run tests.
 on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# A newer push supersedes obsolete runs on the same branch or PR.
 concurrency:
-  group: manual-checks-${{ github.ref }}
+  group: checks-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build and static checks (no tests)
+  checks:
+    name: Go, JavaScript and browser tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -25,15 +29,24 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       - run: npm ci
-      - name: Check JavaScript syntax
-        run: |
-          find web -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-      - name: Verify formatting
-        run: npm run format:check
-      - name: Static analysis
-        run: go vet ./...
-      - name: Compile application
-        run: go build ./cmd/capital-tracker
+      - name: Go, JavaScript, formatting and unit tests
+        run: npm run check
       - name: Known vulnerability checks
         run: npm run security:check
+      - name: Release version and archive tests
+        run: python -m unittest discover -s tests -p '*release*test.py'
+      - name: Install Chrome and Safari browser engines
+        run: npx playwright install --with-deps chromium webkit
+      - name: Playwright end-to-end tests
+        run: npm run test:ui
+      - name: Upload browser traces when tests fail
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ui-test-results
+          path: test-results/
+          if-no-files-found: ignore
