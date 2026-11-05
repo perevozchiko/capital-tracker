@@ -67,7 +67,7 @@ function renderNav() {
   $('#navigation').innerHTML = routes
     .map(
       ([key, label]) =>
-        `<button class="nav-item ${state.page === key ? 'active' : ''}" data-page="${key}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(key === 'dashboard' ? 'familyHome' : key === 'monthly' ? 'familyMonthly' : label)}</span></button>`,
+        `<button class="nav-item ${state.page === key ? 'active' : ''}" data-page="${key}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
     )
     .join('');
   // Mobile quick navigation keeps the less frequently used screens in the drawer.
@@ -79,7 +79,7 @@ function renderNav() {
     ]
       .map(
         ([key, label]) =>
-          `<button type="button" class="mobile-bottom-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
+          `<button type="button" class="mobile-bottom-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(key === 'dashboard' ? 'familyHome' : key === 'monthly' ? 'familyMonthly' : label)}</span></button>`,
       )
       .join('') +
     `<button type="button" class="mobile-bottom-item ${!['dashboard', 'monthly', 'accounts'].includes(state.page) ? 'active' : ''}" data-action="mobileMore" aria-label="${t('familyMore')}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>${t('familyMore')}</span></button>`;
