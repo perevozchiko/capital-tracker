@@ -67,7 +67,7 @@ function renderNav() {
   $('#navigation').innerHTML = routes
     .map(
       ([key, label]) =>
-        `<button class="nav-item ${state.page === key ? 'active' : ''}" data-page="${key}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
+        `<button class="nav-item ${state.page === key ? 'active' : ''}" data-page="${key}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(key === 'dashboard' ? 'familyHome' : key === 'monthly' ? 'familyMonthly' : label)}</span></button>`,
     )
     .join('');
   // Mobile quick navigation keeps the less frequently used screens in the drawer.
