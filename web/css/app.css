@@ -1908,7 +1908,6 @@ th button:hover {
   display: none !important;
 }
 
-
 /* Family Finance visual system.
    A quiet month-end household money journal, not a trading terminal.
    Layout overrides only: existing event handlers and finance logic stay intact. */
@@ -1936,7 +1935,7 @@ th button:hover {
   --border: #dce6ee;
 }
 body {
-  letter-spacing: -.08px;
+  letter-spacing: -0.08px;
 }
 .sidebar {
   width: 226px;
@@ -1955,7 +1954,7 @@ body {
 }
 .brand strong {
   font-size: 15px;
-  letter-spacing: -.4px;
+  letter-spacing: -0.4px;
 }
 .brand small {
   font-size: 11px;
@@ -2044,7 +2043,11 @@ body {
   letter-spacing: 1.5px;
 }
 .family-total {
-  background: linear-gradient(120deg, var(--family-hero-start), var(--family-hero-end));
+  background: linear-gradient(
+    120deg,
+    var(--family-hero-start),
+    var(--family-hero-end)
+  );
   border-color: var(--family-hero-border);
 }
 .family-total > .metric-value {
@@ -2085,7 +2088,7 @@ body {
   display: block;
   min-width: 0;
   font-size: clamp(15px, 1.6vw, 20px);
-  letter-spacing: -.5px;
+  letter-spacing: -0.5px;
   overflow-wrap: anywhere;
 }
 .family-change {
@@ -2096,7 +2099,7 @@ body {
 .family-change > .metric-secondary {
   font-size: clamp(22px, 2.1vw, 29px);
   font-weight: 730;
-  letter-spacing: -.8px;
+  letter-spacing: -0.8px;
   overflow-wrap: anywhere;
   line-height: 1.32;
 }
@@ -2143,7 +2146,9 @@ body {
   border: 1px solid var(--border);
   color: var(--text);
   min-width: 0;
-  transition: background .15s, border-color .15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .family-group-card:hover {
   background: var(--surface2);
@@ -2190,7 +2195,7 @@ body {
   font-size: clamp(20px, 2.1vw, 27px);
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -.8px;
+  letter-spacing: -0.8px;
   overflow-wrap: anywhere;
   max-width: 100%;
 }
@@ -2229,7 +2234,7 @@ body {
 }
 .family-month-status {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(205px, .9fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(205px, 0.9fr);
   align-items: center;
   gap: 26px;
   padding: 23px;
@@ -2289,7 +2294,7 @@ body {
   margin-top: 9px;
 }
 .editor-grid {
-  grid-template-columns: minmax(0, 1.7fr) minmax(250px, .85fr);
+  grid-template-columns: minmax(0, 1.7fr) minmax(250px, 0.85fr);
   gap: 15px;
 }
 .editor-grid > .card {
@@ -2324,7 +2329,7 @@ body {
 .panel-heading h2,
 .family-group-section h2 {
   font-size: 15px;
-  letter-spacing: -.25px;
+  letter-spacing: -0.25px;
 }
 .account-mark {
   border-radius: 11px;
@@ -2428,7 +2433,9 @@ body {
     z-index: 80;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    padding: 8px max(6px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+    padding: 8px max(6px, env(safe-area-inset-right))
+      calc(8px + env(safe-area-inset-bottom))
+      max(6px, env(safe-area-inset-left));
     border-top: 1px solid var(--border);
     background: var(--surface);
     box-shadow: 0 -6px 24px #080f1833;

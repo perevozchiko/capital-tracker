@@ -31,8 +31,9 @@ async function renderDashboard() {
           ? 'positive'
           : 'neutral';
   const balance = m.complete ? moneyHTML(m.total_eur_minor) : '—';
-  const previousBalance =
-    d.previous?.complete ? moneyHTML(d.previous.total_eur_minor) : '—';
+  const previousBalance = d.previous?.complete
+    ? moneyHTML(d.previous.total_eur_minor)
+    : '—';
   const change =
     delta != null
       ? `${moneyHTML(delta, 'EUR', BigInt(delta) > 0n ? '+' : '')}${d.change_percent_bp != null ? ` (${BigInt(d.change_percent_bp) > 0n ? '+' : ''}${percentBP(d.change_percent_bp)})` : ''}`
@@ -45,14 +46,19 @@ async function renderDashboard() {
   const groups = groupData
     ? [
         ...(groupData.groups || []),
-        ...(state.accounts.some((a) => !a.archived_from_month && a.group_id == null)
+        ...(state.accounts.some(
+          (a) => !a.archived_from_month && a.group_id == null,
+        )
           ? [{ ...groupData.ungrouped, name: t('ungrouped') }]
           : []),
       ]
     : [];
   const groupCards = groups
     .map(
-      (g, i) => `<button type="button" class="family-group-card family-group-${i % 3}" data-page="accounts">
+      (
+        g,
+        i,
+      ) => `<button type="button" class="family-group-card family-group-${i % 3}" data-page="accounts">
         <span class="family-group-title"><span class="family-group-icon" aria-hidden="true">${['▤', '◈', '▦'][i % 3]}</span><span>${escapeHTML(g.name)}</span></span>
         <strong class="family-group-value">${g.total_eur_minor == null ? '—' : moneyHTML(g.total_eur_minor)}</strong>
         <span class="family-group-note">${t('groupTotalEUR')}</span>
@@ -82,10 +88,14 @@ async function renderDashboard() {
       <div class="panel-heading"><h2>${t('familyHistory')}</h2><span class="subtle">${t('balanceTrend')}</span></div>
       ${chart(state.history)}
     </section>
-    ${groupCards ? `<section class="family-group-section">
+    ${
+      groupCards
+        ? `<section class="family-group-section">
       <div class="panel-heading"><h2>${t('moneyByGroup')}</h2><button class="btn btn-small" type="button" data-page="accounts">${t('navAccounts')} →</button></div>
       <div class="family-group-grid">${groupCards}</div>
-    </section>` : ''}
+    </section>`
+        : ''
+    }
     <section class="family-next-step">
       <div class="family-next-icon" aria-hidden="true">${m.complete ? '✓' : '!'}</div>
       <div><strong>${m.complete ? t('monthComplete') : t('monthIncomplete')}</strong>

@@ -184,7 +184,8 @@ export default {
   monthComplete: 'Month completed',
   monthIncomplete: 'Month not yet complete',
   allBalancesRecorded: 'Every active account and required rate is recorded.',
-  updateBalancesHelp: 'Enter the remaining balances and exchange rates when ready.',
+  updateBalancesHelp:
+    'Enter the remaining balances and exchange rates when ready.',
   updateBalances: 'Update balances',
   familyAccountsProgress: 'Accounts updated',
   familyAccountsRemaining: 'accounts still need a balance',

@@ -20,12 +20,16 @@ test('family dashboard uses actual saved balances, groups and privacy settings',
   await nav(page, 'Monthly balances');
   await saveBalances(page, '2025-01', { 1: '1000.00' });
   await saveBalances(page, '2025-02', { 1: '1150.00' });
-  await expect(page.locator('.family-month-progress-count')).toContainText('1 / 1');
+  await expect(page.locator('.family-month-progress-count')).toContainText(
+    '1 / 1',
+  );
 
   await nav(page, 'Dashboard');
   await expect(page.locator('.family-total')).toContainText('1,150.00');
   await expect(page.locator('.family-change')).toContainText('+150.00');
-  await expect(page.locator('.family-group-grid')).toContainText('Family savings');
+  await expect(page.locator('.family-group-grid')).toContainText(
+    'Family savings',
+  );
   await expect(page.locator('.family-group-grid')).toContainText('1,150.00');
   await expect(page.locator('.family-history .history-svg')).toBeVisible();
   await expect(page.locator('.money-text:visible')).toHaveCount(0);
@@ -33,7 +37,9 @@ test('family dashboard uses actual saved balances, groups and privacy settings',
   await page.locator('#amountVisibility').click();
   await expect(page.locator('.family-group-value .money-text')).toBeVisible();
   await expect(page.locator('.family-past .money-text')).toHaveCount(2);
-  await expect(page.locator('.family-next-step')).toContainText('Month completed');
+  await expect(page.locator('.family-next-step')).toContainText(
+    'Month completed',
+  );
 });
 
 test('family mobile tabs navigate and More opens the existing drawer', async ({
