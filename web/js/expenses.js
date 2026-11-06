@@ -194,7 +194,7 @@ async function deleteExpense() {
     }))
   )
     return;
-  await request('/expenses/' + state.month, 'PUT', { entries: [] });
+  await request('/expenses/' + state.month, 'DELETE');
   state.dirty = false;
   await renderExpenses();
   notify(t('expenseDeleted'));

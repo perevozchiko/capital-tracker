@@ -38,7 +38,7 @@ test('family dashboard uses actual saved balances, groups and privacy settings',
   await expect(page.locator('.family-group-value .money-text')).toBeVisible();
   await expect(page.locator('.family-past .money-text')).toHaveCount(2);
   await expect(page.locator('.family-next-step')).toContainText(
-    'Month completed',
+    'Month not yet complete',
   );
 });
 

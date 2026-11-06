@@ -76,7 +76,7 @@ func TestExpenseLifecycleAndIsolation(t *testing.T) {
 	if !reflect.DeepEqual(edited, unchanged) {
 		t.Fatal("deleting capital month changed expense")
 	}
-	if err := s.PutExpense("2026-01", []Expense{}); err != nil {
+	if err := s.DeleteFlowMonth("expenses", "2026-01"); err != nil {
 		t.Fatal(err)
 	}
 	remaining, _ := s.Expenses()
@@ -160,7 +160,7 @@ func TestExpenseMigrationAndBackupVersions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.DB.Exec("DROP TABLE recurring_expense_group_members; DROP TABLE recurring_expense_groups; DROP TABLE recurring_expenses; DROP TABLE recurring_expense_months; DROP TABLE expenses; DELETE FROM schema_migrations WHERE version>=5; PRAGMA user_version=4"); err != nil {
+	if _, err := s.DB.Exec("DROP TABLE monthly_reviews; DROP TABLE recurring_expense_group_members; DROP TABLE recurring_expense_groups; DROP TABLE recurring_expenses; DROP TABLE recurring_expense_months; DROP TABLE expenses; DELETE FROM schema_migrations WHERE version>=5; PRAGMA user_version=4"); err != nil {
 		t.Fatal(err)
 	}
 	s.Close()
@@ -181,7 +181,7 @@ func TestExpenseMigrationAndBackupVersions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if snapshot.SchemaVersion != 7 || !reflect.DeepEqual(snapshot.Expenses, entries) {
+	if snapshot.SchemaVersion != 8 || !reflect.DeepEqual(snapshot.Expenses, entries) {
 		t.Fatal(snapshot)
 	}
 	copy := openTest(t)

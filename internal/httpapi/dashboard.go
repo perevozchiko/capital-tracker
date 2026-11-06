@@ -7,6 +7,18 @@ import (
 )
 
 func registerDashboard(mux *http.ServeMux, s *Server) {
+	mux.HandleFunc("/api/exchange-rates/history", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			fail(w, 405, "method_not_allowed", "")
+			return
+		}
+		rates, err := s.Store.SavedRates()
+		if err != nil {
+			handleError(w, err)
+			return
+		}
+		writeJSON(w, 200, rates)
+	})
 	mux.HandleFunc("/api/capital/history", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			fail(w, 405, "method_not_allowed", "")

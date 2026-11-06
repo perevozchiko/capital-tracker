@@ -48,7 +48,10 @@ export function applyBackupPreview() {
       '#pageContent input, #pageContent select, #pageContent button, #headerActions button',
     )
     .forEach((control) => {
-      if (control.closest('.history-chart') || control.matches('.month-picker'))
+      if (
+        control.closest('.history-chart, .fx-controls') ||
+        control.matches('.month-picker, [data-page]')
+      )
         return;
       if (
         control.matches('[data-action]') &&

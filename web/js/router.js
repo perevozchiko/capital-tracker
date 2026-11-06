@@ -10,6 +10,7 @@ import { renderMonthly } from './monthly.js';
 import { renderIncomes } from './incomes.js';
 import { renderExpenses } from './expenses.js';
 import { renderRecurringExpenses } from './recurring-expenses.js';
+import { renderFXRates } from './fx-rates.js';
 import { renderSettings } from './settings.js';
 import { applyBackupPreview } from './backups.js';
 
@@ -44,6 +45,7 @@ async function render() {
     else if (state.page === 'expenses') await renderExpenses();
     else if (state.page === 'recurringExpenses')
       await renderRecurringExpenses();
+    else if (state.page === 'fxRates') await renderFXRates();
     else renderSettings();
   } finally {
     if (state.renderID === renderID) {

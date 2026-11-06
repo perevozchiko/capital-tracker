@@ -536,6 +536,8 @@ th button:hover {
   }
 }
 .chart-tooltip {
+  max-width: min(280px, calc(100vw - 16px));
+  overflow-wrap: anywhere;
   position: fixed;
   z-index: 50;
   background: var(--text);
@@ -2569,5 +2571,224 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .family-group-card {
     transition: none;
+  }
+}
+
+/* Monthly cash-flow summaries and explicit review progress. */
+.dashboard-flows {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 17px;
+}
+.dashboard-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  min-width: 0;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+.dashboard-flow:hover,
+.month-review-item:hover {
+  border-color: var(--primary);
+}
+.dashboard-flow:focus-visible,
+.month-review-item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.flow-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+}
+.flow-heading > :last-child {
+  margin-left: auto;
+}
+.flow-icon {
+  color: var(--primary);
+  font-size: 23px;
+}
+.flow-total {
+  font-size: clamp(24px, 2.5vw, 34px);
+  letter-spacing: -1px;
+  overflow-wrap: anywhere;
+}
+.flow-change {
+  display: block;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.flow-zero-note,
+.flow-period {
+  display: block;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.flow-period {
+  margin-top: auto;
+}
+.month-review-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+.month-review-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--family-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+.month-review-item > .pill {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.review-indicator {
+  font-size: 20px;
+}
+
+/* Saved FX quotes use a separate scale for every currency. */
+.fx-controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.fx-controls select {
+  appearance: none;
+  height: 44px;
+  min-height: 44px;
+  font-size: 16px;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2393abc0' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+.fx-controls .field {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.fx-base {
+  margin-top: 14px;
+  color: var(--primary);
+  font-size: 13px;
+}
+.fx-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+.fx-card {
+  min-width: 0;
+}
+.fx-latest {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 15px 0;
+}
+.fx-latest > span:not(.subtle) {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.fx-latest strong {
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+.fx-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.fx-chart text {
+  fill: var(--muted);
+  font-size: 15px;
+}
+.fx-series path {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.fx-series circle {
+  fill: var(--primary);
+  stroke: var(--bg);
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+.fx-series circle:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+.fx-month-heading {
+  font-size: 13px;
+  margin-top: 20px;
+}
+.fx-quotes {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+}
+.fx-quotes li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 7px 14px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.fx-quotes strong {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 720px) {
+  .dashboard-flows {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .dashboard-flow {
+    padding: 20px;
+    gap: 10px;
+  }
+  .flow-total {
+    font-size: 29px;
+  }
+  .month-review-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .month-review-item {
+    padding: 12px 10px;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .month-review-item .pill {
+    font-size: 10px;
+  }
+  .month-review .panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .fx-chart {
+    min-height: 180px;
   }
 }

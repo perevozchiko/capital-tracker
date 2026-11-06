@@ -64,13 +64,13 @@ For `GET /api/groups`, optional `view=monthly` keeps accounts active in the sele
 }
 ```
 
-Amounts must be nonnegative integer minor-unit strings; each entry requires a trimmed nonempty `name` of at most 100 characters. Multiple entries may share the same currency or name; their order is preserved. Rates mean **1 EUR = rate units of currency**, must be positive, and use at most eight decimals. EUR requires rate `1`. The total sums exact conversions and rounds once. An empty `entries` array deletes the income month; a zero amount records it. Writes require the regular CSRF header and return HTTP 204. Income notes have independent rates and never create or alter capital months or accounts.
+Amounts must be nonnegative integer minor-unit strings; each entry requires a trimmed nonempty `name` of at most 100 characters. Multiple entries may share the same currency or name; their order is preserved. Rates mean **1 EUR = rate units of currency**, must be positive, and use at most eight decimals. EUR requires rate `1`. The total sums exact conversions and rounds once. An empty `entries` array records an explicitly reviewed zero-income month. `DELETE /api/incomes/{month}` removes both its entries and review marker. Writes require the regular CSRF header and return HTTP 204. Income notes have independent rates and never create or alter capital months or accounts.
 
-JSON exports use `schema_version: 7` and include `incomes`, `expenses` and monthly `recurring_expenses` snapshots. Versions 1–6 remain importable. Version 3 income totals are converted to entries named `Income · {currency}`; versions 1 and 2 contain no income notes. Import replaces all data, including income and expense notes. Versions 1–4 have no expense notes, versions 1–5 have no recurring snapshots, and versions 1–6 have no recurring groups.
+JSON exports use `schema_version: 8` and include `incomes`, `expenses`, monthly `recurring_expenses` snapshots and `monthly_reviews` markers (`section` and `month`). Versions 1–7 remain importable; entry-bearing income and expense months in older backups become reviewed months. Version 3 income totals are converted to entries named `Income · {currency}`; versions 1 and 2 contain no income notes. Import replaces all data, including income and expense notes. Versions 1–4 have no expense notes, versions 1–5 have no recurring snapshots, and versions 1–6 have no recurring groups.
 
 ## Major expenses
 
-`GET /api/expenses` and `PUT /api/expenses/{month}` use the same response shape, entry fields, validation, conversion rules and CSRF requirements as income notes. Each expense has a name, amount, currency and rate. An empty `entries` array deletes that month’s expenses. Expenses have independent monthly rates and do not alter income notes, accounts or capital snapshots. Exports include an `expenses` array; imports and full data deletion include expense notes.
+`GET /api/expenses` and `PUT /api/expenses/{month}` use the same response shape, entry fields, validation, conversion rules and CSRF requirements as income notes. Each expense has a name, amount, currency and rate. An empty `entries` array records an explicitly reviewed zero-expense month. `DELETE /api/expenses/{month}` removes both its entries and review marker. Expenses have independent monthly rates and do not alter income notes, accounts or capital snapshots. Exports include an `expenses` array; imports and full data deletion include expense notes.
 
 See [host-managed release updates](UPDATES.md) for the optional Settings → About update button, macOS/OrbStack agent, IPC security and installation contract. Updates require an explicit button click.
 
@@ -94,3 +94,7 @@ See [host-managed release updates](UPDATES.md) for the optional Settings → Abo
 ```
 
 Group names must be distinct ignoring case, trimmed, nonempty and at most 100 characters. Each entry can appear in at most one group; positions must reference existing entries. Empty groups are retained. Omitting `groups` saves all entries as Ungrouped. Saving an empty `entries` array preserves an empty monthly snapshot, stopping inheritance of older expenses. Existing saved months stay unchanged; later unsaved months inherit the new snapshot. CSRF requirements and entry validation match major expenses. JSON exports, backups, imports and full deletion include group membership and order. Schema migration 7 adds the group tables without changing older snapshots; opening an older database first creates a migration backup.
+
+## Saved exchange-rate history
+
+`GET /api/exchange-rates/history` returns saved non-EUR quotes with `month`, `currency`, exact decimal `rate` and `source` (`monthly`, `incomes`, `expenses` or `recurringExpenses`). Independent quotes from different sections are preserved. The FX Rates page shows the saved quotes and their history without fetching newer rates or changing existing data. Backup preview reads quotes from the selected archive.

@@ -15,6 +15,7 @@ const icons = {
   recurringExpenses:
     '<path d="M20 7a8 8 0 0 0-14-2L3 8m0-5v5h5M4 17a8 8 0 0 0 14 2l3-3m0 5v-5h-5"/>',
   incomes: '<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',
+  fxRates: '<path d="M3 7h18l-4-4M21 17H3l4 4M8 10v4m4-5v6m4-5v4"/>',
   settings:
     '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.2-1.7l2-1.5-2-3.5-2.4 1A7 7 0 0 0 14 5l-.4-2.5h-4L9.2 5a7 7 0 0 0-2.4 1.3l-2.4-1-2 3.5 2 1.5a7 7 0 0 0 0 3.4l-2 1.5 2 3.5 2.4-1A7 7 0 0 0 9.2 19l.4 2.5h4L14 19a7 7 0 0 0 2.4-1.3l2.4 1 2-3.5-2-1.5A7 7 0 0 0 19 12Z"/>',
 };
@@ -62,6 +63,7 @@ function renderNav() {
     ['incomes', 'navIncomes'],
     ['expenses', 'navExpenses'],
     ['recurringExpenses', 'navRecurringExpenses'],
+    ['fxRates', 'navFXRates'],
     ['settings', 'navSettings'],
   ];
   $('#navigation').innerHTML = routes
@@ -140,6 +142,7 @@ function renderHeader() {
     incomes: 'navIncomes',
     expenses: 'navExpenses',
     recurringExpenses: 'navRecurringExpenses',
+    fxRates: 'navFXRates',
     settings: 'navSettings',
   };
   $('#pageHeading').textContent = t(names[state.page]);
@@ -150,6 +153,7 @@ function renderHeader() {
     'incomes',
     'expenses',
     'recurringExpenses',
+    'fxRates',
   ].includes(state.page)
     ? monthControls()
     : state.page === 'accounts'

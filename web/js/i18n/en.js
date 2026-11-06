@@ -1,4 +1,27 @@
 export default {
+  navFXRates: 'FX Rates',
+  fxHelp:
+    'Saved monthly exchange rates relative to EUR. Identical quotes from different entries are shown once.',
+  fxEmpty:
+    'No exchange rates saved yet. Save a non-EUR entry in Monthly balances, Income or Expenses to start a chart.',
+  fxSavedQuotes: 'Saved quotes for {month}',
+  fxNoMonthQuotes: 'No saved quotes for this month.',
+  fxLatest: 'Latest saved',
+  fxMultipleQuotes:
+    'Different saved quotes within a month appear at the same date.',
+  fxBase: 'Base currency: EUR · 1 EUR = 1 EUR',
+  reviewSaved: 'Saved',
+  reviewNeeded: 'Needs saving',
+  monthReviewHelp:
+    'Complete balances and save Income, Major expenses and Recurring expenses for this month. An empty list saved as zero counts as reviewed.',
+  monthReviewedHelp:
+    'Balances are complete and every income and expense section has been saved for this month.',
+  reviewProgress: '{count} of 4 sections complete',
+  flowNoPrevious: 'Save both months to compare',
+  flowFromZero: 'Previous month: €0.00 · percentage unavailable',
+  flowUnchangedZero: 'No change from zero',
+  flowNotSaved: 'Not saved for this month',
+
   backups: 'Backups',
   backupsHelp:
     'Automatic backup every 7 days. Keeps the 50 newest copies, including manual and recovery copies. The oldest is removed after a new copy is saved.',

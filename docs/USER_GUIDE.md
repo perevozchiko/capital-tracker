@@ -71,7 +71,7 @@ Open **Settings → JSON import and export** in the browser:
 - Import validates the format/schema version, currencies, dates, relationships and financial precision before starting a SQLite transaction. Malformed or inconsistent input is rejected; the existing data is preserved on failure. Import does not modify database migrations.
 - This is a portable application-data snapshot, **not** a replacement for the SQLite `backup` command, which remains the preferred full-database backup. JSON exports contain personal financial information and should be stored securely.
 
-JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":7}`. Older versions 1–6 can still be imported; version 1 accounts start in **Ungrouped**. Versions 1–6 have no recurring-expense groups, so their recurring entries start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
+JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":8}`. Older versions 1–7 can still be imported; version 1 accounts start in **Ungrouped**. Versions 1–6 have no recurring-expense groups, so their recurring entries start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
 
 ## Clearing all local data
 
@@ -134,3 +134,11 @@ Remove individual entries with ×, or clear the selected month with **Delete rec
 In **Settings → Spreadsheet export**, choose **Export CSV** for a flat monthly-balance table or **Export Excel** for a workbook with **Balances** and **Rates** sheets. The XLSX **Balances** sheet has formulas that look up the rate by *month and currency* from the historical rates on the **Rates** sheet; adjusting a rate in Excel recalculates the EUR equivalents. Rates are stored as **1 EUR = rate units of currency**. EUR amounts use a rate of 1. Missing historical rates leave the EUR cells blank instead of silently using newer rates. Balances are exported even for partially completed months, but those months must not be interpreted as complete net-worth totals.
 
 CSV is a single flat table, so it repeats the saved monthly rate beside each balance rather than using separate tabs or formulas. Both files are read-only reports and **cannot be imported** back into Capital Tracker. Use **Export JSON** to create a restorable backup. Export generation happens in your browser from the same authenticated snapshot used for JSON export; no external spreadsheet service is involved. Exports also work when viewing a read-only backup preview.
+
+## Monthly review and FX Rates
+
+The dashboard shows income, major expenses and recurring expenses in EUR, with comparisons against the previous calendar month. A missing month is shown as unsaved; a saved empty list is shown as zero. A percentage is unavailable when the previous total is zero. Click a summary card to open its editor for the selected month.
+
+A month is complete after balances and all three income/expense sections are saved. Save an empty income or expense list to confirm that the section has no entries. Inherited recurring expenses need to be saved for the selected month to count as reviewed. Deleting an income or expense month removes its review marker. Review markers are included in JSON exports and restored with the data.
+
+Open **FX Rates** to see saved non-EUR exchange rates across balances, income, major expenses and recurring expenses. Select a period to change the chart range, and select or focus a point to see its exact saved quote. Different saved quotes for the same month remain visible; this page does not fetch newer rates or change historical values.

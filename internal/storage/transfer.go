@@ -14,6 +14,7 @@ import (
 // TransferDocument is a portable, versioned snapshot of application data.
 // Monetary amounts and exchange rates use decimal strings to retain precision.
 type TransferDocument struct {
+	MonthlyReviews    []MonthlyReview            `json:"monthly_reviews,omitempty"`
 	RecurringExpenses []RecurringExpenseSnapshot `json:"recurring_expenses"`
 	Format            string                     `json:"format"`
 	SchemaVersion     int                        `json:"schema_version"`
@@ -54,7 +55,7 @@ type TransferRate struct {
 func (s *Store) ExportData() (TransferDocument, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
-	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 7, ExportedAt: now(),
+	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 8, ExportedAt: now(),
 		Accounts: []Account{}, Groups: []AccountGroup{}, AccountPeriods: []TransferPeriod{}, Months: []Month{},
 		Balances: []TransferBalance{}, Rates: []TransferRate{}, Incomes: []Income{}, Expenses: []Expense{}, RecurringExpenses: []RecurringExpenseSnapshot{}, Settings: map[string]string{}}
 	tx, err := s.DB.Begin()
@@ -208,6 +209,10 @@ func (s *Store) ExportData() (TransferDocument, error) {
 	if err != nil {
 		return d, err
 	}
+	d.MonthlyReviews, err = readMonthlyReviews(tx)
+	if err != nil {
+		return d, err
+	}
 	return d, tx.Commit()
 }
 
@@ -231,7 +236,7 @@ func periodActive(periods []TransferPeriod, month string) bool {
 // snapshots before touching the database. It never fixes invalid input silently.
 func ValidateTransfer(d TransferDocument) error {
 	bad := func() error { return invalid("import") }
-	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 7) || !validTransferTime(d.ExportedAt) ||
+	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 8) || !validTransferTime(d.ExportedAt) ||
 		(d.SchemaVersion >= 6 && d.RecurringExpenses == nil) || d.Accounts == nil || (d.SchemaVersion >= 2 && d.Groups == nil) || (d.SchemaVersion >= 3 && d.Incomes == nil) || (d.SchemaVersion >= 5 && d.Expenses == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
 		return bad()
 	}
@@ -247,6 +252,13 @@ func ValidateTransfer(d TransferDocument) error {
 	}
 	if d.SchemaVersion < 6 && len(d.RecurringExpenses) > 0 {
 		return bad()
+	}
+	seenReviews := map[MonthlyReview]bool{}
+	for _, review := range d.MonthlyReviews {
+		if !finance.ValidMonth(review.Month) || (review.Section != "incomes" && review.Section != "expenses") || seenReviews[review] {
+			return bad()
+		}
+		seenReviews[review] = true
 	}
 	recurringMonths := map[string]bool{}
 	for _, snapshot := range d.RecurringExpenses {
@@ -438,7 +450,7 @@ func (s *Store) importData(d TransferDocument) error {
 		return err
 	}
 	defer tx.Rollback()
-	for _, table := range []string{"recurring_expense_group_members", "recurring_expense_groups", "recurring_expenses", "recurring_expense_months", "expenses", "incomes", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
+	for _, table := range []string{"recurring_expense_group_members", "recurring_expense_groups", "recurring_expenses", "recurring_expense_months", "expenses", "incomes", "monthly_reviews", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
 		if _, err = tx.Exec("DELETE FROM " + table); err != nil {
 			return err
 		}
@@ -489,6 +501,22 @@ func (s *Store) importData(d TransferDocument) error {
 		amount, _ := finance.ParseMinor(entry.AmountMinor)
 		rate, _ := finance.ParseRate(entry.Rate)
 		if _, err = tx.Exec("INSERT INTO expenses(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", entry.Month, index, entry.Name, entry.Currency, amount, rate); err != nil {
+			return invalid("import")
+		}
+	}
+	// Entry-bearing months from older backups were already explicitly saved.
+	reviews := append([]MonthlyReview{}, d.MonthlyReviews...)
+	if d.SchemaVersion < 8 {
+		reviews = nil
+	}
+	for _, entry := range d.Incomes {
+		reviews = append(reviews, MonthlyReview{"incomes", entry.Month})
+	}
+	for _, entry := range d.Expenses {
+		reviews = append(reviews, MonthlyReview{"expenses", entry.Month})
+	}
+	for _, review := range reviews {
+		if _, err = tx.Exec("INSERT INTO monthly_reviews(section,month) VALUES(?,?) ON CONFLICT DO NOTHING", review.Section, review.Month); err != nil {
 			return invalid("import")
 		}
 	}

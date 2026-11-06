@@ -194,7 +194,7 @@ async function deleteIncome() {
     }))
   )
     return;
-  await request('/incomes/' + state.month, 'PUT', { entries: [] });
+  await request('/incomes/' + state.month, 'DELETE');
   state.dirty = false;
   await renderIncomes();
   notify(t('incomeDeleted'));

@@ -43,8 +43,12 @@ func TestExpenseAPI(t *testing.T) {
 	call("PUT", "/expenses/2026-13", `{"entries":[]}`, true, 422)
 	call("PUT", "/expenses/2026-01", `{"entries":[`, true, 400)
 	call("POST", "/expenses", `{}`, true, 405)
-	call("DELETE", "/expenses/2026-01", `{}`, true, 405)
+	call("DELETE", "/expenses/2026-01", `{}`, false, 403)
 	call("PUT", "/expenses/2026-01", `{"entries":[]}`, true, 204)
+	if got := call("GET", "/expenses", "", false, 200); !strings.Contains(got, `"total_eur_minor":"0"`) {
+		t.Fatal(got)
+	}
+	call("DELETE", "/expenses/2026-01", "", true, 204)
 	if got := call("GET", "/expenses", "", false, 200); strings.TrimSpace(got) != "[]" {
 		t.Fatal(got)
 	}

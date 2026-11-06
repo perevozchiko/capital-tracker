@@ -113,6 +113,7 @@ async function nav(page, name) {
     Accounts: '#pageContent [data-action="groupCreate"]',
     'Monthly balances': '.status-block',
     Settings: '#themeSelect',
+    'FX Rates': '#fxPeriod',
     Dashboard: '#pageContent .grid-summary, #pageContent .empty',
   };
   await expect(

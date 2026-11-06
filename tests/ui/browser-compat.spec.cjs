@@ -81,7 +81,7 @@ test('a delayed previous screen cannot overwrite navigation', async ({
   await page.locator('#mobileMenu').evaluate((el) => {
     if (getComputedStyle(el).display !== 'none') el.click();
   });
-  await page.locator('[data-page="incomes"]').click();
+  await page.locator('#navigation [data-page="incomes"]').click();
   await pending;
   await nav(page, 'Settings');
   const response = page.waitForResponse((r) =>

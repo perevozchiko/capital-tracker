@@ -43,8 +43,12 @@ func TestIncomeAPI(t *testing.T) {
 	call("PUT", "/incomes/2026-13", `{"entries":[]}`, true, 422)
 	call("PUT", "/incomes/2026-01", `{"entries":[`, true, 400)
 	call("POST", "/incomes", `{}`, true, 405)
-	call("DELETE", "/incomes/2026-01", `{}`, true, 405)
+	call("DELETE", "/incomes/2026-01", `{}`, false, 403)
 	call("PUT", "/incomes/2026-01", `{"entries":[]}`, true, 204)
+	if got := call("GET", "/incomes", "", false, 200); !strings.Contains(got, `"total_eur_minor":"0"`) {
+		t.Fatal(got)
+	}
+	call("DELETE", "/incomes/2026-01", "", true, 204)
 	if got := call("GET", "/incomes", "", false, 200); strings.TrimSpace(got) != "[]" {
 		t.Fatal(got)
 	}

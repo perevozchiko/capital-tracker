@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -89,6 +90,20 @@ func (s *Store) Incomes() ([]IncomeMonth, error) {
 		m := &months[len(months)-1]
 		m.Entries = append(m.Entries, entry)
 	}
+	reviews, err := readMonthlyReviews(s.DB)
+	if err != nil {
+		return nil, err
+	}
+	present := map[string]bool{}
+	for _, m := range months {
+		present[m.Month] = true
+	}
+	for _, review := range reviews {
+		if review.Section == "incomes" && !present[review.Month] {
+			months = append(months, IncomeMonth{Month: review.Month, Entries: []Income{}, Complete: true})
+		}
+	}
+	sort.Slice(months, func(i, j int) bool { return months[i].Month < months[j].Month })
 	for i := range months {
 		values, err := validateIncome(months[i].Month, months[i].Entries)
 		if err != nil {
@@ -103,7 +118,7 @@ func (s *Store) Incomes() ([]IncomeMonth, error) {
 	return months, nil
 }
 
-// PutIncome replaces only the selected month's notes. An empty list deletes it.
+// PutIncome replaces only the selected month's notes. An empty list records a reviewed zero month.
 func (s *Store) PutIncome(month string, entries []Income) error {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
@@ -116,6 +131,9 @@ func (s *Store) PutIncome(month string, entries []Income) error {
 		return err
 	}
 	defer tx.Rollback()
+	if _, err = tx.Exec("INSERT INTO monthly_reviews(section,month) VALUES(?,?) ON CONFLICT DO NOTHING", "incomes", month); err != nil {
+		return err
+	}
 	if _, err = tx.Exec("DELETE FROM incomes WHERE month=?", month); err != nil {
 		return err
 	}

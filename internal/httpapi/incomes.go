@@ -21,6 +21,14 @@ func registerIncomes(mux *http.ServeMux, s *Server) {
 		writeJSON(w, 200, months)
 	})
 	mux.HandleFunc("/api/incomes/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "DELETE" {
+			if err := s.Store.DeleteFlowMonth("incomes", strings.TrimPrefix(r.URL.Path, "/api/incomes/")); err != nil {
+				handleError(w, err)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		if r.Method != "PUT" {
 			fail(w, 405, "method_not_allowed", "")
 			return
