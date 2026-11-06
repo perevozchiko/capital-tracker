@@ -23,6 +23,10 @@ for (const file of ['ci.yml', 'release.yml']) {
     assert.doesNotMatch(workflow, /playwright install|apt-get/);
     assert.match(
       workflow,
+      /git config --global --add safe\.directory "\$GITHUB_WORKSPACE"/,
+    );
+    assert.match(
+      workflow,
       /timeout-minutes: 1\n\s+run: node scripts\/check-playwright-browsers\.mjs/,
     );
     assert.match(workflow, /timeout-minutes: 25\n\s+run: npm run test:ui/);
