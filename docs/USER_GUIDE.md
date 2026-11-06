@@ -6,7 +6,7 @@ Capital Tracker is a monthly snapshot tracker: enter balances at the end of each
 
 Amounts start hidden whenever you open or reload the app. Use the eye button to show them while working; visibility carries across screens within that page and is never saved between openings.
 
-On phones, tap the menu button or swipe right from the leftmost 48 pixels of the screen to open navigation. Swipe left over the menu or its shaded backdrop, tap the backdrop, or press Escape to close it. Selecting a screen also closes the menu. Vertical scrolling, form fields, charts and horizontal tables keep their normal touch behavior.
+On phones, tap the menu button or swipe right from the leftmost 48 pixels of the screen to open navigation. The panel follows your finger, with shading that changes as you drag. Release past halfway or flick to finish opening or closing; a shorter slow drag returns to its starting side. Swipe left over the menu or its shaded backdrop, tap the backdrop, or press Escape to close it. Button taps and release gestures settle smoothly; the system's reduced-motion preference disables settling animations. Selecting a screen also closes the menu. Vertical scrolling, form fields, charts and horizontal tables keep their normal touch behavior.
 
 ## Demo mode — a year of example finances
 
