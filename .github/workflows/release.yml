@@ -35,6 +35,14 @@ jobs:
   prepare:
     name: Prepare version and pin source
     runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    container:
+      # Keep this version aligned with package-lock.json; npm test checks it.
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
+    defaults:
+      run:
+        shell: bash
     permissions:
       contents: write
     outputs:
@@ -58,16 +66,21 @@ jobs:
           cache: npm
       - name: Test release version planner before modifications
         run: python -m unittest discover -s tests -p '*release*test.py'
+      - name: Install JavaScript dependencies
+        timeout-minutes: 5
+        run: npm ci
       # Do not advance the source version if any existing source test is broken.
       - name: Validate source before changing the version
+        timeout-minutes: 10
         run: |
-          npm ci
           npm run check
           npm run security:check
+      - name: Verify bundled Chrome and Safari browser engines
+        timeout-minutes: 1
+        run: node scripts/check-playwright-browsers.mjs
       - name: Test browser UI before changing the version
-        run: |
-          npx playwright install --with-deps chromium webkit
-          npm run test:ui
+        timeout-minutes: 25
+        run: npm run test:ui
       - name: Upload browser traces on preflight failure
         if: failure()
         uses: actions/upload-artifact@v6
