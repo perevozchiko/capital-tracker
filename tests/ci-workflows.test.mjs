@@ -9,12 +9,8 @@ const version = lock.packages['node_modules/@playwright/test'].version;
 
 for (const file of ['ci.yml', 'release.yml']) {
   const workflow = read('.github/workflows/' + file);
-  // The documentation-only capture job intentionally installs Chromium.
-  // Browser-suite invariants apply to CI's checks job, not that capture job.
-  const browserSuite =
-    file === 'ci.yml' ? workflow.slice(workflow.indexOf('\n  checks:\n')) : workflow;
   test(`${file} bundles the browsers for the locked Playwright version`, () => {
-    const images = [...browserSuite.matchAll(/^\s+image:\s*(\S+)$/gm)].map(
+    const images = [...workflow.matchAll(/^\s+image:\s*(\S+)$/gm)].map(
       (match) => match[1],
     );
     assert.deepEqual(images, [
@@ -24,15 +20,15 @@ for (const file of ['ci.yml', 'release.yml']) {
       lock.packages['node_modules/playwright-core'].version,
       version,
     );
-    assert.doesNotMatch(browserSuite, /playwright install|apt-get/);
+    assert.doesNotMatch(workflow, /playwright install|apt-get/);
     assert.match(
-      browserSuite,
+      workflow,
       /git config --global --add safe\.directory "\$GITHUB_WORKSPACE"/,
     );
     assert.match(
-      browserSuite,
+      workflow,
       /timeout-minutes: 1\n\s+run: node scripts\/check-playwright-browsers\.mjs/,
     );
-    assert.match(browserSuite, /timeout-minutes: 25\n\s+run: npm run test:ui/);
+    assert.match(workflow, /timeout-minutes: 25\n\s+run: npm run test:ui/);
   });
 }
