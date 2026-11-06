@@ -44,6 +44,13 @@ export default {
     'Enter a name, amount and currency to add a recurring expense for the selected month.',
   recurringExpenseListEmpty: 'No recurring expenses added for this month yet.',
   removeRecurringExpense: 'Remove recurring expense',
+  editRecurringExpense: 'Edit recurring expense',
+  editExpense: 'Edit expense',
+  editIncome: 'Edit income',
+  editMonthlyEntryHelp:
+    'Changes apply only to {month}. Save the month after editing.',
+  editRecurringExpenseHelp:
+    'Changes apply to {month} and following months without a saved list. Earlier months stay unchanged. Save the month after editing.',
   recurringExpenseName: 'Name',
   recurringExpenseNamePlaceholder: 'e.g. Rent, internet or subscriptions',
   monthlyRecurringExpenseTotal: 'Monthly total in EUR',
@@ -54,7 +61,7 @@ export default {
   recurringExpenseEmpty:
     'Save monthly recurring expenses to see how they change in EUR.',
   recurringExpenseHelp:
-    'New months start with the last saved list. Add or remove entries and save this month independently. To change an amount, remove the entry and add it again.',
+    'New months start with the last saved list. Add, edit or remove entries and save this month. Earlier months stay unchanged.',
   saveRecurringExpense: 'Save recurring expense',
   deleteRecurringExpense: 'Delete recurring expense',
   confirmDeleteRecurringExpense:
@@ -81,7 +88,7 @@ export default {
   expenseHistory: 'Expense history in EUR',
   expenseEmpty: 'Save monthly expenses to see how they change in EUR.',
   expenseHelp:
-    'To correct an expense entry, remove it and add it again. Save the month to keep your changes. Each exchange rate applies to all expenses in that currency.',
+    'Edit an expense name or amount and save the month to keep your changes. Other months stay unchanged. Each exchange rate applies to all expenses in that currency.',
   saveExpense: 'Save expense',
   deleteExpense: 'Delete expense',
   confirmDeleteExpense:
@@ -106,7 +113,7 @@ export default {
   incomeHistory: 'Income history in EUR',
   incomeEmpty: 'Save monthly income to see how it changes in EUR.',
   incomeHelp:
-    'To correct an income entry, remove it and add it again. Save the month to keep your changes. Each exchange rate applies to all income in that currency.',
+    'Edit an income name or amount and save the month to keep your changes. Other months stay unchanged. Each exchange rate applies to all income in that currency.',
   saveIncome: 'Save income',
   deleteIncome: 'Delete income',
   confirmDeleteIncome:

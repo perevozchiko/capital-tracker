@@ -147,6 +147,15 @@ function moveRow(row, target, after = false) {
 
 export function bindRecurringExpenseGroups(onChange) {
   changed = onChange;
+  document.addEventListener('mousedown', (event) => {
+    const button = event.target.closest(
+      '.recurring-expense-group .action-menu-content button',
+    );
+    if (!button || !editable()) return;
+    // Keep Safari from blurring the menu before the click reaches its button.
+    event.preventDefault();
+    button.focus({ preventScroll: true });
+  });
   document.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-recurring-action]');
     if (!button) return;

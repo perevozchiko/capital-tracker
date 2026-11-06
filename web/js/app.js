@@ -53,6 +53,7 @@ import {
   loadIncomeRates,
   addIncomeRow,
   removeIncomeRow,
+  editIncomeRow,
 } from './incomes.js';
 
 import {
@@ -61,6 +62,7 @@ import {
   loadExpenseRates,
   addExpenseRow,
   removeExpenseRow,
+  editExpenseRow,
 } from './expenses.js';
 import {
   saveRecurringExpense,
@@ -68,6 +70,7 @@ import {
   loadRecurringExpenseRates,
   addRecurringExpenseRow,
   removeRecurringExpenseRow,
+  editRecurringExpenseRow,
 } from './recurring-expenses.js';
 
 bindAccountDragAndDrop();
@@ -141,6 +144,10 @@ document.addEventListener('click', async (e) => {
       updateBalanceDifference(input);
       input.focus();
     } else if (action === 'loadRates') await loadRates(node);
+    else if (action === 'editIncomeRow') editIncomeRow(node);
+    else if (action === 'editExpenseRow') editExpenseRow(node);
+    else if (action === 'editRecurringExpenseRow')
+      editRecurringExpenseRow(node);
     else if (action === 'removeExpenseRow') removeExpenseRow(node);
     else if (action === 'deleteExpense') await deleteExpense();
     else if (action === 'loadExpenseRates') await loadExpenseRates(node);

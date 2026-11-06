@@ -5,6 +5,7 @@ import { escapeHTML, moneyHTML, parseMoney, parseRate } from './format.js';
 import { $, notify, applyAmountVisibility } from './ui.js';
 import { chart } from './chart.js';
 import { showConfirm } from './dialogs.js';
+import { editEntry } from './entry-editor.js';
 import { incomeTotal as expenseTotal } from './income-math.js';
 
 let monthRates = new Map();
@@ -38,7 +39,7 @@ function expenseRow(entry) {
     <div class="account-main income-list-main"><strong data-expense-name>${escapeHTML(entry.name)}</strong><span class="currency-tag">${escapeHTML(entry.currency)}</span></div>
     <div class="account-balance"><strong data-expense-amount>${moneyHTML(entry.amount_minor, entry.currency)}</strong><small>${t('expenseAmount')}</small></div>
     <div class="account-balance"><strong data-expense-eur>—</strong><small>${t('totalEUR')}</small></div>
-    <button class="btn btn-icon" type="button" data-action="removeExpenseRow" aria-label="${t('removeExpense')}">×</button>
+    <div class="income-row-actions"><button class="btn btn-icon" type="button" data-action="editExpenseRow" aria-label="${t('editExpense')}" title="${t('editExpense')}">✎</button><button class="btn btn-icon" type="button" data-action="removeExpenseRow" aria-label="${t('removeExpense')}">×</button></div>
   </div>`;
 }
 
@@ -129,6 +130,10 @@ function addExpenseRow(form) {
   form.reset();
   form.elements.name.focus();
 }
+function editExpenseRow(button) {
+  editEntry(button, 'expense', updateExpenseTotals);
+}
+
 function removeExpenseRow(button) {
   button.closest('[data-expense-row]').remove();
   $('#expenseListEmpty').hidden = !!$('#expenseForm [data-expense-row]');
@@ -239,4 +244,5 @@ export {
   loadExpenseRates,
   addExpenseRow,
   removeExpenseRow,
+  editExpenseRow,
 };

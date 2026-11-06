@@ -1,5 +1,5 @@
 // Bump CACHE_NAME for every frontend release. API responses are NEVER cached.
-const CACHE_NAME = 'capital-tracker-static-v29-recurring-groups';
+const CACHE_NAME = 'capital-tracker-static-v32-entry-editing';
 const STATIC = [
   '/',
   '/index.html',
@@ -22,6 +22,7 @@ const STATIC = [
   '/js/accounts.js',
   '/js/monthly.js',
   '/js/incomes.js',
+  '/js/entry-editor.js',
   '/js/expenses.js',
   '/js/recurring-expenses.js',
   '/js/recurring-expense-groups.js',

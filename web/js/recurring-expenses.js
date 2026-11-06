@@ -5,6 +5,7 @@ import { escapeHTML, moneyHTML, parseMoney, parseRate } from './format.js';
 import { $, notify, applyAmountVisibility } from './ui.js';
 import { chart } from './chart.js';
 import { showConfirm } from './dialogs.js';
+import { editEntry } from './entry-editor.js';
 import { incomeTotal as recurringExpenseTotal } from './income-math.js';
 import {
   renderRecurringExpenseGroups,
@@ -52,7 +53,7 @@ function recurringExpenseRow(entry) {
     <div class="account-main income-list-main"><span class="drag-handle" title="${t('recurringExpenseDrag')}" aria-hidden="true">⠿</span><strong data-recurring-expense-name>${escapeHTML(entry.name)}</strong><span class="currency-tag">${escapeHTML(entry.currency)}</span></div>
     <div class="account-balance"><strong data-recurring-expense-amount>${moneyHTML(entry.amount_minor, entry.currency)}</strong><small>${t('recurringExpenseAmount')}</small></div>
     <div class="account-balance"><strong data-recurring-expense-eur>—</strong><small>${t('totalEUR')}</small></div>
-    <div class="recurring-row-actions"><details class="account-actions-menu" name="recurring-actions"><summary aria-label="${t('recurringExpenseActions')}">⋮</summary><div class="action-menu-content"><label class="menu-move-label">${t('moveToGroup')}<select data-recurring-move aria-label="${t('moveToGroup')}"></select></label><button type="button" data-recurring-action="rowUp">${t('reorderUp')}</button><button type="button" data-recurring-action="rowDown">${t('reorderDown')}</button></div></details><button class="btn btn-icon" type="button" data-action="removeRecurringExpenseRow" aria-label="${t('removeRecurringExpense')}">×</button></div>
+    <div class="recurring-row-actions"><button class="btn btn-icon" type="button" data-action="editRecurringExpenseRow" aria-label="${t('editRecurringExpense')}" title="${t('editRecurringExpense')}">✎</button><details class="account-actions-menu" name="recurring-actions"><summary aria-label="${t('recurringExpenseActions')}">⋮</summary><div class="action-menu-content"><label class="menu-move-label">${t('moveToGroup')}<select data-recurring-move aria-label="${t('moveToGroup')}"></select></label><button type="button" data-recurring-action="rowUp">${t('reorderUp')}</button><button type="button" data-recurring-action="rowDown">${t('reorderDown')}</button></div></details><button class="btn btn-icon" type="button" data-action="removeRecurringExpenseRow" aria-label="${t('removeRecurringExpense')}">×</button></div>
   </div>`;
 }
 
@@ -164,6 +165,10 @@ function addRecurringExpenseRow(form) {
   form.elements.group.value = selectedGroup;
   form.elements.name.focus();
 }
+function editRecurringExpenseRow(button) {
+  editEntry(button, 'recurringExpense', updateRecurringExpenseTotals);
+}
+
 function removeRecurringExpenseRow(button) {
   button.closest('[data-recurring-expense-row]').remove();
   refreshRecurringExpenseGroups();
@@ -283,4 +288,5 @@ export {
   loadRecurringExpenseRates,
   addRecurringExpenseRow,
   removeRecurringExpenseRow,
+  editRecurringExpenseRow,
 };
