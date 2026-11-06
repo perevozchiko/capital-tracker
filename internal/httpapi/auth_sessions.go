@@ -15,6 +15,8 @@ const (
 	sessionIdleTimeout      = 7 * 24 * time.Hour
 	rememberedLifetime      = 180 * 24 * time.Hour
 	sessionActivityInterval = time.Hour
+	trustedDeviceLifetime   = 180 * 24 * time.Hour
+	trustedDeviceCookie     = "capital_tracker_trusted_device"
 )
 
 type sessionState struct {
@@ -38,9 +40,11 @@ type savedSession struct {
 
 // Session hashes are separate from the financial database and its backups.
 type savedSessions struct {
-	Version     int            `json:"version"`
-	Credentials string         `json:"credentials"`
-	Sessions    []savedSession `json:"sessions"`
+	Version      int                  `json:"version"`
+	Credentials  string               `json:"credentials"`
+	Sessions     []savedSession       `json:"sessions"`
+	Devices      map[string]time.Time `json:"trusted_devices,omitempty"`
+	LastTOTPStep int64                `json:"last_totp_step,omitempty"`
 }
 
 func sessionKey(token string) string {
@@ -51,6 +55,7 @@ func sessionKey(token string) string {
 // Called once at startup, after the application's data-directory lock is held.
 func (a *Auth) loadSessions() error {
 	a.sessions = make(map[string]sessionState)
+	a.devices = make(map[string]time.Time)
 	data, err := os.ReadFile(a.sessionPath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("read auth sessions: %w", err)
@@ -85,6 +90,18 @@ func (a *Auth) loadSessions() error {
 			return fmt.Errorf("decode auth sessions: %w", err)
 		}
 		if saved.Credentials == a.credentials {
+			if saved.LastTOTPStep < 0 {
+				return fmt.Errorf("invalid TOTP replay state")
+			}
+			a.lastTOTPStep = saved.LastTOTPStep
+			for key, expiry := range saved.Devices {
+				if !validSessionKey(key) || expiry.IsZero() {
+					return fmt.Errorf("invalid trusted device")
+				}
+				if a.now().Before(expiry) {
+					a.devices[key] = expiry
+				}
+			}
 			for _, session := range saved.Sessions {
 				if !validSessionKey(session.Key) || session.LastSeen.IsZero() || !session.ExpiresAt.After(session.LastSeen) {
 					return fmt.Errorf("invalid auth session")
@@ -108,7 +125,15 @@ func validSessionKey(key string) bool {
 
 // Caller holds a.mu, or is initializing Auth before serving requests.
 func (a *Auth) saveSessions() error {
-	saved := savedSessions{Version: 1, Credentials: a.credentials, Sessions: make([]savedSession, 0, len(a.sessions))}
+	saved := savedSessions{Version: 1, Credentials: a.credentials, Sessions: make([]savedSession, 0, len(a.sessions)),
+		Devices: make(map[string]time.Time), LastTOTPStep: a.lastTOTPStep}
+	for key, expiry := range a.devices {
+		if a.now().Before(expiry) {
+			saved.Devices[key] = expiry
+		} else {
+			delete(a.devices, key)
+		}
+	}
 	for key, session := range a.sessions {
 		if session.valid(a.now()) {
 			saved.Sessions = append(saved.Sessions, savedSession{Key: key, sessionState: session})

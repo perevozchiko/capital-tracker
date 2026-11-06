@@ -28,11 +28,20 @@ type Auth struct {
 	credentials  string
 	loginLimits  map[string]loginWindow
 	loginSlots   chan struct{}
+	totpSecret   []byte
+	lastTOTPStep int64
+	totpLimits   loginWindow
+	devices      map[string]time.Time
 	now          func() time.Time
 }
 
 // Credentials are deployment configuration, never part of financial backups.
 func NewAuth(username, hash, origin, sessionPath string) (*Auth, error) {
+	return NewAuthWithTOTP(username, hash, origin, sessionPath, "")
+}
+
+// NewAuthWithTOTP optionally requires a code when signing in on a new browser.
+func NewAuthWithTOTP(username, hash, origin, sessionPath, secret string) (*Auth, error) {
 	if username == "" || len(username) > 100 {
 		return nil, errors.New("auth username is required (max 100 bytes)")
 	}
@@ -48,7 +57,15 @@ func NewAuth(username, hash, origin, sessionPath string) (*Auth, error) {
 	}
 	a := &Auth{username: username, passwordHash: []byte(hash), Origin: origin, sessionPath: sessionPath,
 		loginLimits: make(map[string]loginWindow), loginSlots: make(chan struct{}, 2), now: time.Now}
-	fingerprint := sha256.Sum256([]byte(username + "\x00" + hash))
+	credentials := username + "\x00" + hash
+	if secret != "" {
+		a.totpSecret, err = decodeTOTPSecret(secret)
+		if err != nil {
+			return nil, err
+		}
+		credentials += "\x00totp\x00" + hex.EncodeToString(a.totpSecret)
+	}
+	fingerprint := sha256.Sum256([]byte(credentials))
 	a.credentials = hex.EncodeToString(fingerprint[:])
 	if err := a.loadSessions(); err != nil {
 		return nil, err
@@ -167,6 +184,8 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 		Username string `json:"username"`
 		Password string `json:"password"`
 		Remember bool   `json:"remember"`
+		Code     string `json:"code"`
+		Trust    bool   `json:"trust_device"`
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 4096)
 	if !readJSON(w, r, &input) {
@@ -205,6 +224,46 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 	token := hex.EncodeToString(random[:])
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	now := a.now()
+	deviceKey := ""
+	var deviceExpiry time.Time
+	if device, err := r.Cookie(trustedDeviceCookie); err == nil && len(device.Value) == 64 {
+		deviceKey = sessionKey(device.Value)
+		deviceExpiry = a.devices[deviceKey]
+	}
+	step := a.lastTOTPStep
+	if len(a.totpSecret) > 0 && !now.Before(deviceExpiry) {
+		if input.Code == "" {
+			fail(w, 401, "two_factor_required", "code")
+			return
+		}
+		// Only callers who know the password can consume the account-wide OTP
+		// budget. Changing source IP cannot bypass this limit.
+		if now.Sub(a.totpLimits.Started) >= time.Minute {
+			a.totpLimits = loginWindow{Started: now}
+		}
+		if a.totpLimits.Attempts >= 10 {
+			w.Header().Set("Retry-After", strconv.Itoa(int((time.Minute-now.Sub(a.totpLimits.Started)+time.Second-1)/time.Second)))
+			fail(w, 429, "login_rate_limited", "")
+			return
+		}
+		a.totpLimits.Attempts++
+		var valid bool
+		step, valid = verifyTOTP(a.totpSecret, input.Code, now, a.lastTOTPStep)
+		if !valid {
+			fail(w, 401, "invalid_two_factor_code", "code")
+			return
+		}
+	}
+	var deviceToken string
+	if len(a.totpSecret) > 0 && input.Trust {
+		var random [32]byte
+		if _, err := rand.Read(random[:]); err != nil {
+			fail(w, 500, "internal_error", "")
+			return
+		}
+		deviceToken = hex.EncodeToString(random[:])
+	}
 	// Rotate only this browser's session; other devices stay signed in.
 	var oldKey string
 	var hadOld bool
@@ -215,15 +274,25 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 		delete(a.sessions, oldKey)
 	}
 	key := sessionKey(token)
-	now := a.now()
 	session := sessionState{ExpiresAt: now.Add(sessionCookieLifetime), LastSeen: now}
 	if input.Remember {
 		session.Remember = true
 		session.ExpiresAt = now.Add(rememberedLifetime)
 	}
 	a.sessions[key] = session
+	previousStep := a.lastTOTPStep
+	a.lastTOTPStep = step
+	delete(a.devices, deviceKey)
+	if deviceToken != "" {
+		a.devices[sessionKey(deviceToken)] = now.Add(trustedDeviceLifetime)
+	}
 	if err := a.saveSessions(); err != nil {
 		delete(a.sessions, key)
+		a.lastTOTPStep = previousStep
+		delete(a.devices, sessionKey(deviceToken))
+		if !deviceExpiry.IsZero() {
+			a.devices[deviceKey] = deviceExpiry
+		}
 		if hadOld {
 			a.sessions[oldKey] = oldSession
 		}
@@ -231,5 +300,14 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.SetCookie(w, a.cookie(token, session.maxAge(now)))
+	if len(a.totpSecret) > 0 {
+		maxAge := -1
+		if deviceToken != "" {
+			maxAge = int(trustedDeviceLifetime.Seconds())
+		}
+		cookie := a.cookie(deviceToken, maxAge)
+		cookie.Name = trustedDeviceCookie
+		http.SetCookie(w, cookie)
+	}
 	w.WriteHeader(http.StatusNoContent)
 }

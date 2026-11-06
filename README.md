@@ -22,7 +22,7 @@
 
 </div>
 
-Capital Tracker is independently developed open-source software, not affiliated with any commercial budgeting app. Your balances and notes live in your own SQLite database. Run it locally with no sign-in, or optionally self-host it behind HTTPS with password-protected access from your devices.
+Capital Tracker is independently developed open-source software, not affiliated with any commercial budgeting app. Your balances and notes live in your own SQLite database. Run it locally with no sign-in, or optionally self-host it behind HTTPS with password-protected access and TOTP confirmation for new devices.
 
 ## Screenshots
 

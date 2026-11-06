@@ -1,5 +1,125 @@
 const { test, expect, nav } = require('./helpers.cjs');
+const { createHmac } = require('node:crypto');
 test.use({ authEnabled: true });
+
+function authenticatorCode() {
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000)));
+  const digest = createHmac('sha1', '12345678901234567890')
+    .update(counter)
+    .digest();
+  const offset = digest[digest.length - 1] & 15;
+  return String((digest.readUInt32BE(offset) & 0x7fffffff) % 1000000).padStart(
+    6,
+    '0',
+  );
+}
+
+test.describe('two-factor device confirmation', () => {
+  test.use({ totpSecret: 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ' });
+
+  async function enterPassword(page, app) {
+    await page.goto(app);
+    await page.locator('#loginUsername').fill('tester');
+    await page.locator('#loginPassword').fill('browser test password');
+    await page.locator('#loginForm button').click();
+  }
+
+  test('new devices need a code; trusted devices survive restart and sign-out', async ({
+    page,
+    context,
+    browser,
+    app,
+    restartApp,
+  }) => {
+    await enterPassword(page, app);
+    await expect(page.getByLabel('Authenticator code')).toBeFocused();
+    await expect(page.locator('#trustDevice')).toBeChecked();
+    expect((await page.request.get(app + '/api/data/export')).status()).toBe(
+      401,
+    );
+    expect((await page.request.get(app + '/js/app.js')).status()).toBe(401);
+    const code = authenticatorCode();
+    await page
+      .locator('#loginCode')
+      .fill(code === '000000' ? '111111' : '000000');
+    await page.locator('#loginForm button').click();
+    await expect(page.locator('#loginError')).toContainText(
+      'Invalid or already used code.',
+    );
+    await page.locator('#loginCode').fill(authenticatorCode());
+    await page.locator('#loginForm button').click();
+    await expect(page.locator('#logoutButton')).toBeVisible();
+    const trust = (await context.cookies()).find(
+      (cookie) => cookie.name === 'capital_tracker_trusted_device',
+    );
+    expect(trust.httpOnly).toBe(true);
+    expect(trust.sameSite).toBe('Strict');
+    await restartApp();
+    await page.reload();
+    await expect(page.locator('#logoutButton')).toBeVisible();
+    await page.locator('#logoutButton').click();
+    await expect(page.locator('#loginForm')).toBeVisible();
+    expect((await page.request.get(app + '/api/data/export')).status()).toBe(
+      401,
+    );
+    await enterPassword(page, app);
+    await expect(page.locator('#logoutButton')).toBeVisible();
+    await expect(page.locator('#loginCode')).toHaveCount(0);
+
+    const other = await browser.newContext();
+    try {
+      const otherPage = await other.newPage();
+      await enterPassword(otherPage, app);
+      await expect(otherPage.getByLabel('Authenticator code')).toBeVisible();
+      expect((await other.request.get(app + '/api/data/export')).status()).toBe(
+        401,
+      );
+    } finally {
+      await other.close();
+    }
+
+    // Losing only device trust also requires a code at the next password login.
+    await context.clearCookies({ name: 'capital_tracker_trusted_device' });
+    await page.locator('#logoutButton').click();
+    await expect(page.locator('#loginForm')).toBeVisible();
+    await enterPassword(page, app);
+    await expect(page.getByLabel('Authenticator code')).toBeVisible();
+  });
+
+  test('shared devices can decline trust and the code form fits small screens', async ({
+    page,
+    context,
+    app,
+  }) => {
+    await enterPassword(page, app);
+    await expect(page.getByLabel('Authenticator code')).toBeVisible();
+    await page.locator('#trustDevice').uncheck();
+    await page.locator('#rememberDevice').uncheck();
+    for (const width of [320, 390, 844, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect(page.locator('#loginCode')).toBeInViewport();
+      await expect(page.locator('#loginForm button')).toBeInViewport();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth - innerWidth,
+        ),
+      ).toBeLessThanOrEqual(1);
+    }
+    await page.locator('#loginCode').fill(authenticatorCode());
+    await page.locator('#loginForm button').click();
+    await expect(page.locator('#logoutButton')).toBeVisible();
+    expect(
+      (await context.cookies()).find(
+        (cookie) => cookie.name === 'capital_tracker_trusted_device',
+      ),
+    ).toBeUndefined();
+    await page.locator('#logoutButton').click();
+    await expect(page.locator('#loginForm')).toBeVisible();
+    await enterPassword(page, app);
+    await expect(page.getByLabel('Authenticator code')).toBeVisible();
+  });
+});
 
 test('login protects financial data, survives reload and sign-out revokes access', async ({
   page,

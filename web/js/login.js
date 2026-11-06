@@ -1,5 +1,7 @@
 const form = document.querySelector('#loginForm');
 const error = document.querySelector('#loginError');
+const twoFactorStep = document.querySelector('#twoFactorStep');
+const code = document.querySelector('#loginCode');
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -16,9 +18,26 @@ form.addEventListener('submit', async (event) => {
         username: form.elements.username.value,
         password: form.elements.password.value,
         remember: form.elements.remember.checked,
+        code: code.value,
+        trust_device: form.elements.trustDevice.checked,
       }),
     });
     if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      if (
+        data.error?.code === 'two_factor_required' ||
+        data.error?.code === 'invalid_two_factor_code'
+      ) {
+        twoFactorStep.hidden = false;
+        code.required = true;
+        code.value = '';
+        button.textContent = 'Confirm and sign in';
+        code.focus();
+        if (data.error.code === 'invalid_two_factor_code')
+          error.textContent =
+            'Invalid or already used code. Try the next code from your authenticator app.';
+        return;
+      }
       error.textContent =
         response.status === 401
           ? 'Incorrect username or password.'

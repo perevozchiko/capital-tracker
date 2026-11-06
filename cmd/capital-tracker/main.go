@@ -57,6 +57,14 @@ func main() {
 	}
 }
 func run() error {
+	if len(os.Args) == 2 && os.Args[1] == "generate-totp" {
+		secret, uri, err := httpapi.NewTOTPEnrollment(os.Getenv("CAPITAL_TRACKER_USERNAME"))
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Add this secret to Authy (6 digits, 30 seconds):\n%s\n\nEnrollment URI (contains the same secret):\n%s\n\nSet CAPITAL_TRACKER_TOTP_SECRET in the private server environment to the secret above, then restart.\n", secret, uri)
+		return nil
+	}
 	if len(os.Args) == 2 && os.Args[1] == "hash-password" {
 		password := os.Getenv("CAPITAL_TRACKER_PASSWORD")
 		if len(password) < 12 || len(password) > 72 {
@@ -143,8 +151,9 @@ func run() error {
 	var auth *httpapi.Auth
 	publicOrigin := os.Getenv("CAPITAL_TRACKER_PUBLIC_ORIGIN")
 	username, hash := os.Getenv("CAPITAL_TRACKER_USERNAME"), os.Getenv("CAPITAL_TRACKER_PASSWORD_HASH")
-	if publicOrigin != "" || username != "" || hash != "" {
-		auth, err = httpapi.NewAuth(username, hash, publicOrigin, filepath.Join(*dataDir, "auth-sessions.json"))
+	totpSecret := os.Getenv("CAPITAL_TRACKER_TOTP_SECRET")
+	if publicOrigin != "" || username != "" || hash != "" || totpSecret != "" {
+		auth, err = httpapi.NewAuthWithTOTP(username, hash, publicOrigin, filepath.Join(*dataDir, "auth-sessions.json"), totpSecret)
 		if err != nil {
 			return err
 		}

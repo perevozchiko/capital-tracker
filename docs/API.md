@@ -10,6 +10,9 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 
 | Method | Endpoint | Function |
 | --- | --- | --- |
+| `GET` | `/api/auth/status` | Return `enabled` and `authenticated`; does not accept device trust as a session |
+| `POST` | `/api/auth/login` | Configured auth only: username/password, optional `remember`, `code`, `trust_device`; returns 204 and cookies on success |
+| `POST` | `/api/auth/logout` | Configured auth only: revoke this session and clear its cookie; preserve device trust |
 | `GET`, `POST` | `/api/accounts` | List / create accounts (`name`, `currency`, `start_month`, optional `group_id`) |
 | `PATCH`, `DELETE` | `/api/accounts/{id}` | Change account name or currency (currency only before any recorded balance) / delete history-free account |
 | `POST` | `/api/accounts/{id}/archive` | `{"month":"2026-11"}`; requires an explicit zero balance in the latest saved month, otherwise returns `409` with reason `archive_requires_zero_balance` |
@@ -50,6 +53,24 @@ Example full monthly replacement:
 `PUT /api/months/{month}` creates the month when needed, and removes old balance/rate entries omitted from this request. `POST /api/months` creates a deliberately empty month and rejects duplicates. `DELETE /api/months/{month}` requires JSON `{"confirm":true}` with the CSRF header and permanently removes the month plus its balances and rates via one SQLite transaction; other months remain unchanged. Never call `PUT` with an empty payload unintentionally, as that means clear the month. Requests are limited to 1 MiB.
 
 For `GET /api/groups`, optional `view=monthly` keeps accounts active in the selected month in their assigned groups, including accounts archived later, instead of placing them in Archive. The default view retains the Accounts screen grouping.
+
+## Authentication and device trust
+
+When server authentication is configured, protected endpoints require the `capital_tracker_session` cookie. Login accepts:
+
+```json
+{
+  "username": "andrei",
+  "password": "your password",
+  "remember": true,
+  "code": "012345",
+  "trust_device": true
+}
+```
+
+`code` is a string to preserve leading zeros. With TOTP enabled, correct credentials without a valid trusted-device cookie return HTTP 401 `two_factor_required` if the code is missing, or `invalid_two_factor_code` if it is invalid, expired, or already used. No session or device cookie is issued on either response. Resubmit the same credentials with the current six-digit code. The password is checked on every attempt; invalid credentials always return `invalid_credentials`. Throttled attempts return HTTP 429 `login_rate_limited` with `Retry-After`.
+
+`remember` controls session lifetime only. `trust_device` separately persists a confirmed browser for 180 days and defaults to false for API clients. A successful login with trust enabled issues/rotates `capital_tracker_trusted_device`; subsequent logins with that cookie still require the password but can omit `code`. Trust is renewed on successful password sign-in and survives sign-out. A successful login with `trust_device: false` removes any existing trust for that browser. The trust cookie alone cannot read protected endpoints. See [Hosting](HOSTING.md#two-factor-confirmation-for-new-devices) for enrollment, expiry, reset and recovery.
 
 ## Income notes
 

@@ -7,7 +7,8 @@ const path = require('node:path');
 
 const test = base.extend({
   authEnabled: [false, { option: true }],
-  appServer: async ({ authEnabled }, use) => {
+  totpSecret: ['', { option: true }],
+  appServer: async ({ authEnabled, totpSecret }, use) => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'capital-tracker-ui-'));
     const probe = net.createServer();
     await new Promise((resolve) => probe.listen(0, '127.0.0.1', resolve));
@@ -28,11 +29,13 @@ const test = base.extend({
       'CAPITAL_TRACKER_USERNAME',
       'CAPITAL_TRACKER_PASSWORD_HASH',
       'CAPITAL_TRACKER_PUBLIC_ORIGIN',
+      'CAPITAL_TRACKER_TOTP_SECRET',
       'CAPITAL_TRACKER_UPDATE_AGENT_URL',
       'CAPITAL_TRACKER_UPDATE_AGENT_KEY_FILE',
     ])
       delete serverEnv[key];
     if (authEnabled) {
+      if (totpSecret) serverEnv.CAPITAL_TRACKER_TOTP_SECRET = totpSecret;
       serverEnv.CAPITAL_TRACKER_USERNAME = 'tester';
       serverEnv.CAPITAL_TRACKER_PASSWORD_HASH = execFileSync(
         process.env.CAPITAL_TRACKER_TEST_BINARY,

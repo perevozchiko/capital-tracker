@@ -42,6 +42,34 @@
           <input id="rememberDevice" name="remember" type="checkbox" checked />
           <span>Keep me signed in on this device</span>
         </label>
+        <div id="twoFactorStep" hidden>
+          <label for="loginCode">Authenticator code</label>
+          <p id="codeHelp" class="code-help">
+            Enter the 6-digit code from Authy or your authenticator app to
+            confirm this device.
+          </p>
+          <input
+            id="loginCode"
+            name="code"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            pattern="[0-9]{6}"
+            minlength="6"
+            maxlength="6"
+            aria-describedby="codeHelp"
+          />
+          <label class="remember-device" for="trustDevice">
+            <input
+              id="trustDevice"
+              name="trustDevice"
+              type="checkbox"
+              checked
+            />
+            <span>Trust this device — skip codes for 180 days</span>
+          </label>
+          <p class="code-help">Uncheck both options on a shared device.</p>
+        </div>
         <p id="loginError" role="alert" aria-live="polite"></p>
         <button type="submit">Sign in</button>
       </form>
