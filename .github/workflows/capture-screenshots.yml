@@ -2,15 +2,37 @@ name: Capture demo screenshots
 
 on:
   workflow_dispatch:
+  # Let a same-repository documentation PR generate captures for review.
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]
+  # Run screenshot refreshes on a dedicated review branch, without changing master.
+  push:
+    branches:
+      - 'docs/refresh-screenshots-*'
+    paths:
+      - '.github/workflows/capture-screenshots.yml'
+      - 'README.md'
+      - 'docs/screenshots/README.md'
+      - 'scripts/capture-demo-screenshots.py'
+      - 'web/**'
+      - 'internal/**'
 
 permissions:
   contents: write
 
 jobs:
   screenshots:
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       startsWith(github.head_ref, 'docs/refresh-screenshots-'))
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
@@ -24,7 +46,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Capture real dark screenshots
         run: python scripts/capture-demo-screenshots.py
-      - name: Commit all eight updated browser captures
+      - name: Commit refreshed browser captures to the selected branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -34,4 +56,4 @@ jobs:
             exit 0
           fi
           git commit -m "docs: capture real dark-theme application screenshots"
-          git push origin HEAD:refs/heads/master
+          git push origin "HEAD:refs/heads/${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"

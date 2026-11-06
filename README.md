@@ -26,7 +26,7 @@ Capital Tracker is independently developed open-source software, not affiliated 
 
 ## Screenshots
 
-<p align="center"><strong>Real Chromium captures from the latest app (refreshed November 2026) — not renders or mockups.</strong><br>
+<p align="center"><strong>Real Chromium captures from the current app (November 2026) — not renders or mockups.</strong><br>
 Dark theme · isolated, fictional 12-month demo · October 2025–September 2026.<br>
 Click any image to open the original full-size PNG.</p>
 
@@ -74,7 +74,21 @@ Click any image to open the original full-size PNG.</p>
   <img src="docs/screenshots/recurring-expenses.png" alt="Recurring monthly expenses with category-like names, EUR totals and history" width="940">
 </a>
 
-<sub>Maintain a monthly snapshot of rent, utilities and other regular costs; unsaved months inherit the last saved list.</sub>
+<sub>Organize rent, utilities and other recurring costs into reorderable groups with EUR subtotals; unsaved months inherit the previous saved snapshot.</sub>
+
+### Currency history and exports
+
+<table>
+  <tr><th width="50%">Historical exchange rates</th><th width="50%">Data exports and backups</th></tr>
+  <tr>
+    <td align="center"><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/fx-history.png"><img src="docs/screenshots/fx-history.png" alt="Saved EUR exchange-rate history with charts, currency details and a time-range filter" width="455"></a></td>
+    <td align="center"><a href="https://raw.githubusercontent.com/perevozchiko/capital-tracker/master/docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Settings with Excel, CSV and JSON exports, backups and appearance controls" width="455"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Inspect the rates saved with your months, not today's live quotes.</sub></td>
+    <td align="center"><sub>Download CSV or linked Excel reports; keep portable JSON and local SQLite backups.</sub></td>
+  </tr>
+</table>
 
 ### Mobile
 
@@ -86,7 +100,7 @@ Click any image to open the original full-size PNG.</p>
   </tr>
 </table>
 
-<sub>Both captures use a real 390-pixel browser viewport, not a scaled desktop screenshot.</sub>
+<sub>Both captures use a real 390-pixel browser viewport, not a scaled desktop screenshot. The mobile layout has bottom tabs plus a swipeable navigation drawer.</sub>
 
 <p><a href="docs/screenshots/README.md">Open the full screenshot gallery &amp; regeneration instructions</a></p>
 
@@ -95,20 +109,20 @@ Click any image to open the original full-size PNG.</p>
 ## What it does
 
 - **Monthly net-worth snapshots:** update balances once a month, not every transaction. Add one account now and fill in the rest later; a missing balance is not zero.
-- **Accounts & groups:** keep bank, cash, investment and loan accounts in expandable groups with EUR subtotals. Drag accounts between groups, reorder them and archive without erasing history. Monthly balances use the same groups in a read-only arrangement.
-- **Five currencies:** EUR is the reporting base, with USD, RSD, RUB and TRY. Enter month-specific exchange rates manually or request the latest available quotes. Saved historical rates stay fixed.
-- **Capital dashboard:** a EUR net-worth total, comparison against the previous calendar month when both months are complete, and a history chart. Incomplete months are clearly marked.
-- **Income:** named sources such as salary and freelance work, each in its original currency. See EUR equivalents, shared rates for entries in the same currency/month, and monthly income history.
-- **Major expenses:** record occasional large purchases with names, currencies, EUR equivalents, totals and a separate history chart.
-- **Recurring expenses:** keep a monthly list of regular costs. An unsaved month inherits the latest earlier saved snapshot; saving the month freezes its own list. View EUR totals and historical trends.
-- **Privacy & backups:** use it locally without an account; optionally deploy your own HTTPS server with single-user password login and revocable sessions. Automatic weekly backups retain the newest 50 copies. Browse older data without changing the current database, or restore a copy with a recovery backup. JSON export/import, CSV and Excel (.xlsx) reports with historical exchange-rate references, and manual SQLite backups are also available.
-- **Responsive PWA:** desktop and phone layouts, Dark/Light/System themes, hide/show amounts, and an English interface. Stored money uses integer minor units and exact fixed-point FX rates.
+- **Accounts & groups:** keep bank, cash, investment and loan accounts in expandable groups with EUR subtotals. Drag accounts between groups, reorder them and archive without erasing history. Monthly balances show the same group order while keeping balances editable.
+- **Five currencies & FX history:** EUR is the reporting base, with USD, RSD, RUB and TRY. Enter month-specific rates or explicitly fetch quotes. Saved rates remain attached to their months; a separate Exchange rates screen charts the recorded history without repricing past balances.
+- **Monthly review dashboard:** EUR net worth, a previous-month comparison, income/expense summaries, group subtotals, a history chart and a four-part checklist for balances, income, major expenses and recurring expenses. Missing entries are shown as needing review.
+- **Income:** named sources such as salary and freelance work in their original currencies. Edit a recorded entry, view EUR equivalents and monthly income history, and retain each month's saved rates.
+- **Major expenses:** record and edit occasional large purchases with names, currencies, EUR totals and a separate history chart, without changing saved account balances.
+- **Recurring expense groups:** organize regular costs into named, collapsible groups, reorder groups or items by drag-and-drop, and see EUR subtotals. An unsaved month inherits the latest earlier saved snapshot; saving freezes that month's list and groups.
+- **Exports & backups:** export a flat CSV balance table or an Excel (.xlsx) workbook whose Balances formulas reference the saved monthly Rates sheet. JSON import/export preserves application data; the import replaces existing data. Automatic weekly SQLite backups retain the newest 50 copies, with read-only browsing and recoverable restores. Optional HTTPS self-hosting supports single-user login and revocable sessions.
+- **Responsive, privacy-first PWA:** redesigned desktop cards, mobile bottom tabs and a swipeable menu. Amounts start hidden on each page load; tap the eye to reveal them. Dark/Light/System themes are available. Stored money uses integer minor units and exact fixed-point FX rates.
 
 Income, major expenses and recurring expenses are **independent notes**, not bank transactions. They do not automatically change account balances or net worth.
 
 ## Quick start
 
-Install [Go](https://go.dev/dl/) 1.23 or newer, then clone this repository and run:
+Install [Go](https://go.dev/dl/) 1.27.3 or newer, then clone this repository and run:
 
 ```sh
 go run ./cmd/capital-tracker --demo
@@ -136,7 +150,7 @@ The executable bundles the web interface and uses only a local HTTP server. It h
 <details>
 <summary><strong>What is included in the demo?</strong></summary>
 
-The isolated sample contains 12 complete monthly snapshots (October 2025–September 2026), with fictional account balances, EUR/USD rates, savings, investments, a loan, named income, major expenses and regular expenses. Demo mode never opens or edits your regular database. See the [User Guide](docs/USER_GUIDE.md) for details.
+The isolated fictional sample contains 12 complete monthly snapshots (October 2025–September 2026), with fictional account balances, EUR/USD rates, savings, investments, a loan, named income, major expenses and regular expenses. Demo mode never opens or edits your regular database. See the [User Guide](docs/USER_GUIDE.md) for details.
 
 </details>
 
@@ -144,6 +158,13 @@ The isolated sample contains 12 complete monthly snapshots (October 2025–Septe
 <summary><strong>How private is the app?</strong></summary>
 
 The app binds only to the local loopback interface, does not require an online account, and stores financial data in local SQLite. Optional exchange-rate lookups require an explicit user action and do not send your account balances to the provider. Self-hosted access can use password-protected HTTPS through your own reverse proxy; this is optional and requires setup. The SQLite database and exported JSON are not encrypted by the application; use full-disk encryption and backups for protection. See [Security](SECURITY.md).
+
+</details>
+
+<details>
+<summary><strong>What is the difference between CSV, Excel and JSON exports?</strong></summary>
+
+**CSV** is a flat, read-only list of recorded account balances. **Excel (.xlsx)** includes separate Balances and Rates sheets, with formulas linking each balance to its saved monthly exchange rate. **JSON** is the full application snapshot for backup/migration and is the only format you can import back into Capital Tracker. Neither CSV nor Excel import is supported.
 
 </details>
 
@@ -160,7 +181,8 @@ Downloaded binaries are currently unsigned/not notarized. Verify the attached SH
 | Guide | Contents |
 | --- | --- |
 | [User Guide](docs/USER_GUIDE.md) | Demo, groups, balances, income and expense notes, rates, backups and financial rules |
-| [Self-hosting](docs/HOSTING.md) | Optional single-user login, systemd service and HTTPS reverse proxy |\n| [Architecture](docs/ARCHITECTURE.md) | Go and browser modules, data flow, SQLite migrations, exact-money invariants, security |
+| [Self-hosting](docs/HOSTING.md) | Optional single-user login, systemd service and HTTPS reverse proxy |
+| [Architecture](docs/ARCHITECTURE.md) | Go and browser modules, data flow, SQLite migrations, exact-money invariants, security |
 | [Application updates](docs/UPDATES.md) | Explicit update button, macOS/OrbStack host agent, protected IPC and installation contract |
 | [HTTP API](docs/API.md) | Endpoint list, JSON payloads, errors and same-origin requirements |
 | [Development and releases](docs/DEVELOPMENT.md) | Build/run options, formatting, unit and browser tests, GitHub Actions, release versions |
@@ -187,7 +209,9 @@ Browser tests use fresh isolated temporary databases, not your personal data. Th
 CAPITAL_TRACKER_LIVE_RATES=1 npm run test:ui -- --workers=4
 ```
 
-To regenerate the eight real browser screenshots on a fresh isolated demo, run `python3 scripts/capture-demo-screenshots.py` after installing Python Playwright and Chromium, or use the manual screenshot GitHub Action. See [screenshot instructions](docs/screenshots/README.md).\n\nSee the [coverage matrix](docs/TEST_COVERAGE.md) for the scenario breakdown. `npm run format` formats Go and frontend sources; see the [Development guide](docs/DEVELOPMENT.md) for details.
+To regenerate all ten real browser screenshots on a fresh isolated demo, run `python3 scripts/capture-demo-screenshots.py` after installing Python Playwright and Chromium, or use the manual screenshot GitHub Action. See [screenshot instructions](docs/screenshots/README.md).
+
+See the [coverage matrix](docs/TEST_COVERAGE.md) for the scenario breakdown. `npm run format` formats Go and frontend sources; see the [Development guide](docs/DEVELOPMENT.md) for details.
 
 ## License
 

@@ -19,6 +19,8 @@ test('README screenshots link to full-size originals', () => {
     'income.png',
     'major-expenses.png',
     'recurring-expenses.png',
+    'fx-history.png',
+    'settings.png',
     'mobile-dashboard.png',
     'mobile-balances.png',
   ];

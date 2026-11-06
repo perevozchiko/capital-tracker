@@ -106,12 +106,55 @@ def main() -> None:
                     for route, selector, filename in (
                         ("incomes", "[data-income-row]", "income.png"),
                         ("expenses", "[data-expense-row]", "major-expenses.png"),
-                        ("recurringExpenses", "[data-recurring-expense-row]", "recurring-expenses.png"),
                     ):
                         page.locator(f'#navigation [data-page="{route}"]').click()
                         page.locator(selector).first.wait_for()
                         page.locator("html[data-theme='dark']").wait_for()
                         page.screenshot(path=str(OUT / filename), full_page=True, animations="disabled")
+
+                    # The demo predates recurring-expense groups. Arrange its
+                    # fictional entries through the real editor so the capture
+                    # demonstrates the new groups rather than just Ungrouped.
+                    page.locator('#navigation [data-page="recurringExpenses"]').click()
+                    page.locator("[data-recurring-expense-row]").first.wait_for()
+                    for name in ("Housing", "Everyday"):
+                        page.locator('[data-recurring-action="create"]').click()
+                        page.locator("#recurringExpenseGroupName").fill(name)
+                        page.locator("#recurringExpenseGroupForm button[type=submit]").click()
+                    page.evaluate("""() => {
+                        const rows = [...document.querySelectorAll('[data-recurring-expense-row]')];
+                        rows.forEach((row, index) => {
+                            const picker = row.querySelector('[data-recurring-move]');
+                            picker.value = index % 2 === 0 ? '1' : '2';
+                            picker.dispatchEvent(new Event('change', { bubbles: true }));
+                        });
+                    }""")
+                    with page.expect_response(
+                        lambda response: "/recurring-expenses/" in response.url
+                        and response.request.method == "PUT"
+                    ):
+                        page.locator('#recurringExpenseForm button[type="submit"]').click()
+                    page.locator('[data-recurring-group="1"] [data-recurring-expense-row]').first.wait_for()
+                    page.screenshot(
+                        path=str(OUT / "recurring-expenses.png"),
+                        full_page=True, animations="disabled",
+                    )
+
+                    page.locator('#navigation [data-page="fxRates"]').click()
+                    page.locator("[data-fx-currency]").first.wait_for()
+                    page.locator("#fxPeriod").wait_for()
+                    page.screenshot(
+                        path=str(OUT / "fx-history.png"),
+                        full_page=True, animations="disabled",
+                    )
+
+                    page.locator('#navigation [data-page="settings"]').click()
+                    page.locator('[data-action="exportExcel"]').wait_for()
+                    page.locator('[data-action="exportCSV"]').wait_for()
+                    page.screenshot(
+                        path=str(OUT / "settings.png"),
+                        full_page=True, animations="disabled",
+                    )
 
                     page.locator('#navigation [data-page="dashboard"]').click()
                     page.locator(".grid-summary").wait_for()
@@ -140,7 +183,7 @@ def main() -> None:
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait()
-    print("Captured eight real Chromium screenshots in docs/screenshots/ (desktop and mobile).")
+    print("Captured ten real Chromium screenshots in docs/screenshots/ (desktop and mobile).")
 
 
 if __name__ == "__main__":
