@@ -61,6 +61,13 @@ async function renderMonthly() {
   const currencies = [...new Set(accounts.map((a) => a.currency))]
     .filter((c) => c !== 'EUR')
     .sort();
+  const membersByGroup = new Map();
+  for (const account of accounts) {
+    const id = account.group_id ?? null;
+    const members = membersByGroup.get(id) || [];
+    members.push(account);
+    membersByGroup.set(id, members);
+  }
   const balanceRow = (a) => {
     const last = previousBalances.get(a.id);
     return `<div class='editor-row balance-row'>
@@ -73,7 +80,7 @@ async function renderMonthly() {
   };
   // Organization and order are shared with Accounts. No drag, edit or action menu here.
   const groupSection = (group, id) => {
-    const members = accounts.filter((a) => (a.group_id ?? null) === id);
+    const members = membersByGroup.get(id) || [];
     const key = id === null ? 'ungrouped' : 'g-' + id;
     const closed = collapsedGroups.has(key);
     const total =

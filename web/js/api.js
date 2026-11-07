@@ -1,8 +1,35 @@
 import { t } from './messages.js';
 import { state } from './state.js';
-async function api(path, options = {}) {
+
+// Screens often need the same immutable data (for example, returning to a
+// tab or rendering while another render is in flight). Keep it in memory for
+// this page only: starting a write invalidates the whole cache, so a saved
+// balance or account change is visible immediately everywhere.
+const readCache = new Map();
+
+function api(path, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  const cacheable =
+    method === 'GET' &&
+    options.cache !== 'no-store' &&
+    !path.startsWith('/auth/');
+  const cacheKey = state.snapshotID + ':' + path;
+  if (cacheable && readCache.has(cacheKey)) return readCache.get(cacheKey);
+  if (method !== 'GET') readCache.clear();
+
+  const pending = fetchAPI(path, options, method);
+  if (cacheable) {
+    // Cache the promise as well as its value. This coalesces requests made by
+    // quick consecutive tab changes instead of starting duplicate fetches.
+    readCache.set(cacheKey, pending);
+    pending.catch(() => readCache.delete(cacheKey));
+  }
+  return pending;
+}
+
+async function fetchAPI(path, options, method) {
   const preview = state.snapshotID && !path.startsWith('/auth/');
-  if (preview && options.method && options.method !== 'GET') {
+  if (preview && method !== 'GET') {
     throw new Error(t('backup_read_only'));
   }
   const res = await fetch('/api' + path, {
@@ -11,9 +38,7 @@ async function api(path, options = {}) {
       Accept: 'application/json',
       ...(preview ? { 'X-Capital-Tracker-Snapshot': state.snapshotID } : {}),
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-      ...(options.method && options.method !== 'GET'
-        ? { 'X-Capital-Tracker': '1' }
-        : {}),
+      ...(method !== 'GET' ? { 'X-Capital-Tracker': '1' } : {}),
       ...options.headers,
     },
   });
