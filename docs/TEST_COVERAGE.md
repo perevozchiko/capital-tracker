@@ -20,6 +20,8 @@ Each scenario can contain many assertions. Counts describe concrete paths throug
 
 `auth.spec.cjs` also checks two-factor confirmation with real server-side TOTP in Chromium, WebKit, iPhone and Android profiles: no financial access before confirmation, invalid-code feedback, separate trust and session cookies, trust after sign-out/restart, new-browser and cleared-cookie challenges, shared-device opt-out, and the code form at 320–1280 pixels. Go tests verify RFC 6238 vectors, leading zeros, clock skew, replay across restart and simultaneous requests, account-wide throttling across IPs, expiry, configuration revocation, secret validation, and rollback when persistence fails.
 
+`mobile-menu.spec.cjs` checks drawer position and backdrop opacity while a finger is still down, movement reversal, slow drags and quick flicks, animated settling and button/backdrop transitions, cancelled and multi-touch gestures, resizing mid-drag, reduced motion, focus trapping, and preserved vertical scrolling/form/table/chart behavior. Native Chromium touch injection also checks intermediate drawer positions; synthetic touch events exercise Chromium, WebKit, iPhone and Android profiles.
+
 ## Run every scenario, including the real currency provider
 
 ```sh

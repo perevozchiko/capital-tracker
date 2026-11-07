@@ -25,12 +25,19 @@ async function renderAccounts() {
   );
   const accounts = state.accounts;
   const groups = state.groups.groups;
+  // Do this once rather than scanning every account for every group. It is
+  // noticeable on phones with many accounts and groups.
+  const membersByGroup = new Map();
+  for (const account of accounts) {
+    const id = account.archived_from_month
+      ? 'archive'
+      : (account.group_id ?? null);
+    const members = membersByGroup.get(id) || [];
+    members.push(account);
+    membersByGroup.set(id, members);
+  }
   const groupRows = (group, id, index) => {
-    const members = accounts.filter((a) =>
-      id === 'archive'
-        ? !!a.archived_from_month
-        : !a.archived_from_month && (a.group_id ?? null) === id,
-    );
+    const members = membersByGroup.get(id) || [];
     const key =
       id === 'archive' ? 'archive' : id === null ? 'ungrouped' : 'g-' + id;
     const closed = collapsedGroups.has(key);

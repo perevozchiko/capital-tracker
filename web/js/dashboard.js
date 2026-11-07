@@ -16,7 +16,11 @@ import { chart } from './chart.js';
 async function renderDashboard() {
   const isCurrentView = captureView();
   const [d, groupData, incomes, expenses, recurring] = await Promise.all([
-    api('/dashboard?month=' + encodeURIComponent(state.month)),
+    // The chart uses state.history, so this page only needs the selected
+    // month. Avoid calculating the otherwise unused default 12 columns.
+    api(
+      '/dashboard?month=' + encodeURIComponent(state.month) + '&columns=1',
+    ),
     api('/groups?month=' + encodeURIComponent(state.month)).catch(() => null),
     api('/incomes'),
     api('/expenses'),

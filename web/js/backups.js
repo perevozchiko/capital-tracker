@@ -30,7 +30,7 @@ export const backupActionAllowed = (action) => previewActions.has(action);
 
 export async function loadBackupPreview() {
   if (!state.snapshotID) return;
-  const status = await api('/backups');
+  const status = await api('/backups', { cache: 'no-store' });
   state.snapshot = status.backups.find(
     (backup) => backup.id === state.snapshotID,
   );
@@ -77,7 +77,7 @@ export async function renderBackupPanel() {
   const panel = $('#backupPanel');
   if (!panel) return;
   try {
-    const status = await api('/backups');
+    const status = await api('/backups', { cache: 'no-store' });
     if ($('#backupPanel') !== panel) return;
     const next = status.next_at ? dateLabel(status.next_at) : t('backupSoon');
     panel.innerHTML = `<div class="panel-heading"><h2>${t('backups')}</h2><span class="pill">${status.backups.length} / ${status.limit}</span></div>
@@ -117,7 +117,7 @@ export async function restoreBackup(id, button) {
   if (busy || state.snapshotID || !(await confirmClean())) return;
   busy = true;
   try {
-    const status = await api('/backups');
+    const status = await api('/backups', { cache: 'no-store' });
     const backup = status.backups.find((item) => item.id === id);
     if (!backup) throw new Error(t('backup_not_found'));
     if (
