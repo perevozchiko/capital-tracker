@@ -22,20 +22,22 @@ The app does not run a background cloud service. The optional FX rate lookup is 
 
 | Path | Responsibility |
 | --- | --- |
-| `cmd/capital-tracker/` | CLI, `--demo`, backup, loopback listener, launch browser, OS lock, graceful shutdown |
-| `internal/httpapi/` | REST routes, validation/error mapping, static serving, same-origin and Host checks |
-| `internal/storage/` | SQLite access, migrations, transactions, account/group/month persistence, export/import |
+| `cmd/capital-tracker/` | CLI, `--demo`, `backup`, `hash-password`, `generate-totp`, loopback listener, launch browser, OS lock, graceful shutdown |
+| `internal/httpapi/` | REST routes, validation/error mapping, static serving, same-origin and Host checks, optional sign-in with sessions and TOTP |
+| `internal/storage/` | SQLite access, migrations, transactions, account/group/month, income and expense persistence, managed backups, export/import |
+| `internal/updateagent/` | Client for the optional host update agent |
 | `internal/finance/` | Integer minor units, scaled FX rates, exact rational totals and rounding |
 | `internal/demo/` | Embedded fictional fixture, isolated sample database |
 | `internal/buildinfo/` | Authoritative version and embedded commit SHA |
 | `web/embed.go` | Bundled frontend resources embedded in Go binary at compile time |
 | `web/js/app.js` | Browser event wiring and app bootstrap |
 | `web/js/state.js` and `router.js` | UI state, navigation and refresh |
-| `web/js/{accounts,monthly,dashboard,settings}.js` | Screen rendering |
+| `web/js/{accounts,monthly,dashboard,incomes,expenses,recurring-expenses,fx-rates,settings,backups}.js` | Screen rendering |
 | `web/js/*-actions.js` | Async mutation handlers and dialogs |
 | `web/js/{api,format,ui,numbers,messages}.js` | Shared API, formatting, UI and message utilities |
 | `web/css/app.css`, `web/sw.js` | Responsive styling, network-first PWA cache |
-| `tests/` | Node unit tests, release tests and Playwright end-to-end tests |
+| `web/login.html`, `web/js/login.js`, `web/auth-sw.js` | Standalone sign-in page and network-only worker used when authentication is enabled |
+| `tests/` | Node unit tests, release and update-agent tests, and Playwright end-to-end tests |
 
 The browser is an **untrusted client**. All persisted values and state transitions are validated in Go before SQLite writes. Browser-side validation is for user experience only.
 

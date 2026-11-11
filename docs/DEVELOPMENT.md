@@ -44,7 +44,7 @@ python3 -m playwright install chromium
 python3 scripts/capture-demo-screenshots.py
 ```
 
-This launches the real Go app with isolated sample data, captures Chromium in Dark mode, and writes eight real browser screenshots to `docs/screenshots/`: dashboard, monthly balances, accounts, income, major expenses, recurring expenses, mobile dashboard and mobile balances. You can also run **Actions → Capture demo screenshots → Run workflow** on `master`: the workflow commits changed PNG files only and does not rewrite the hand-maintained README gallery.
+This launches the real Go app with isolated sample data, captures Chromium in Dark mode, and writes ten real browser screenshots to `docs/screenshots/`: dashboard, monthly balances, accounts, income, major expenses, recurring expenses, currency history, settings, mobile dashboard and mobile balances. You can also run **Actions → Capture demo screenshots → Run workflow** on `master`: the workflow commits changed PNG files only and does not rewrite the hand-maintained README gallery. Pushes and same-repository pull requests from a `docs/refresh-screenshots-*` branch trigger the same capture and commit the refreshed PNG files back to that branch for review.
 
 ## GitHub Actions (one automatic runner)
 
@@ -55,7 +55,7 @@ The repository keeps **four workflows**:
 | **CI** | Pushes to `master`, PRs against `master`, or manual | One Ubuntu job runs Go tests/vet, JavaScript checks, formatting, release-planner tests and real Playwright/Chromium UI tests |
 | **Build Capital Tracker** | Manual only | Build development binaries on chosen platforms |
 | **Release** | Manual only | Validate, build, verify, tag and publish a versioned release |
-| **Capture demo screenshots** | Manual only | Capture the real demo UI into `docs/screenshots/` |
+| **Capture demo screenshots** | Manual, or pushes and PRs from `docs/refresh-screenshots-*` branches | Capture the real demo UI into `docs/screenshots/` |
 
 The former separate `Browser UI tests` workflow was redundant: it ran much of the same suite as CI and allocated an additional runner on every push. It has been consolidated into **CI**, including failed-browser-test trace artifacts. Older in-flight CI runs on the same branch or pull request are cancelled when replaced by a newer commit; completed history is retained by GitHub according to repository retention settings. Deleting historical runs does not change the number of runners used by future commits.
 
@@ -99,7 +99,7 @@ To request a binary, open **Actions → Build Capital Tracker → Run workflow**
 | `windows` | Windows x86-64 (AMD64) | `CapitalTracker-windows-amd64` | `CapitalTracker-windows-amd64.exe` |
 | `all` | All three | All three artifacts | One per platform |
 
-Each selected job runs unit tests, JavaScript checks, `go vet`, and a native build. The macOS job additionally smoke-tests the server, the home page, backup, and restart. After a successful run, download your artifact from that run's **Artifacts** section. Each artifact includes a SHA-256 checksum. The manual development workflow does not build macOS Intel (the Release workflow does); downloaded binaries are unsigned/unnotarized, and GitHub Releases are not published automatically.
+Each selected job runs unit tests, JavaScript checks, `go vet`, and a native build. The macOS and Linux jobs additionally smoke-test the built binary, including backup and restart. After a successful run, download your artifact from that run's **Artifacts** section. Each artifact includes a SHA-256 checksum. The manual development workflow does not build macOS Intel (the Release workflow does); downloaded binaries are unsigned/unnotarized, and GitHub Releases are not published automatically.
 
 ## Release Process
 
@@ -120,7 +120,7 @@ Each release includes `CapitalTracker-vX.Y.Z[-stage.N]-macos-arm64.zip`, `...-ma
 ## Project structure
 
 ```text
-cmd/capital-tracker/   Startup, CLI flags, signals and platform-specific locking
+cmd/capital-tracker/   Startup, CLI flags and subcommands, signals and platform-specific locking
 internal/buildinfo/    Authoritative version and build commit metadata
 internal/demo/         Embedded fixture and isolated demo initialization
 internal/finance/      Exact conversions, validation and rounding
@@ -128,18 +128,43 @@ internal/storage/      SQLite connection, migrations and domain operations
   accounts.go          Accounts, activity periods and ordering
   months.go            Monthly snapshots, balances and exchange rates
   dashboard.go         Capital history and dashboard aggregation
+  rates_history.go     Saved exchange-rate history
+  incomes.go           Named income notes
+  expenses.go          Major expense notes
+  recurring_expenses.go, recurring_expense_groups.go
+                       Recurring monthly snapshots and their groups
+  monthly_reviews.go   Reviewed-month markers for income and expenses
   settings.go          Persisted preferences
   groups.go            Account groups, assignments and subtotals
+  backups.go           Managed SQLite copies, retention, archive reads and restore
+  clear.go             Full data deletion
   transfer.go          Versioned JSON import and export
 internal/httpapi/      Domain routes, JSON helpers, security and static serving
+  handler.go           Route registration and middleware chain
+  auth*.go, totp.go    Optional sign-in, sessions, throttling and TOTP device trust
+  security.go          Host, Origin and CSRF-header checks, response headers
+  updates.go           Host-managed update endpoints
+internal/updateagent/  Client for the optional host update agent
 web/
-  js/app.js            Bootstrap and browser event wiring
+  index.html, login.html  Application shell and standalone sign-in page
+  js/boot.js, js/app.js   Bootstrap and browser event wiring
   js/router.js         Navigation, data refresh and page rendering
   js/*-actions.js      Account, monthly and data-management actions
   js/accounts.js       Accounts page
-  js/dashboard.js      Dashboard, table and chart
+  js/dashboard.js      Dashboard and table
+  js/chart.js          History charts and period selection
   js/monthly.js        Monthly balance editor
+  js/incomes.js, js/expenses.js, js/entry-editor.js, js/income-math.js
+                       Income and major-expense pages and their shared editor
+  js/recurring-expenses.js, js/recurring-expense-groups.js
+                       Recurring-expense page and groups
+  js/fx-rates.js       Saved currency-rate history
   js/settings.js       Settings page
+  js/backups.js        Backup list, archive view and restore
+  js/tabular-export.js CSV and Excel (.xlsx) export
+  js/updates.js        Settings → About update button
+  js/auth.js, js/login.js  Session handling and sign-in form
+  js/mobile-menu.js    Mobile navigation
   js/state.js          Shared application state and collapsed groups
   js/api.js            JSON API client and request headers
   js/format.js         Exact amount parsing, display and month utilities
@@ -148,16 +173,17 @@ web/
   js/i18n/en.js        English message catalog
   js/dialogs.js        Confirmation dialogs
   js/numbers.js        Exact rate parsing and balance differences
-  css/app.css          Responsive layouts, components and themes
-  sw.js                Network-first static asset caching
+  css/app.css, css/login.css  Responsive layouts, components and themes
+  sw.js, auth-sw.js    Network-first static asset caching; network-only worker when sign-in is enabled
   embed.go             Assets embedded into the Go binary
-tests/                JavaScript unit tests and Playwright browser scenarios
-scripts/               Source checks, formatting and screenshot capture
-.github/workflows/     CI, browser tests, builds, releases and screenshots
+tests/                 JavaScript unit tests, Python release/updater tests and Playwright browser scenarios
+scripts/               Source checks, formatting, screenshot capture, release packaging and the host update agent
+deploy/                Example service, Caddy, environment and update-agent configuration
+.github/workflows/     CI, manual builds, releases and screenshot capture
 ```
 
 The interface always uses English, including dates, numbers and confirmations. Older databases and JSON snapshots with a Russian language preference remain compatible; that legacy field does not change the interface language. Account and group names entered by users are preserved.
 
-Migration scripts are embedded under [`internal/storage/migrations/`](../internal/storage/migrations/). Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1–7 are defined; migration 2 adds account groups and account membership, and migration 3 adds independent monthly income notes. Migration 4 gives income notes names and preserves multiple entries per currency. Migration 5 adds independent major expense notes, migration 6 adds recurring monthly snapshots, and migration 7 adds recurring-expense groups and ordered membership. JSON exports use version 7; versions 1–6 remain importable. [`PROGRESS.md`](../PROGRESS.md) documents verification status.
+Migration scripts are embedded under [`internal/storage/migrations/`](../internal/storage/migrations/). Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1–8 are defined; migration 2 adds account groups and account membership, and migration 3 adds independent monthly income notes. Migration 4 gives income notes names and preserves multiple entries per currency. Migration 5 adds independent major expense notes, migration 6 adds recurring monthly snapshots, and migration 7 adds recurring-expense groups and ordered membership. Migration 8 adds reviewed-month markers for income and expenses, so an explicitly saved empty month is distinct from an unrecorded one. JSON exports use version 8; versions 1–7 remain importable. [`PROGRESS.md`](../PROGRESS.md) documents verification status.
 
 Browser projects cover Chromium and WebKit, plus iPhone and Android emulation for compatibility and login tests. Use `npm run test:ui -- --project=chromium` for a focused run. The Node test runner works on Windows, macOS and Linux and stores artifacts in `test-results/latest`. Set `CAPITAL_TRACKER_TEST_OUTPUT` to a different directory when running independent suites concurrently. `--last-failed` reuses the previous run’s result.
