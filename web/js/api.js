@@ -1,28 +1,30 @@
 import { t } from './messages.js';
 import { state } from './state.js';
 
-// Screens often need the same immutable data (for example, returning to a
-// tab or rendering while another render is in flight). Keep it in memory for
-// this page only: starting a write invalidates the whole cache, so a saved
-// balance or account change is visible immediately everywhere.
-const readCache = new Map();
+// Several screens ask for the same data while a render is still in flight
+// (for example, quick consecutive tab changes). Share that one request, but
+// never keep a finished response: data can change in another tab or on
+// another device, and every navigation must show what the server has now.
+const inFlight = new Map();
 
 function api(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
-  const cacheable =
+  const shareable =
     method === 'GET' &&
     options.cache !== 'no-store' &&
     !path.startsWith('/auth/');
-  const cacheKey = state.snapshotID + ':' + path;
-  if (cacheable && readCache.has(cacheKey)) return readCache.get(cacheKey);
-  if (method !== 'GET') readCache.clear();
+  const key = state.snapshotID + ':' + path;
+  if (shareable && inFlight.has(key)) return inFlight.get(key);
+  // A read that started before a write must not answer readers after it.
+  if (method !== 'GET') inFlight.clear();
 
   const pending = fetchAPI(path, options, method);
-  if (cacheable) {
-    // Cache the promise as well as its value. This coalesces requests made by
-    // quick consecutive tab changes instead of starting duplicate fetches.
-    readCache.set(cacheKey, pending);
-    pending.catch(() => readCache.delete(cacheKey));
+  if (shareable) {
+    inFlight.set(key, pending);
+    const done = () => {
+      if (inFlight.get(key) === pending) inFlight.delete(key);
+    };
+    pending.then(done, done);
   }
   return pending;
 }

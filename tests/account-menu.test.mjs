@@ -13,7 +13,8 @@ const css = readFileSync(
 test('account and group actions are inside overflow menus', () => {
   assert.match(js, /class="account-actions-menu"/);
   assert.match(js, /class="action-menu-content"/);
-  assert.match(js, /id\s*===\s*'archive'\s*\?\s*!!a\.archived_from_month/);
+  // Archived accounts are bucketed under the Archive group, never their old one.
+  assert.match(js, /account\.archived_from_month\s*\?\s*'archive'/);
   assert.match(css, /\.account-group:has\(\.account-actions-menu\[open\]\)/);
 });
 test('dropping active account into archive opens archive editor', () => {
