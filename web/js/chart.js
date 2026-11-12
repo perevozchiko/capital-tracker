@@ -134,7 +134,12 @@ function chartSVG(history, source, range) {
 
 function chart(history, source = 'capital') {
   histories.set(source, history);
-  const selection = selections.get(source) || { period: 'all' };
+  // Rendering every historical SVG point is needlessly expensive on a phone.
+  // The full history remains available through the explicit “All” control.
+  const selection =
+    selections.get(source) || {
+      period: window.matchMedia('(max-width: 540px)').matches ? '36' : 'all',
+    };
   const range = rangeFor(history, selection);
   const from = selection.from || range.from;
   const to = selection.to || range.to;
