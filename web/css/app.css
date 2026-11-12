@@ -1817,7 +1817,7 @@ th button:hover {
 .income-list-main strong {
   overflow-wrap: anywhere;
 }
-.recurring-expense-group .income-list-row {
+.entry-group .income-list-row {
   display: grid;
   grid-template-columns:
     minmax(0, 1fr) minmax(90px, 150px) minmax(90px, 150px)
@@ -1830,30 +1830,30 @@ th button:hover {
   gap: 6px;
   align-items: center;
 }
-.recurring-expense-group.dragging {
+.entry-group.dragging {
   opacity: 0.35;
 }
-.recurring-expense-group [data-recurring-group-header][draggable='true'] {
+.entry-group .account-group-head[draggable='true'] {
   cursor: grab;
 }
-.recurring-expense-group:has(details[open]) {
+.entry-group:has(details[open]) {
   overflow: visible;
   position: relative;
   z-index: 5;
 }
-.recurring-expense-group:has(details[open]):focus-within {
+.entry-group:has(details[open]):focus-within {
   z-index: 7;
 }
 @media (max-width: 720px) {
-  .recurring-expense-group .income-list-row {
+  .entry-group .income-list-row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   }
-  .recurring-expense-group .recurring-row-actions {
+  .entry-group .recurring-row-actions {
     flex-direction: column;
     grid-column: 3;
     grid-row: 1 / 4;
   }
-  .recurring-expense-group .income-list-main {
+  .entry-group .income-list-main {
     grid-column: 1 / 3;
   }
 }
@@ -2502,7 +2502,7 @@ body {
     right: 0;
     z-index: 80;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     padding: 8px max(6px, env(safe-area-inset-right))
       calc(8px + env(safe-area-inset-bottom))
       max(6px, env(safe-area-inset-left));

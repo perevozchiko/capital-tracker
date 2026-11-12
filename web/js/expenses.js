@@ -7,6 +7,15 @@ import { chart } from './chart.js';
 import { showConfirm } from './dialogs.js';
 import { editEntry } from './entry-editor.js';
 import { incomeTotal as expenseTotal } from './income-math.js';
+import {
+  renderExpenseGroups,
+  expenseGroupDialog,
+  refreshExpenseGroups,
+  readExpenseGroups,
+  bindExpenseGroups,
+} from './expense-groups.js';
+
+bindExpenseGroups(updateExpenseTotals);
 
 let monthRates = new Map();
 
@@ -35,11 +44,11 @@ function syncExpenseRates() {
   $('#expenseRates').hidden = used.size === 0;
 }
 function expenseRow(entry) {
-  return `<div class="account-row income-list-row" data-expense-row data-name="${escapeHTML(entry.name)}" data-currency="${escapeHTML(entry.currency)}" data-amount-minor="${escapeHTML(entry.amount_minor)}">
-    <div class="account-main income-list-main"><strong data-expense-name>${escapeHTML(entry.name)}</strong><span class="currency-tag">${escapeHTML(entry.currency)}</span></div>
+  return `<div class="account-row income-list-row" data-expense-row draggable="true" data-name="${escapeHTML(entry.name)}" data-currency="${escapeHTML(entry.currency)}" data-amount-minor="${escapeHTML(entry.amount_minor)}">
+    <div class="account-main income-list-main"><span class="drag-handle" title="${t('expenseDrag')}" aria-hidden="true">⠿</span><strong data-expense-name>${escapeHTML(entry.name)}</strong><span class="currency-tag">${escapeHTML(entry.currency)}</span></div>
     <div class="account-balance"><strong data-expense-amount>${moneyHTML(entry.amount_minor, entry.currency)}</strong><small>${t('expenseAmount')}</small></div>
     <div class="account-balance"><strong data-expense-eur>—</strong><small>${t('totalEUR')}</small></div>
-    <div class="income-row-actions"><button class="btn btn-icon" type="button" data-action="editExpenseRow" aria-label="${t('editExpense')}" title="${t('editExpense')}">✎</button><button class="btn btn-icon" type="button" data-action="removeExpenseRow" aria-label="${t('removeExpense')}">×</button></div>
+    <div class="recurring-row-actions"><button class="btn btn-icon" type="button" data-action="editExpenseRow" aria-label="${t('editExpense')}" title="${t('editExpense')}">✎</button><details class="account-actions-menu" name="expense-actions"><summary aria-label="${t('expenseActions')}">⋮</summary><div class="action-menu-content"><label class="menu-move-label">${t('moveToGroup')}<select data-expense-move aria-label="${t('moveToGroup')}"></select></label><button type="button" data-expense-action="rowUp">${t('reorderUp')}</button><button type="button" data-expense-action="rowDown">${t('reorderDown')}</button></div></details><button class="btn btn-icon" type="button" data-action="removeExpenseRow" aria-label="${t('removeExpense')}">×</button></div>
   </div>`;
 }
 
@@ -62,8 +71,10 @@ async function renderExpenses() {
  <div class="field"><label for="expenseName">${t('expenseName')}</label><input id="expenseName" name="name" maxlength="100" required placeholder="${t('expenseNamePlaceholder')}"></div>
  <div class="field"><label for="expenseAmount">${t('expenseAmount')}</label><input id="expenseAmount" name="amount" data-expense type="text" inputmode="decimal" autocomplete="off" required></div>
  <div class="field"><label for="expenseCurrency">${t('currency')}</label><select id="expenseCurrency" name="currency">${state.currencies.map((c) => `<option ${c === 'EUR' ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+ <div class="field"><label for="expenseGroup">${t('group')}</label><select id="expenseGroup" name="group"></select></div>
  <button class="btn btn-primary" type="submit">${t('addExpense')}</button></form></section>
- <section class="card panel"><div class="panel-heading"><h2>${t('expenseEditor')}</h2></div><p class="subtle">${t('expenseHelp')}</p><form id="expenseForm"><p id="expenseListEmpty" class="caption" ${month?.entries?.length ? 'hidden' : ''}>${t('expenseListEmpty')}</p><div class="income-fields">${(month?.entries || []).map(expenseRow).join('')}</div><aside id="expenseRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('expenseSharedRatesHelp')}</p><div id="expenseRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadExpenseRates">${t('loadRates')}</button><p id="expenseRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyExpenseTotal')}</span><strong id="expenseTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveExpense')}</button><button class="btn btn-danger" type="button" data-action="deleteExpense" ${month ? '' : 'disabled'}>${t('deleteExpense')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('expenseHistory')}</h2></div>${chart(state.expenseHistory, 'expense')}</section>`;
+ <section class="card panel"><div class="panel-heading"><h2>${t('expenseEditor')}</h2><button type="button" class="btn btn-small btn-primary" data-expense-action="create">+ ${t('createGroup')}</button></div><p class="subtle">${t('expenseHelp')}</p><p class="caption">${t('expenseGroupsHelp')}</p><form id="expenseForm"><p id="expenseListEmpty" class="caption" ${month?.entries?.length ? 'hidden' : ''}>${t('expenseListEmpty')}</p><div class="income-fields">${renderExpenseGroups(month?.entries || [], month?.groups || [], expenseRow)}</div><aside id="expenseRates" class="income-rates" hidden><h3>${t('rates')}</h3><p class="subtle">${t('expenseSharedRatesHelp')}</p><div id="expenseRateFields" class="income-rate-fields"></div><button class="btn" type="button" data-action="loadExpenseRates">${t('loadRates')}</button><p id="expenseRateStatus" class="subtle" role="status"></p></aside><div class="income-total"><span>${t('monthlyExpenseTotal')}</span><strong id="expenseTotal">${moneyHTML(month?.total_eur_minor || '0')}</strong></div><div class="income-actions"><button class="btn btn-primary" type="submit">${t('saveExpense')}</button><button class="btn btn-danger" type="button" data-action="deleteExpense" ${month ? '' : 'disabled'}>${t('deleteExpense')}</button></div></form></section><section class="card panel"><div class="panel-heading"><h2>${t('expenseHistory')}</h2></div>${chart(state.expenseHistory, 'expense')}</section>${expenseGroupDialog()}`;
+  refreshExpenseGroups();
   syncExpenseRates();
   updateExpenseTotals();
   applyAmountVisibility();
@@ -106,6 +117,18 @@ function updateExpenseTotals() {
   $('#expenseTotal').innerHTML = complete
     ? moneyHTML(expenseTotal(entries))
     : '—';
+  for (const group of form.querySelectorAll('[data-expense-group]')) {
+    try {
+      const members = [...group.querySelectorAll('[data-expense-row]')].map(
+        readRow,
+      );
+      group.querySelector('[data-expense-group-total]').innerHTML = moneyHTML(
+        expenseTotal(members),
+      );
+    } catch {
+      group.querySelector('[data-expense-group-total]').textContent = '—';
+    }
+  }
 }
 
 function addExpenseRow(form) {
@@ -114,8 +137,12 @@ function addExpenseRow(form) {
   const amount = parseMoney(form.elements.amount.value);
   if (amount == null || BigInt(amount) < 0n)
     throw new Error(t('expenseNonnegative'));
-  $('#expenseForm .income-fields').insertAdjacentHTML(
-    'beforeend',
+  const group = [...document.querySelectorAll('[data-expense-group]')].find(
+    (group) =>
+      group.getAttribute('data-expense-group') === form.elements.group.value,
+  );
+  group.querySelector('[data-expense-group-empty]').insertAdjacentHTML(
+    'beforebegin',
     expenseRow({
       name,
       amount_minor: amount,
@@ -124,10 +151,13 @@ function addExpenseRow(form) {
   );
   $('#expenseListEmpty').hidden = true;
   state.dirty = true;
+  refreshExpenseGroups();
   syncExpenseRates();
   updateExpenseTotals();
   applyAmountVisibility();
+  const selectedGroup = form.elements.group.value;
   form.reset();
+  form.elements.group.value = selectedGroup;
   form.elements.name.focus();
 }
 function editExpenseRow(button) {
@@ -136,6 +166,7 @@ function editExpenseRow(button) {
 
 function removeExpenseRow(button) {
   button.closest('[data-expense-row]').remove();
+  refreshExpenseGroups();
   $('#expenseListEmpty').hidden = !!$('#expenseForm [data-expense-row]');
   syncExpenseRates();
   state.dirty = true;
@@ -169,7 +200,10 @@ async function saveExpense(form) {
   form.inert = true;
   addForm.inert = true;
   try {
-    await request('/expenses/' + state.month, 'PUT', { entries });
+    await request('/expenses/' + state.month, 'PUT', {
+      entries,
+      groups: readExpenseGroups(),
+    });
     if (!isCurrentView()) return;
     state.dirty = false;
     await renderExpenses();

@@ -73,18 +73,21 @@ function renderNav() {
     )
     .join('');
   // Mobile quick navigation keeps the less frequently used screens in the drawer.
+  // Each item has a short visible label and an optional fuller accessible name.
+  const quickRoutes = [
+    ['dashboard', 'familyHome'],
+    ['monthly', 'familyMonthly'],
+    ['accounts', 'navAccounts'],
+    ['expenses', 'familyExpenses', 'navExpenses'],
+  ];
   $('#mobileBottomNav').innerHTML =
-    [
-      ['dashboard', 'navDashboard'],
-      ['monthly', 'navMonthly'],
-      ['accounts', 'navAccounts'],
-    ]
+    quickRoutes
       .map(
-        ([key, label]) =>
-          `<button type="button" class="mobile-bottom-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(key === 'dashboard' ? 'familyHome' : key === 'monthly' ? 'familyMonthly' : label)}</span></button>`,
+        ([key, label, name]) =>
+          `<button type="button" class="mobile-bottom-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''} ${name ? `aria-label="${t(name)}" title="${t(name)}"` : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
       )
       .join('') +
-    `<button type="button" class="mobile-bottom-item ${!['dashboard', 'monthly', 'accounts'].includes(state.page) ? 'active' : ''}" data-action="mobileMore" aria-label="${t('familyMore')}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>${t('familyMore')}</span></button>`;
+    `<button type="button" class="mobile-bottom-item ${!quickRoutes.some(([key]) => key === state.page) ? 'active' : ''}" data-action="mobileMore" aria-label="${t('familyMore')}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>${t('familyMore')}</span></button>`;
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     el.textContent = t(
       el.dataset.i18n === 'localOnly' && state.authEnabled

@@ -124,7 +124,7 @@ func TestRecurringExpenseGroupMigrationPreservesVersion6Snapshots(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.DB.Exec("DROP TABLE monthly_reviews; DROP TABLE recurring_expense_group_members; DROP TABLE recurring_expense_groups; DELETE FROM schema_migrations WHERE version>=7; PRAGMA user_version=6"); err != nil {
+	if _, err := s.DB.Exec("DROP TABLE expense_group_members; DROP TABLE expense_groups; DROP TABLE monthly_reviews; DROP TABLE recurring_expense_group_members; DROP TABLE recurring_expense_groups; DELETE FROM schema_migrations WHERE version>=7; PRAGMA user_version=6"); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Close(); err != nil {

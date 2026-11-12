@@ -1,5 +1,7 @@
 const { test, expect, open, nav, setMonth } = require('./helpers.cjs');
 const rows = (page) => page.locator('[data-expense-row]');
+// Names and amounts are plain text; only the ⋮ menu's group selector is a control.
+const editors = 'input, textarea, select:not([data-expense-move])';
 async function add(page, name, amount, currency = 'EUR', rate = '') {
   await page.locator('#expenseName').fill(name);
   await page.locator('#expenseAmount').fill(amount);
@@ -7,7 +9,7 @@ async function add(page, name, amount, currency = 'EUR', rate = '') {
   await page.getByRole('button', { name: 'Add expense', exact: true }).click();
   const row = rows(page).last();
   await expect(page.locator('#expenseName')).toBeFocused();
-  await expect(row.locator('input, select, textarea')).toHaveCount(0);
+  await expect(row.locator(editors)).toHaveCount(0);
   await expect(row.locator('[data-expense-name]')).toHaveText(name);
   if (rate) await page.locator(`[data-expense-rate="${currency}"]`).fill(rate);
   return row;
@@ -71,7 +73,7 @@ for (const width of [320, 1280]) {
       'Автомобиль',
     );
     await expect(page.locator('#expenseTotal')).toHaveText('€1,153.24');
-    await expect(rows(page).locator('input, select, textarea')).toHaveCount(0);
+    await expect(rows(page).locator(editors)).toHaveCount(0);
     await rows(page)
       .first()
       .getByRole('button', { name: 'Remove expense' })

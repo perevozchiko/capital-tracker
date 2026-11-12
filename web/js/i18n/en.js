@@ -119,6 +119,15 @@ export default {
   expenseSaved: 'Expense saved.',
   expenseDeleted: 'Expense deleted.',
   expenseNonnegative: 'Expense must be zero or positive.',
+  expenseGroupsHelp:
+    'Drag expenses between groups or drag group headers to reorder them. Use ⋮ for more actions. Save to keep this month’s groups and order.',
+  expenseDropHere: 'Drop expenses here.',
+  expenseDrag: 'Drag expense to another group',
+  expenseActions: 'Expense actions',
+  expenseCount: '{count} expenses',
+  expenseSingle: '1 expense',
+  expenseDeleteGroupWarning:
+    'Delete this group? Its expenses will move to Ungrouped. Save the month to keep this change.',
 
   incomeSharedRatesHelp:
     'One exchange rate per currency for all income entries in this month.',
@@ -239,6 +248,7 @@ export default {
   familyAccountsRemaining: 'accounts still need a balance',
   familyAccountsAll: 'All account balances recorded',
   familyMore: 'More',
+  familyExpenses: 'Expenses',
   familyHome: 'Home',
   familyMonthly: 'Monthly',
   selectedMonth: 'Selected month',

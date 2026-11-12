@@ -45,8 +45,15 @@ func validateRecurringExpenseGroups(entries []Expense, groups []RecurringExpense
 func readRecurringExpenseGroups(q interface {
 	Query(string, ...any) (*sql.Rows, error)
 }) (map[string][]RecurringExpenseGroup, error) {
+	return readEntryGroups(q, "recurring_expense_groups", "recurring_expense_group_members")
+}
+
+// readEntryGroups reads per-month groups from a fixed, trusted pair of tables.
+func readEntryGroups(q interface {
+	Query(string, ...any) (*sql.Rows, error)
+}, groupTable, memberTable string) (map[string][]RecurringExpenseGroup, error) {
 	rows, err := q.Query(`SELECT g.month,g.position,g.name,m.entry_position
- FROM recurring_expense_groups g LEFT JOIN recurring_expense_group_members m
+ FROM ` + groupTable + ` g LEFT JOIN ` + memberTable + ` m
  ON m.month=g.month AND m.group_position=g.position
  ORDER BY g.month,g.position,m.sort_order`)
 	if err != nil {
@@ -75,12 +82,17 @@ func readRecurringExpenseGroups(q interface {
 }
 
 func writeRecurringExpenseGroups(tx *sql.Tx, snapshot RecurringExpenseSnapshot) error {
-	for position, group := range snapshot.Groups {
-		if _, err := tx.Exec("INSERT INTO recurring_expense_groups(month,position,name) VALUES(?,?,?)", snapshot.Month, position, group.Name); err != nil {
+	return writeEntryGroups(tx, "recurring_expense_groups", "recurring_expense_group_members", snapshot.Month, snapshot.Groups)
+}
+
+// writeEntryGroups inserts one month's groups into a fixed, trusted pair of tables.
+func writeEntryGroups(tx *sql.Tx, groupTable, memberTable, month string, groups []RecurringExpenseGroup) error {
+	for position, group := range groups {
+		if _, err := tx.Exec("INSERT INTO "+groupTable+"(month,position,name) VALUES(?,?,?)", month, position, group.Name); err != nil {
 			return err
 		}
 		for order, entry := range group.EntryPositions {
-			if _, err := tx.Exec("INSERT INTO recurring_expense_group_members(month,entry_position,group_position,sort_order) VALUES(?,?,?,?)", snapshot.Month, entry, position, order); err != nil {
+			if _, err := tx.Exec("INSERT INTO "+memberTable+"(month,entry_position,group_position,sort_order) VALUES(?,?,?,?)", month, entry, position, order); err != nil {
 				return err
 			}
 		}

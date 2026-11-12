@@ -15,6 +15,7 @@ import (
 // Monetary amounts and exchange rates use decimal strings to retain precision.
 type TransferDocument struct {
 	MonthlyReviews    []MonthlyReview            `json:"monthly_reviews,omitempty"`
+	ExpenseGroups     []ExpenseGroupMonth        `json:"expense_groups,omitempty"`
 	RecurringExpenses []RecurringExpenseSnapshot `json:"recurring_expenses"`
 	Format            string                     `json:"format"`
 	SchemaVersion     int                        `json:"schema_version"`
@@ -55,7 +56,7 @@ type TransferRate struct {
 func (s *Store) ExportData() (TransferDocument, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
-	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 8, ExportedAt: now(),
+	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 9, ExportedAt: now(),
 		Accounts: []Account{}, Groups: []AccountGroup{}, AccountPeriods: []TransferPeriod{}, Months: []Month{},
 		Balances: []TransferBalance{}, Rates: []TransferRate{}, Incomes: []Income{}, Expenses: []Expense{}, RecurringExpenses: []RecurringExpenseSnapshot{}, Settings: map[string]string{}}
 	tx, err := s.DB.Begin()
@@ -213,6 +214,10 @@ func (s *Store) ExportData() (TransferDocument, error) {
 	if err != nil {
 		return d, err
 	}
+	d.ExpenseGroups, err = readExpenseGroupMonths(tx)
+	if err != nil {
+		return d, err
+	}
 	return d, tx.Commit()
 }
 
@@ -236,7 +241,7 @@ func periodActive(periods []TransferPeriod, month string) bool {
 // snapshots before touching the database. It never fixes invalid input silently.
 func ValidateTransfer(d TransferDocument) error {
 	bad := func() error { return invalid("import") }
-	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 8) || !validTransferTime(d.ExportedAt) ||
+	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 9) || !validTransferTime(d.ExportedAt) ||
 		(d.SchemaVersion >= 6 && d.RecurringExpenses == nil) || d.Accounts == nil || (d.SchemaVersion >= 2 && d.Groups == nil) || (d.SchemaVersion >= 3 && d.Incomes == nil) || (d.SchemaVersion >= 5 && d.Expenses == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
 		return bad()
 	}
@@ -281,6 +286,19 @@ func ValidateTransfer(d TransferDocument) error {
 		if _, err := validateExpense(month, entries); err != nil {
 			return bad()
 		}
+	}
+	if d.SchemaVersion < 9 && len(d.ExpenseGroups) > 0 {
+		return bad()
+	}
+	groupedExpenseMonths := map[string]bool{}
+	for _, item := range d.ExpenseGroups {
+		_, hasEntries := expenseMonths[item.Month]
+		reviewed := seenReviews[MonthlyReview{"expenses", item.Month}]
+		if !finance.ValidMonth(item.Month) || groupedExpenseMonths[item.Month] || item.Groups == nil || (!hasEntries && !reviewed) ||
+			validateRecurringExpenseGroups(expenseMonths[item.Month], item.Groups) != nil {
+			return bad()
+		}
+		groupedExpenseMonths[item.Month] = true
 	}
 	incomeMonths := map[string][]Income{}
 	for _, entry := range d.Incomes {
@@ -450,7 +468,7 @@ func (s *Store) importData(d TransferDocument) error {
 		return err
 	}
 	defer tx.Rollback()
-	for _, table := range []string{"recurring_expense_group_members", "recurring_expense_groups", "recurring_expenses", "recurring_expense_months", "expenses", "incomes", "monthly_reviews", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
+	for _, table := range []string{"recurring_expense_group_members", "recurring_expense_groups", "recurring_expenses", "recurring_expense_months", "expense_group_members", "expense_groups", "expenses", "incomes", "monthly_reviews", "monthly_balances", "exchange_rates", "account_periods", "months", "accounts", "account_groups", "app_settings"} {
 		if _, err = tx.Exec("DELETE FROM " + table); err != nil {
 			return err
 		}
@@ -497,10 +515,19 @@ func (s *Store) importData(d TransferDocument) error {
 			return invalid("import")
 		}
 	}
-	for index, entry := range d.Expenses {
+	// Positions restart in each month so group membership matches entry order.
+	expensePositions := map[string]int{}
+	for _, entry := range d.Expenses {
 		amount, _ := finance.ParseMinor(entry.AmountMinor)
 		rate, _ := finance.ParseRate(entry.Rate)
-		if _, err = tx.Exec("INSERT INTO expenses(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", entry.Month, index, entry.Name, entry.Currency, amount, rate); err != nil {
+		position := expensePositions[entry.Month]
+		expensePositions[entry.Month]++
+		if _, err = tx.Exec("INSERT INTO expenses(month,position,name,currency,amount_minor,rate_scaled) VALUES(?,?,?,?,?,?)", entry.Month, position, entry.Name, entry.Currency, amount, rate); err != nil {
+			return invalid("import")
+		}
+	}
+	for _, item := range d.ExpenseGroups {
+		if err := writeEntryGroups(tx, "expense_groups", "expense_group_members", item.Month, item.Groups); err != nil {
 			return invalid("import")
 		}
 	}
