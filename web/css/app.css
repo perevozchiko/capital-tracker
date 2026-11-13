@@ -2232,62 +2232,77 @@ th button:hover {
   .backup-banner .btn {
     width: 100%;
   }
+  /* A floating tab bar for the screens used every month. */
   .mobile-bottom-nav {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
     z-index: 80;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    padding: 0 max(6px, env(safe-area-inset-right))
-      calc(6px + env(safe-area-inset-bottom))
-      max(6px, env(safe-area-inset-left));
-    border-top: 1px solid var(--line);
-    background: var(--bg);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    padding: 5px;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    background: color-mix(in srgb, var(--raised) 90%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    backdrop-filter: blur(20px) saturate(1.6);
+    box-shadow: 0 10px 34px rgb(0 0 0 / 0.22);
   }
   .mobile-bottom-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     justify-content: center;
-    padding: 9px 2px 6px;
-    min-height: 56px;
+    padding: 7px 2px 6px;
+    min-height: 52px;
     background: transparent;
     border: 0;
-    border-top: 3px solid transparent;
-    margin-top: -1px;
+    border-radius: 19px;
     color: var(--muted);
     font-weight: 600;
     font-size: 10px;
     line-height: 1.2;
     min-width: 0;
     cursor: pointer;
+    transition:
+      background 0.18s,
+      color 0.18s;
   }
   .mobile-bottom-item svg {
-    width: 21px;
-    height: 21px;
+    width: 23px;
+    height: 23px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.5;
+    stroke-width: 1.7;
     stroke-linecap: round;
     stroke-linejoin: round;
     flex: none;
   }
+  .mobile-bottom-item[data-action='mobileMore'] svg {
+    fill: currentColor;
+    stroke: none;
+  }
   .mobile-bottom-item.active {
-    color: var(--text);
-    border-top-color: var(--line);
+    color: var(--onPrimary);
+    background: var(--primary);
+  }
+  .mobile-bottom-item:active:not(.active) {
+    background: var(--primarySoft);
   }
   .mobile-bottom-item > span {
     max-width: 100%;
     text-align: center;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .toast {
     left: 12px;
     right: 12px;
-    bottom: calc(85px + env(safe-area-inset-bottom));
+    bottom: calc(86px + env(safe-area-inset-bottom));
   }
 }
 @media (max-width: 600px) {
@@ -2395,6 +2410,7 @@ th button:hover {
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
   .menu-backdrop,
+  .mobile-bottom-item,
   .flow-heading > :last-child {
     transition: none;
   }

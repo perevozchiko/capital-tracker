@@ -50,11 +50,21 @@ test('family mobile tabs navigate and More opens the existing drawer', async ({
   await open(page, app);
   const tabs = page.locator('#mobileBottomNav');
   await expect(tabs).toBeVisible();
-  await expect(tabs.locator('button')).toHaveCount(4);
-  await tabs.locator('[data-page="accounts"]').click();
-  await expect(page.locator('#addAccountForm')).toBeVisible();
+  await expect(tabs.locator('button')).toHaveText([
+    'Home',
+    'Balances',
+    'Income',
+    'Expenses',
+    'More',
+  ]);
+  await expect(tabs.locator('[aria-current="page"]')).toHaveText('Home');
+  await tabs.locator('[data-page="incomes"]').click();
+  await expect(page.locator('#incomeForm')).toBeVisible();
+  await tabs.locator('[data-page="expenses"]').click();
+  await expect(page.locator('#expenseForm')).toBeVisible();
   await tabs.locator('[data-page="monthly"]').click();
   await expect(page.locator('.status-block')).toBeVisible();
+  await expect(tabs.locator('[aria-current="page"]')).toHaveText('Balances');
   await tabs.locator('[data-action="mobileMore"]').click();
   await expect(page.locator('#sidebar')).toHaveClass(/show/);
   await page.locator('#menuBackdrop').click({ position: { x: 365, y: 200 } });
