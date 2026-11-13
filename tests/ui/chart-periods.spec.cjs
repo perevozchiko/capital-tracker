@@ -71,7 +71,7 @@ test('presets use inclusive calendar months and preserve data and tooltip indice
   await page.getByRole('button', { name: 'Show amounts', exact: true }).click();
   await page.locator('.chart-dot').first().focus();
   await expect(page.locator('#chartTooltip')).toContainText(
-    'July 2025 · €202,500.07',
+    'July 2025 · €202 500.07',
   );
   await period(page, '1 year').click();
   await expect(page.locator('#chartTooltip')).toBeHidden();
