@@ -28,7 +28,7 @@ The included fictional example represents a typical euro-paid working household,
 
 The example is also provided as a fully importable, versioned JSON snapshot in [`internal/demo/sample-2025-2026.json`](../internal/demo/sample-2025-2026.json). You can import it via **Settings → JSON import and export** if desired, but **import replaces the currently open database**. For safe exploration, prefer `--demo`.
 
-On **Dashboard**, **Accounts** and **Monthly balances**, click **Current month** beside the month picker to jump to the current month in your local time zone. Switching months prompts before discarding unsaved edits. Clicking it while already in the current month preserves your edits.
+Every time the app is opened or reloaded, all screens start on the current month in your local time zone, regardless of which months are already saved. The month you pick then stays selected as you move between screens. On **Dashboard**, **Accounts** and **Monthly balances**, click **Current month** beside the month picker to jump to the current month in your local time zone. Switching months prompts before discarding unsaved edits. Clicking it while already in the current month preserves your edits.
 
 ## History charts
 

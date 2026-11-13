@@ -6,6 +6,7 @@ const {
   nav,
   createAccount,
   saveBalances,
+  setMonth,
 } = require('./helpers.cjs');
 
 for (const width of [390, 1280]) {
@@ -44,6 +45,7 @@ for (const width of [390, 1280]) {
     const currentTab = await page.context().newPage();
     await open(currentTab, app);
     await nav(currentTab, 'Monthly balances');
+    await setMonth(currentTab, '2026-01');
     await expect(currentTab.locator('[data-balance]')).toHaveValue('200.00');
 
     await nav(page, 'Settings');
@@ -55,6 +57,7 @@ for (const width of [390, 1280]) {
     await page.reload();
     await expect(page.locator('#backupBanner')).toBeVisible();
     await nav(page, 'Monthly balances');
+    await setMonth(page, '2026-01');
     await expect(page.locator('[data-balance]')).toHaveValue('100.00');
     await expect(page.locator('[data-balance]')).toBeDisabled();
     await expect(page.locator('[data-action="saveMonth"]')).toBeDisabled();
@@ -88,6 +91,7 @@ for (const width of [390, 1280]) {
     ).toBeLessThanOrEqual(1);
     await currentTab.reload();
     await nav(currentTab, 'Monthly balances');
+    await setMonth(currentTab, '2026-01');
     await expect(currentTab.locator('[data-balance]')).toHaveValue('200.00');
     await expect(currentTab.locator('[data-balance]')).toBeEnabled();
     await page
@@ -95,6 +99,7 @@ for (const width of [390, 1280]) {
       .click();
     await expect(page.locator('#backupBanner')).not.toBeVisible();
     await nav(page, 'Monthly balances');
+    await setMonth(page, '2026-01');
     await expect(page.locator('[data-balance]')).toHaveValue('200.00');
     await expect(page.locator('[data-balance]')).toBeEnabled();
     await restartApp();
