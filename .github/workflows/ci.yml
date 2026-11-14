@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 35
     container:
       # Keep this version aligned with package-lock.json; npm test checks it.
-      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
       options: --ipc=host
     defaults:
       run:
@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install JavaScript dependencies
@@ -61,7 +61,7 @@ jobs:
         run: npm run test:ui
       - name: Upload browser traces when tests fail
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ui-test-results
           path: test-results/
