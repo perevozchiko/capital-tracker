@@ -60,7 +60,7 @@ func TestRecurringExpenseInheritanceAndBackup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if snapshot.SchemaVersion != 8 || len(snapshot.RecurringExpenses) != 3 || len(snapshot.Months) != 0 || len(snapshot.Expenses) != 0 || len(snapshot.Incomes) != 0 {
+	if snapshot.SchemaVersion != 9 || len(snapshot.RecurringExpenses) != 3 || len(snapshot.Months) != 0 || len(snapshot.Expenses) != 0 || len(snapshot.Incomes) != 0 {
 		t.Fatalf("bad snapshot: %+v", snapshot)
 	}
 	if err := s.Close(); err != nil {
@@ -250,7 +250,7 @@ func TestRecurringExpenseMigrationPreservesVersion5Data(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.DB.Exec("DROP TABLE monthly_reviews; DROP TABLE recurring_expense_group_members; DROP TABLE recurring_expense_groups; DROP TABLE recurring_expenses; DROP TABLE recurring_expense_months; DELETE FROM schema_migrations WHERE version>=6; PRAGMA user_version=5"); err != nil {
+	if _, err := s.DB.Exec("DROP TABLE expense_group_members; DROP TABLE expense_groups; DROP TABLE monthly_reviews; DROP TABLE recurring_expense_group_members; DROP TABLE recurring_expense_groups; DROP TABLE recurring_expenses; DROP TABLE recurring_expense_months; DELETE FROM schema_migrations WHERE version>=6; PRAGMA user_version=5"); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Close(); err != nil {

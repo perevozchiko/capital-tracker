@@ -71,7 +71,7 @@ Open **Settings → JSON import and export** in the browser:
 - Import validates the format/schema version, currencies, dates, relationships and financial precision before starting a SQLite transaction. Malformed or inconsistent input is rejected; the existing data is preserved on failure. Import does not modify database migrations.
 - This is a portable application-data snapshot, **not** a replacement for the SQLite `backup` command, which remains the preferred full-database backup. JSON exports contain personal financial information and should be stored securely.
 
-JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":8}`. Older versions 1–7 can still be imported; version 1 accounts start in **Ungrouped**. Versions 1–6 have no recurring-expense groups, so their recurring entries start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
+JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":9}`. Older versions 1–8 can still be imported; version 1 accounts start in **Ungrouped**. Versions 1–6 have no recurring-expense groups and versions 1–8 have no major-expense groups, so those entries start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
 
 ## Clearing all local data
 
@@ -115,6 +115,10 @@ The chart shows monthly income totals converted to EUR, connecting recorded poin
 ## Major expenses
 
 Open **Major expenses** and choose a month. In the **Add expense** form at the top, enter a name (for example, Car, Holiday or Home renovation), amount and currency, then click **Add expense** or press Enter. The expense appears as a plain-text row below and the form resets for the next expense. Use the pencil button to edit a name or amount, confirm, then click **Save expense**. Changes apply only to the selected month. To change currency, remove the entry with × and add it again. Set one rate per currency in **Exchange rates**, or load rates automatically. Each row shows its EUR equivalent; the monthly total updates as you type. Click **Save expense** to save entries and rates. The chart shows saved monthly totals in EUR.
+
+Major expenses can be grouped the same way as recurring expenses (for example, Home, Travel or Car). Use **New group**, choose a group when adding an expense, and drag expenses between groups or drag group headers to change their order; the ⋮ menus offer the same moves for touch and keyboard use. Each group shows its EUR subtotal, and groups can be renamed, collapsed or deleted (their expenses move to **Ungrouped**). **Save expense** saves entries, groups and their order together. Groups belong to the selected month only; another month starts without groups, because major expenses are not copied forward. Group subtotals round once per group, so their sum can differ from the monthly total by a cent.
+
+On a phone, **Expenses** in the bottom bar opens Major expenses directly.
 
 Use × to remove a row, or **Delete expense** to delete the selected month after confirmation. Expenses are independent of income and capital snapshots. JSON export/import and full data deletion include expense notes. Importing a backup from versions 1–4 clears current expense notes because those backups contain none.
 

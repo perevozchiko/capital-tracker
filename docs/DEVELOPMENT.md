@@ -156,8 +156,8 @@ web/
   js/monthly.js        Monthly balance editor
   js/incomes.js, js/expenses.js, js/entry-editor.js, js/income-math.js
                        Income and major-expense pages and their shared editor
-  js/recurring-expenses.js, js/recurring-expense-groups.js
-                       Recurring-expense page and groups
+  js/recurring-expenses.js  Recurring-expense page
+  js/entry-groups.js   Shared monthly groups, used by js/expense-groups.js and js/recurring-expense-groups.js
   js/fx-rates.js       Saved currency-rate history
   js/settings.js       Settings page
   js/backups.js        Backup list, archive view and restore
@@ -184,6 +184,6 @@ deploy/                Example service, Caddy, environment and update-agent conf
 
 The interface always uses English, including dates, numbers and confirmations. Older databases and JSON snapshots with a Russian language preference remain compatible; that legacy field does not change the interface language. Account and group names entered by users are preserved.
 
-Migration scripts are embedded under [`internal/storage/migrations/`](../internal/storage/migrations/). Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1–8 are defined; migration 2 adds account groups and account membership, and migration 3 adds independent monthly income notes. Migration 4 gives income notes names and preserves multiple entries per currency. Migration 5 adds independent major expense notes, migration 6 adds recurring monthly snapshots, and migration 7 adds recurring-expense groups and ordered membership. Migration 8 adds reviewed-month markers for income and expenses, so an explicitly saved empty month is distinct from an unrecorded one. JSON exports use version 8; versions 1–7 remain importable. [`PROGRESS.md`](../PROGRESS.md) documents verification status.
+Migration scripts are embedded under [`internal/storage/migrations/`](../internal/storage/migrations/). Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1–9 are defined; migration 2 adds account groups and account membership, and migration 3 adds independent monthly income notes. Migration 4 gives income notes names and preserves multiple entries per currency. Migration 5 adds independent major expense notes, migration 6 adds recurring monthly snapshots, and migration 7 adds recurring-expense groups and ordered membership. Migration 8 adds reviewed-month markers for income and expenses, so an explicitly saved empty month is distinct from an unrecorded one. Migration 9 adds per-month major-expense groups and ordered membership. JSON exports use version 9; versions 1–8 remain importable. [`PROGRESS.md`](../PROGRESS.md) documents verification status.
 
 Browser projects cover Chromium and WebKit, plus iPhone and Android emulation for compatibility and login tests. Use `npm run test:ui -- --project=chromium` for a focused run. The Node test runner works on Windows, macOS and Linux and stores artifacts in `test-results/latest`. Set `CAPITAL_TRACKER_TEST_OUTPUT` to a different directory when running independent suites concurrently. `--last-failed` reuses the previous run’s result.

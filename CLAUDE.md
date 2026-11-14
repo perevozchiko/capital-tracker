@@ -65,7 +65,7 @@ Authentication is off by default (local mode). It turns on when any of `CAPITAL_
 
 ## Things that must change together
 
-- Schema change: add the next contiguous `internal/storage/migrations/NNN_name.sql` (currently up to 008). Never edit a released migration. If exported data changes, bump `SchemaVersion` in `internal/storage/transfer.go` (currently 8) and keep older versions importable.
+- Schema change: add the next contiguous `internal/storage/migrations/NNN_name.sql` (currently up to 009). Never edit a released migration. If exported data changes, bump `SchemaVersion` in `internal/storage/transfer.go` (currently 9) and keep older versions importable.
 - New or renamed frontend file: `web/embed.go` embed patterns, the `STATIC` list and `CACHE_NAME` in `web/sw.js` (bump the cache name on every frontend change).
 - User-visible strings go in `web/js/i18n/en.js`; the UI is English only.
 - Playwright version: `package-lock.json` must match the `mcr.microsoft.com/playwright:vX-noble` image tag in the CI and release workflows (`tests/ci-workflows.test.mjs` enforces it).
