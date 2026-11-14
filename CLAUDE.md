@@ -77,4 +77,4 @@ Authentication is off by default (local mode). It turns on when any of `CAPITAL_
 - No new frameworks, TypeScript, ORM or runtime npm dependencies without explicit discussion.
 - Every bug fix gets a regression test; destructive paths are tested on isolated data.
 - Prettier with single quotes for `web/` and `tests/`; `gofmt` for Go.
-- Commit messages follow Conventional Commits (`feat:`, `fix:`, `test:`, `ci:`, `docs:`, `chore(release):`). Work on branches with PRs against `master`; builds and releases are manual workflows.
+- Commit messages follow Conventional Commits (`feat:`, `fix:`, `test:`, `ci:`, `docs:`, `chore(release):`). Work on feature branches; merge them into `dev` (test instance, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)) and open PRs against `master`; builds and releases are manual workflows.

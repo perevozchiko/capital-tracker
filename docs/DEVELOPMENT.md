@@ -101,6 +101,10 @@ To request a binary, open **Actions → Build Capital Tracker → Run workflow**
 
 Each selected job runs unit tests, JavaScript checks, `go vet`, and a native build. The macOS and Linux jobs additionally smoke-test the built binary, including backup and restart. After a successful run, download your artifact from that run's **Artifacts** section. Each artifact includes a SHA-256 checksum. The manual development workflow does not build macOS Intel (the Release workflow does); downloaded binaries are unsigned/unnotarized, and GitHub Releases are not published automatically.
 
+## Integration branch and test deployment
+
+`dev` collects feature branches before they reach `master`. Merge a finished feature branch into `dev` and push it; CI runs on every push to `dev`. The self-hosted server can run that branch next to production as a separate instance (`https://fin-dev.anasko.net`, own container, port and data directory, seeded from a read-only snapshot of production) with the host command `deploy-capital-tracker-dev`; `--ref <branch>` deploys any other branch. The command and its notes live on the server in `/Users/server/capital-tracker-setup/dev/`, not in this repository, and never modify the production container, image or database. After checking the result there, open a pull request from `dev` to `master`, then release and update production as described below.
+
 ## Release Process
 
 Versioned releases are deliberately manual. Open **Actions → Release → Run workflow**, choose `master`. The two selectors work like those in Budget Tinker: **Version: Current, Patch, Minor or Major** (default **`current`**) and **Release stage** (default **`alpha`**, with `beta`, `rc` and `stable` also available). Then click **Run workflow**. After success, find the archives under [GitHub Releases](https://github.com/perevozchiko/capital-tracker/releases). Regular commits and merges run CI checks but never create version tags or publish releases. The separate **Build Capital Tracker** workflow remains manually runnable on development branches and can build macOS, Linux, Windows or all platforms.
