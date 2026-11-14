@@ -21,6 +21,8 @@ func (s *Store) ClearData() error {
 		"recurring_expense_months",
 		"incomes",
 		"monthly_reviews",
+		"expense_group_members",
+		"expense_groups",
 		"expenses",
 		"monthly_balances",
 		"exchange_rates",

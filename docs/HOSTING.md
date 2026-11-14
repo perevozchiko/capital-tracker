@@ -26,6 +26,8 @@ CAPITAL_TRACKER_TOTP_SECRET='YOUR_GENERATED_BASE32_SECRET'
 
 Restart the service. Enabling TOTP revokes existing password-only sessions, so each browser must confirm once. Invalid or weak secrets prevent startup; a secret without a valid username/password configuration also prevents startup. Leave the variable unset for password-only deployments.
 
+For a second instance used to try changes (for example a `dev` branch next to the real data), set `CAPITAL_TRACKER_INSTANCE_LABEL` to a short marker such as `DEV` (at most 20 letters, digits, spaces, `-`, `_` or `.`). It is shown at the top of every screen, on the sign-in page and in the browser tab title, so the test instance cannot be mistaken for the real one. The label is public and does not enable authentication by itself; an invalid value prevents startup.
+
 After the username and password are accepted, a new browser is asked for its current authenticator code. **Trust this device — skip codes for 180 days** is checked by default. A trusted browser still needs the password after sign-out or session expiry, but skips the code. Trust lasts **180 days from the last successful password sign-in** with trust selected; each such sign-in rotates the device token and renews this deadline. A live authenticated session continues to follow its own lifetime described above. On a shared device, uncheck both **Keep me signed in** and **Trust this device**. API clients that omit `trust_device` do not create device trust.
 
 Trust is a separate HttpOnly, SameSite=Strict cookie (also Secure under HTTPS) and survives sign-out and server restarts. It identifies a browser profile, not the physical machine: a different browser, a private window, an installed PWA with a separate cookie store, clearing cookies, or an expired trust cookie requires another code. A trusted-device cookie alone never grants access to financial data. Sign-out revokes the login session and keeps device trust as requested.
@@ -44,7 +46,7 @@ The Go server stays on `127.0.0.1:8765`. Caddy on the same Linux machine serves 
 
 ## Install on a Linux server
 
-Build with Go 1.27.3 or newer for your server's CPU (amd64 or arm64). The module enforces the minimum patched Go version; automatic toolchain selection downloads it when necessary:
+Build with Go 1.27.4 or newer for your server's CPU (amd64 or arm64). The module enforces the minimum patched Go version; automatic toolchain selection downloads it when necessary:
 
 ```sh
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o capital-tracker ./cmd/capital-tracker

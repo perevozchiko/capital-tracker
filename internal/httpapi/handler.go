@@ -15,8 +15,10 @@ type Server struct {
 	Auth    *Auth
 	Store   *storage.Store
 	Version string
-	Commit  string
-	Assets  fs.FS
+	// Label marks a non-production instance in the interface; empty on normal installs.
+	Label  string
+	Commit string
+	Assets fs.FS
 }
 
 func (s *Server) Handler() http.Handler {
@@ -39,7 +41,11 @@ func (s *Server) routes() *http.ServeMux {
 			fail(w, 405, "method_not_allowed", "")
 			return
 		}
-		writeJSON(w, 200, map[string]string{"app": "capital-tracker", "version": s.Version, "commit": s.Commit})
+		meta := map[string]string{"app": "capital-tracker", "version": s.Version, "commit": s.Commit}
+		if s.Label != "" {
+			meta["label"] = s.Label
+		}
+		writeJSON(w, 200, meta)
 	})
 	mux.HandleFunc("/api/currencies", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {

@@ -7,7 +7,7 @@ import {
   monitorUpdates,
   updatePending,
 } from './updates.js';
-import { state } from './state.js';
+import { state, currentMonth } from './state.js';
 import { api, request } from './api.js';
 import { t } from './messages.js';
 import {
@@ -119,7 +119,7 @@ document.addEventListener('click', async (e) => {
     else if (action === 'monthPrev') await setMonth(nextMonth(state.month, -1));
     else if (action === 'monthNext') await setMonth(nextMonth(state.month, 1));
     else if (action === 'monthCurrent') {
-      const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+      const month = currentMonth();
       if (month !== state.month) await setMonth(month);
     } else if (action === 'focusAdd') {
       $('#accountName')?.focus();
@@ -379,12 +379,15 @@ async function boot() {
     ]);
     state.settings = settings;
     state.buildCommit = metadata.commit || 'unknown';
+    if (metadata.label) {
+      $('#instanceLabel').textContent = metadata.label;
+      $('#instanceLabel').hidden = false;
+      state.instanceLabel = metadata.label;
+    }
     themeApply();
     await refresh();
-    const lastComplete = state.history.filter((x) => x.complete).at(-1);
-    if (lastComplete) state.month = lastComplete.month;
-    else if (state.months.length)
-      state.month = state.months[state.months.length - 1].month;
+    // state.month stays on the current calendar month: every opening starts
+    // there on every screen, whatever was saved last.
     await render();
     if (new URLSearchParams(location.search).has('restored')) {
       notify(t('backupRestored'));

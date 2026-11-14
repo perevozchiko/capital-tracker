@@ -30,10 +30,8 @@ function money(minor, currency = 'EUR') {
   const v = BigInt(minor),
     neg = v < 0n,
     abs = neg ? -v : v;
-  const whole = new Intl.NumberFormat('en-US', {
-    useGrouping: true,
-    maximumFractionDigits: 0,
-  }).format(abs / 100n);
+  // Thousands are grouped with a narrow no-break space, never a comma.
+  const whole = String(abs / 100n).replace(/\B(?=(\d{3})+$)/g, '\u202f');
   const frac = String(abs % 100n).padStart(2, '0');
   const parts = new Intl.NumberFormat('en-US', {
     style: 'currency',

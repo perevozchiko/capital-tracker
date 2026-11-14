@@ -122,7 +122,7 @@ Income, major expenses and recurring expenses are **independent notes**, not ban
 
 ## Quick start
 
-Install [Go](https://go.dev/dl/) 1.27.3 or newer, then clone this repository and run:
+Install [Go](https://go.dev/dl/) 1.27.4 or newer, then clone this repository and run:
 
 ```sh
 go run ./cmd/capital-tracker --demo

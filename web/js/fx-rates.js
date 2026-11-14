@@ -35,6 +35,7 @@ function rateChart(quotes, currency) {
     top + ((max - Number(rate)) / (max - min)) * (H - top - bottom);
   const formatter = new Intl.NumberFormat('en-US', {
     maximumSignificantDigits: 5,
+    useGrouping: false,
   });
   const grid = Array.from({ length: 5 }, (_, i) => {
     const value = min + ((max - min) * i) / 4;

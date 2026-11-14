@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
-    <meta name="theme-color" content="#0e1421" />
+    <meta name="theme-color" content="#101010" />
     <meta name="robots" content="noindex,nofollow" />
     <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/css/login.css" />
@@ -14,8 +14,8 @@
     <script src="/js/login.js" defer></script>
   </head>
   <body>
+    <div class="instance-label" id="instanceLabel" hidden></div>
     <main class="login-panel" aria-labelledby="loginTitle">
-      <img src="/icons/favicon.svg" width="44" height="44" alt="" />
       <h1 id="loginTitle">Capital Tracker</h1>
       <p class="subtitle">Sign in to your finances</p>
       <form id="loginForm" method="post" action="/api/auth/login">

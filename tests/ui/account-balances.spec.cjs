@@ -65,7 +65,7 @@ for (const width of [320, 1280]) {
       'Feb 2025',
     );
     await setMonth(page, '2025-01');
-    await expect(balance(1)).toHaveText('€10,000,000.99');
+    await expect(balance(1)).toHaveText('€10 000 000.99');
     await expect(balance(2)).toHaveText('-$123.45');
     await expect(page.locator('.account-balance small').first()).toHaveText(
       'Jan 2025',

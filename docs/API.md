@@ -27,7 +27,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET` | `/api/dashboard?month=YYYY-MM&columns=12` | Summary, previous month and 1–120 monthly columns |
 | `GET` | `/api/capital/history` | Chronological complete/incomplete points |
 | `GET`, `PATCH` | `/api/settings` | Read / update appearance (legacy language field retained) |
-| `GET` | `/api/meta` | App identity, version, and build commit |
+| `GET` | `/api/meta` | App identity, version, and build commit; `label` only when `CAPITAL_TRACKER_INSTANCE_LABEL` is set |
 | `GET` | `/api/exchange-rates?month=YYYY-MM` | Fetch the latest available EUR rates on demand; optional month identifies the editor and does not select a historical date; does not save them |
 | `GET` | `/api/currencies` | Supported ISO 4217 currency codes from Go |
 | `GET` | `/api/data/export` | Download complete application JSON snapshot |
@@ -87,11 +87,13 @@ When server authentication is configured, protected endpoints require the `capit
 
 Amounts must be nonnegative integer minor-unit strings; each entry requires a trimmed nonempty `name` of at most 100 characters. Multiple entries may share the same currency or name; their order is preserved. Rates mean **1 EUR = rate units of currency**, must be positive, and use at most eight decimals. EUR requires rate `1`. The total sums exact conversions and rounds once. An empty `entries` array records an explicitly reviewed zero-income month. `DELETE /api/incomes/{month}` removes both its entries and review marker. Writes require the regular CSRF header and return HTTP 204. Income notes have independent rates and never create or alter capital months or accounts.
 
-JSON exports use `schema_version: 8` and include `incomes`, `expenses`, monthly `recurring_expenses` snapshots and `monthly_reviews` markers (`section` and `month`). Versions 1–7 remain importable; entry-bearing income and expense months in older backups become reviewed months. Version 3 income totals are converted to entries named `Income · {currency}`; versions 1 and 2 contain no income notes. Import replaces all data, including income and expense notes. Versions 1–4 have no expense notes, versions 1–5 have no recurring snapshots, and versions 1–6 have no recurring groups.
+JSON exports use `schema_version: 9` and include `incomes`, `expenses`, `expense_groups` (per month: `month` and `groups`), monthly `recurring_expenses` snapshots and `monthly_reviews` markers (`section` and `month`). Versions 1–8 remain importable; entry-bearing income and expense months in older backups become reviewed months. Version 3 income totals are converted to entries named `Income · {currency}`; versions 1 and 2 contain no income notes. Import replaces all data, including income and expense notes. Versions 1–4 have no expense notes, versions 1–5 have no recurring snapshots, versions 1–6 have no recurring groups, and versions 1–8 have no major-expense groups.
 
 ## Major expenses
 
 `GET /api/expenses` and `PUT /api/expenses/{month}` use the same response shape, entry fields, validation, conversion rules and CSRF requirements as income notes. Each expense has a name, amount, currency and rate. An empty `entries` array records an explicitly reviewed zero-expense month. `DELETE /api/expenses/{month}` removes both its entries and review marker. Expenses have independent monthly rates and do not alter income notes, accounts or capital snapshots. Exports include an `expenses` array; imports and full data deletion include expense notes.
+
+Major expenses can be grouped like recurring expenses. Each month in `GET /api/expenses` includes ordered `groups` (`name`, `entry_positions`, `total_eur_minor`) and `ungrouped_total_eur_minor`. `PUT /api/expenses/{month}` accepts an optional `groups` array with the same shape and validation rules as recurring-expense groups; entries and groups are replaced together in one transaction, and omitting `groups` saves every entry as Ungrouped. Groups belong to their month only: major expenses are never inherited, so another month starts without groups. Groups never change the monthly total. `DELETE /api/expenses/{month}` also removes that month's groups. Schema migration 9 adds the group tables without changing existing expenses.
 
 See [host-managed release updates](UPDATES.md) for the optional Settings → About update button, macOS/OrbStack agent, IPC security and installation contract. Updates require an explicit button click.
 

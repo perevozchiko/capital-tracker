@@ -65,22 +65,20 @@ async function renderDashboard() {
       (
         g,
         i,
-      ) => `<button type="button" class="family-group-card family-group-${i % 3}" data-page="accounts">
-        <span class="family-group-title"><span class="family-group-icon" aria-hidden="true">${['▤', '◈', '▦'][i % 3]}</span><span>${escapeHTML(g.name)}</span></span>
+      ) => `<button type="button" class="family-group-card" data-page="accounts">
+        <span class="family-group-title"><span>${escapeHTML(g.name)}</span></span>
         <strong class="family-group-value">${g.total_eur_minor == null ? '—' : moneyHTML(g.total_eur_minor)}</strong>
-        <span class="family-group-note">${t('groupTotalEUR')}</span>
       </button>`,
     )
     .join('');
 
   const flows = [
-    { page: 'incomes', label: 'navIncomes', history: incomes, icon: '↗' },
-    { page: 'expenses', label: 'navExpenses', history: expenses, icon: '↘' },
+    { page: 'incomes', label: 'navIncomes', history: incomes },
+    { page: 'expenses', label: 'navExpenses', history: expenses },
     {
       page: 'recurringExpenses',
       label: 'navRecurringExpenses',
       history: recurring,
-      icon: '↻',
     },
   ].map((flow) => ({
     ...flow,
@@ -120,7 +118,7 @@ async function renderDashboard() {
     <section class="card panel month-review" aria-label="${t('status')}">
       <div class="panel-heading"><h2>${allComplete ? t('monthComplete') : t('monthIncomplete')}</h2><span class="pill ${allComplete ? 'good' : 'bad'}">${t('reviewProgress').replace('{count}', completed)}</span></div>
       <p class="subtle">${t(allComplete ? 'monthReviewedHelp' : 'monthReviewHelp')}</p>
-      <div class="month-review-sections">${sections.map((section) => `<button type="button" class="month-review-item" data-page="${section.page}"><span class="review-indicator ${section.saved ? 'positive' : 'neutral'}" aria-hidden="true">${section.saved ? '✓' : '○'}</span><span>${t(section.label)}</span><span class="pill ${section.saved ? 'good' : 'bad'}">${t(section.saved ? 'reviewSaved' : 'reviewNeeded')}</span></button>`).join('')}</div>
+      <div class="month-review-sections">${sections.map((section) => `<button type="button" class="month-review-item" data-page="${section.page}"><span class="review-indicator ${section.saved ? 'positive' : 'neutral'}" aria-hidden="true"></span><span>${t(section.label)}</span><span class="pill ${section.saved ? 'good' : 'bad'}">${t(section.saved ? 'reviewSaved' : 'reviewNeeded')}</span></button>`).join('')}</div>
     </section>
     <section class="card panel family-history">
       <div class="panel-heading"><h2>${t('familyHistory')}</h2><span class="subtle">${t('balanceTrend')}</span></div>
@@ -129,13 +127,12 @@ async function renderDashboard() {
     ${
       groupCards
         ? `<section class="family-group-section">
-      <div class="panel-heading"><h2>${t('moneyByGroup')}</h2><button class="btn btn-small" type="button" data-page="accounts">${t('navAccounts')} →</button></div>
+      <div class="panel-heading"><div><h2>${t('moneyByGroup')}</h2><span class="subtle">${t('groupTotalEUR')}</span></div><button class="btn btn-small" type="button" data-page="accounts">${t('navAccounts')} →</button></div>
       <div class="family-group-grid">${groupCards}</div>
     </section>`
         : ''
     }
     <section class="family-next-step">
-      <div class="family-next-icon" aria-hidden="true">${allComplete ? '✓' : '!'}</div>
       <div><strong>${allComplete ? t('monthComplete') : t('monthIncomplete')}</strong>
         <p class="subtle">${t(allComplete ? 'monthReviewedHelp' : 'monthReviewHelp')}</p></div>
       <button class="btn btn-primary" type="button" data-page="${nextSection.page}">${t(nextSection.label)} →</button>
@@ -163,7 +160,7 @@ function flowCard(flow) {
       comparison += `<span class="subtle flow-zero-note">${t(value ? 'flowFromZero' : 'flowUnchangedZero')}</span>`;
   }
   return `<button type="button" class="card metric dashboard-flow" data-page="${flow.page}">
-    <span class="flow-heading"><span class="flow-icon" aria-hidden="true">${flow.icon}</span><span>${t(flow.label)}</span><span aria-hidden="true">→</span></span>
+    <span class="flow-heading"><span>${t(flow.label)}</span><span aria-hidden="true">→</span></span>
     <strong class="flow-total">${current ? moneyHTML(current.total_eur_minor) : '—'}</strong>
     <span class="flow-change ${color}">${current ? comparison : t('flowNotSaved')}</span>
     <span class="subtle flow-period">${escapeHTML(monthLabel(state.month))}${current && previous ? ` · ${t('comparedLastMonth')} ${escapeHTML(monthLabel(previous.month, true))}` : ''}</span>

@@ -40,7 +40,7 @@ for (const width of [320, 1280]) {
     await expect(rows(page).locator('[data-income-rate]')).toHaveCount(0);
     await expect(page.locator('#incomeTotal')).toHaveText('€953.24');
     await add(page, 'Бонус', '200');
-    await expect(page.locator('#incomeTotal')).toHaveText('€1,153.24');
+    await expect(page.locator('#incomeTotal')).toHaveText('€1 153.24');
     await save(page);
     expect(await (await page.request.get(app + '/api/months')).json()).toEqual(
       [],
@@ -70,7 +70,7 @@ for (const width of [320, 1280]) {
     await expect(rows(page).first().locator('[data-income-name]')).toHaveText(
       'Зарплата',
     );
-    await expect(page.locator('#incomeTotal')).toHaveText('€1,153.24');
+    await expect(page.locator('#incomeTotal')).toHaveText('€1 153.24');
     await expect(rows(page).locator('input, select, textarea')).toHaveCount(0);
     await rows(page)
       .first()
@@ -78,13 +78,13 @@ for (const width of [320, 1280]) {
       .click();
     const replacement = await add(page, 'Зарплата', '117200', 'RSD');
     await expect(replacement.locator('[data-income-eur]')).toHaveText(
-      '€1,000.00',
+      '€1 000.00',
     );
     await rows(page)
       .nth(1)
       .getByRole('button', { name: 'Remove income' })
       .click();
-    await expect(page.locator('#incomeTotal')).toHaveText('€1,100.00');
+    await expect(page.locator('#incomeTotal')).toHaveText('€1 100.00');
     await save(page);
     await setMonth(page, '2026-11');
     await expect(rows(page)).toHaveCount(0);
@@ -95,7 +95,7 @@ for (const width of [320, 1280]) {
       .getByRole('button', { name: 'Show amounts', exact: true })
       .click();
     await page.locator('[data-chart-source="income"]').last().focus();
-    await expect(page.locator('#chartTooltip')).toContainText('€2,000.00');
+    await expect(page.locator('#chartTooltip')).toContainText('€2 000.00');
     await page.locator('#amountVisibility').click();
     await expect(
       rows(page).first().locator('[data-income-amount] .money-text'),
@@ -200,7 +200,7 @@ test('loaded rates update each matching income and its EUR equivalent', async ({
     route.fulfill({ json: { date: '2026-10-30', rates: { RSD: '117.2' } } }),
   );
   await page.locator('[data-action="loadIncomeRates"]').click();
-  await expect(page.locator('#incomeTotal')).toHaveText('€1,000.00');
+  await expect(page.locator('#incomeTotal')).toHaveText('€1 000.00');
   await save(page);
 });
 
@@ -219,15 +219,15 @@ for (const width of [320, 1280]) {
     await expect(rows(page).locator('[data-income-rate]')).toHaveCount(0);
     await expect(page.locator('[data-income-rate]')).toHaveCount(1);
     await expect(page.locator('#incomeRates')).toBeVisible();
-    await expect(page.locator('#incomeTotal')).toHaveText('€1,100.00');
+    await expect(page.locator('#incomeTotal')).toHaveText('€1 100.00');
     await page.locator('[data-income-rate="RSD"]').fill('100');
     await expect(rows(page).nth(0).locator('[data-income-eur]')).toHaveText(
-      '€1,000.00',
+      '€1 000.00',
     );
     await expect(rows(page).nth(1).locator('[data-income-eur]')).toHaveText(
       '€172.00',
     );
-    await expect(page.locator('#incomeTotal')).toHaveText('€1,272.00');
+    await expect(page.locator('#incomeTotal')).toHaveText('€1 272.00');
     // Adding another currency keeps the shared RSD rate intact.
     const temporary = await add(page, 'Temporary income', '20', 'USD');
     await expect(page.locator('[data-income-rate]')).toHaveCount(2);
@@ -235,7 +235,7 @@ for (const width of [320, 1280]) {
     await page.locator('[data-income-rate="USD"]').fill('2');
     await temporary.getByRole('button', { name: 'Remove income' }).click();
     await expect(page.locator('[data-income-rate]')).toHaveCount(1);
-    await expect(page.locator('#incomeTotal')).toHaveText('€1,272.00');
+    await expect(page.locator('#incomeTotal')).toHaveText('€1 272.00');
     await save(page);
     const snapshot = await (
       await page.request.get(app + '/api/data/export')
@@ -258,7 +258,7 @@ for (const width of [320, 1280]) {
     await nav(page, 'Income');
     await setMonth(page, '2026-10');
     await expect(page.locator('[data-income-rate="RSD"]')).toHaveValue('100');
-    await expect(page.locator('#incomeTotal')).toHaveText('€1,272.00');
+    await expect(page.locator('#incomeTotal')).toHaveText('€1 272.00');
     await setMonth(page, '2026-09');
     await expect(page.locator('#incomeRates')).toBeHidden();
     await add(page, 'Earlier salary', '100000', 'RSD', '200');

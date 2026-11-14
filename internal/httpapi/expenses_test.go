@@ -39,6 +39,16 @@ func TestExpenseAPI(t *testing.T) {
 	if !strings.Contains(got, `"total_eur_minor":"10000"`) {
 		t.Fatal(got)
 	}
+	grouped := `{"entries":[{"month":"2026-01","name":"Car","currency":"EUR","amount_minor":"100","rate":"1"},{"month":"2026-01","name":"Sofa","currency":"EUR","amount_minor":"250","rate":"1"}],"groups":[{"name":"Home","entry_positions":[1]}]}`
+	call("PUT", "/expenses/2026-01", grouped, true, 204)
+	got = call("GET", "/expenses", "", false, 200)
+	if !strings.Contains(got, `"groups":[{"name":"Home","entry_positions":[1],"total_eur_minor":"250"}]`) || !strings.Contains(got, `"ungrouped_total_eur_minor":"100"`) || !strings.Contains(got, `"total_eur_minor":"350"`) {
+		t.Fatal(got)
+	}
+	call("PUT", "/expenses/2026-01", strings.Replace(grouped, `[1]`, `[2]`, 1), true, 422)
+	if got := call("GET", "/expenses", "", false, 200); !strings.Contains(got, `"name":"Home"`) {
+		t.Fatalf("rejected groups changed the month: %s", got)
+	}
 	call("PUT", "/expenses/2026-01", `{"entries":null}`, true, 422)
 	call("PUT", "/expenses/2026-13", `{"entries":[]}`, true, 422)
 	call("PUT", "/expenses/2026-01", `{"entries":[`, true, 400)

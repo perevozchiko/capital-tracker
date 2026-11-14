@@ -42,6 +42,11 @@ func (s *Store) DeleteFlowMonth(section, month string) error {
 		return err
 	}
 	defer tx.Rollback()
+	if section == "expenses" {
+		if _, err = tx.Exec("DELETE FROM expense_groups WHERE month=?", month); err != nil {
+			return err
+		}
+	}
 	if _, err = tx.Exec("DELETE FROM "+section+" WHERE month=?", month); err != nil {
 		return err
 	}

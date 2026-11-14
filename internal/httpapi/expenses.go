@@ -34,7 +34,8 @@ func registerExpenses(mux *http.ServeMux, s *Server) {
 			return
 		}
 		var input struct {
-			Entries []storage.Expense `json:"entries"`
+			Entries []storage.Expense               `json:"entries"`
+			Groups  []storage.RecurringExpenseGroup `json:"groups"`
 		}
 		if !readJSON(w, r, &input) {
 			return
@@ -43,7 +44,7 @@ func registerExpenses(mux *http.ServeMux, s *Server) {
 			fail(w, 422, "validation_error", "entries")
 			return
 		}
-		if err := s.Store.PutExpense(strings.TrimPrefix(r.URL.Path, "/api/expenses/"), input.Entries); err != nil {
+		if err := s.Store.PutExpenseGroups(strings.TrimPrefix(r.URL.Path, "/api/expenses/"), input.Entries, input.Groups); err != nil {
 			handleError(w, err)
 			return
 		}

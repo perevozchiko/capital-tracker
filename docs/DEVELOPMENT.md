@@ -4,7 +4,7 @@
 
 ## Build and run
 
-Install Go and build (Go 1.27.3 or later; GitHub Actions uses Go 1.27.3). The module requires this patched minimum version and Go automatically selects it when needed:
+Install Go and build (Go 1.27.4 or later; GitHub Actions uses Go 1.27.4). The module requires this patched minimum version and Go automatically selects it when needed:
 
 ```sh
 go mod tidy
@@ -61,7 +61,7 @@ The former separate `Browser UI tests` workflow was redundant: it ran much of th
 
 ## Download builds from GitHub Actions
 
-Run all local source checks before committing (requires Go 1.27.3+, Node.js 22+ and Python 3.10+ for the macOS/Linux host updater tests):
+Run all local source checks before committing (requires Go 1.27.4+, Node.js 22+ and Python 3.10+ for the macOS/Linux host updater tests):
 ```sh
 npm ci
 npm run check
@@ -100,6 +100,10 @@ To request a binary, open **Actions → Build Capital Tracker → Run workflow**
 | `all` | All three | All three artifacts | One per platform |
 
 Each selected job runs unit tests, JavaScript checks, `go vet`, and a native build. The macOS and Linux jobs additionally smoke-test the built binary, including backup and restart. After a successful run, download your artifact from that run's **Artifacts** section. Each artifact includes a SHA-256 checksum. The manual development workflow does not build macOS Intel (the Release workflow does); downloaded binaries are unsigned/unnotarized, and GitHub Releases are not published automatically.
+
+## Integration branch and test deployment
+
+`dev` collects feature branches before they reach `master`. Merge a finished feature branch into `dev` and push it; CI runs on every push to `dev`. The self-hosted server can run that branch next to production as a separate instance (`https://fin-dev.anasko.net`, own container, port and data directory, seeded from a read-only snapshot of production) with the host command `deploy-capital-tracker-dev`; `--ref <branch>` deploys any other branch. The command and its notes live on the server in `/Users/server/capital-tracker-setup/dev/`, not in this repository, and never modify the production container, image or database. After checking the result there, open a pull request from `dev` to `master`, then release and update production as described below.
 
 ## Release Process
 
@@ -156,8 +160,8 @@ web/
   js/monthly.js        Monthly balance editor
   js/incomes.js, js/expenses.js, js/entry-editor.js, js/income-math.js
                        Income and major-expense pages and their shared editor
-  js/recurring-expenses.js, js/recurring-expense-groups.js
-                       Recurring-expense page and groups
+  js/recurring-expenses.js  Recurring-expense page
+  js/entry-groups.js   Shared monthly groups, used by js/expense-groups.js and js/recurring-expense-groups.js
   js/fx-rates.js       Saved currency-rate history
   js/settings.js       Settings page
   js/backups.js        Backup list, archive view and restore
@@ -184,6 +188,6 @@ deploy/                Example service, Caddy, environment and update-agent conf
 
 The interface always uses English, including dates, numbers and confirmations. Older databases and JSON snapshots with a Russian language preference remain compatible; that legacy field does not change the interface language. Account and group names entered by users are preserved.
 
-Migration scripts are embedded under [`internal/storage/migrations/`](../internal/storage/migrations/). Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1–8 are defined; migration 2 adds account groups and account membership, and migration 3 adds independent monthly income notes. Migration 4 gives income notes names and preserves multiple entries per currency. Migration 5 adds independent major expense notes, migration 6 adds recurring monthly snapshots, and migration 7 adds recurring-expense groups and ordered membership. Migration 8 adds reviewed-month markers for income and expenses, so an explicitly saved empty month is distinct from an unrecorded one. JSON exports use version 8; versions 1–7 remain importable. [`PROGRESS.md`](../PROGRESS.md) documents verification status.
+Migration scripts are embedded under [`internal/storage/migrations/`](../internal/storage/migrations/). Database identity is checked on opening, and an unknown/newer schema is rejected; a pre-migration backup is created for existing older-format databases. Schema versions 1–9 are defined; migration 2 adds account groups and account membership, and migration 3 adds independent monthly income notes. Migration 4 gives income notes names and preserves multiple entries per currency. Migration 5 adds independent major expense notes, migration 6 adds recurring monthly snapshots, and migration 7 adds recurring-expense groups and ordered membership. Migration 8 adds reviewed-month markers for income and expenses, so an explicitly saved empty month is distinct from an unrecorded one. Migration 9 adds per-month major-expense groups and ordered membership. JSON exports use version 9; versions 1–8 remain importable. [`PROGRESS.md`](../PROGRESS.md) documents verification status.
 
 Browser projects cover Chromium and WebKit, plus iPhone and Android emulation for compatibility and login tests. Use `npm run test:ui -- --project=chromium` for a focused run. The Node test runner works on Windows, macOS and Linux and stores artifacts in `test-results/latest`. Set `CAPITAL_TRACKER_TEST_OUTPUT` to a different directory when running independent suites concurrently. `--last-failed` reuses the previous run’s result.

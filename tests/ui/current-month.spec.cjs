@@ -4,6 +4,7 @@ const {
   open,
   nav,
   createAccount,
+  saveBalances,
   setMonth,
 } = require('./helpers.cjs');
 
@@ -80,4 +81,37 @@ test('current month respects unsaved edits and preserves edits in the same month
   await expect(page.locator('#confirmDialog')).toBeVisible();
   await page.locator('#confirmCancel').click();
   await expect(balance).toHaveValue('456.78');
+});
+
+test('every opening starts on the current month on every screen', async ({
+  page,
+  app,
+}) => {
+  await page.clock.setFixedTime(new Date('2026-10-15T12:00:00Z'));
+  await open(page, app);
+  await expect(page.locator('.month-picker')).toHaveValue('2026-10');
+  await nav(page, 'Accounts');
+  await createAccount(page, 'Wallet');
+  await nav(page, 'Monthly balances');
+  // Older saved months, complete or not, must not pull the opening away.
+  await saveBalances(page, '2025-01', { 1: '100' });
+  await saveBalances(page, '2025-03', { 1: '300' });
+  await page.reload();
+  for (const screen of [
+    'Dashboard',
+    'Accounts',
+    'Monthly balances',
+    'Income',
+    'Major expenses',
+    'Recurring expenses',
+  ]) {
+    await nav(page, screen);
+    await expect(page.locator('.month-picker')).toHaveValue('2026-10');
+  }
+  await nav(page, 'Monthly balances');
+  await expect(page.locator('[data-balance="1"]')).toHaveValue('');
+  const other = await page.context().newPage();
+  await open(other, app);
+  await expect(other.locator('.month-picker')).toHaveValue('2026-10');
+  await other.close();
 });
