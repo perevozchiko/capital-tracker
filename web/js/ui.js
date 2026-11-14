@@ -4,21 +4,25 @@ import { escapeHTML, monthLabel, money } from './format.js';
 import { showConfirm } from './dialogs.js';
 
 const $ = (selector) => document.querySelector(selector);
+// Only the phone tab bar uses pictograms; the sidebar is plain text.
 const icons = {
   dashboard:
-    '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
-  accounts:
-    '<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/>',
+    '<path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1Z"/>',
   monthly:
-    '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15h3"/>',
-  expenses: '<path d="M12 15V3m-5 5 5-5 5 5M4 17v4h16v-4"/>',
-  recurringExpenses:
-    '<path d="M20 7a8 8 0 0 0-14-2L3 8m0-5v5h5M4 17a8 8 0 0 0 14 2l3-3m0 5v-5h-5"/>',
-  incomes: '<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',
-  fxRates: '<path d="M3 7h18l-4-4M21 17H3l4 4M8 10v4m4-5v6m4-5v4"/>',
-  settings:
-    '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.2-1.7l2-1.5-2-3.5-2.4 1A7 7 0 0 0 14 5l-.4-2.5h-4L9.2 5a7 7 0 0 0-2.4 1.3l-2.4-1-2 3.5 2 1.5a7 7 0 0 0 0 3.4l-2 1.5 2 3.5 2.4-1A7 7 0 0 0 9.2 19l.4 2.5h4L14 19a7 7 0 0 0 2.4-1.3l2.4 1 2-3.5-2-1.5A7 7 0 0 0 19 12Z"/>',
+    '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  incomes:
+    '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v8m-3.5-3.5L12 16l3.5-3.5"/>',
+  expenses:
+    '<circle cx="12" cy="12" r="8.5"/><path d="M12 16V8m-3.5 3.5L12 8l3.5 3.5"/>',
+  more: '<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>',
 };
+// The screens used every month sit in the phone tab bar; the rest stay in the drawer.
+const mobileTabs = [
+  ['dashboard', 'familyHome'],
+  ['monthly', 'familyMonthly'],
+  ['incomes', 'navIncomes'],
+  ['expenses', 'familyExpenses'],
+];
 function notify(message, failed = false) {
   const element = $('#toast');
   element.textContent = message;
@@ -69,25 +73,18 @@ function renderNav() {
   $('#navigation').innerHTML = routes
     .map(
       ([key, label]) =>
-        `<button class="nav-item ${state.page === key ? 'active' : ''}" data-page="${key}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
+        `<button class="nav-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''}>${t(label)}</button>`,
     )
     .join('');
-  // Mobile quick navigation keeps the less frequently used screens in the drawer.
-  // Each item has a short visible label and an optional fuller accessible name.
-  const quickRoutes = [
-    ['dashboard', 'familyHome'],
-    ['monthly', 'familyMonthly'],
-    ['accounts', 'navAccounts'],
-    ['expenses', 'familyExpenses', 'navExpenses'],
-  ];
+  const onTab = mobileTabs.some(([key]) => key === state.page);
   $('#mobileBottomNav').innerHTML =
-    quickRoutes
+    mobileTabs
       .map(
-        ([key, label, name]) =>
-          `<button type="button" class="mobile-bottom-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''} ${name ? `aria-label="${t(name)}" title="${t(name)}"` : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
+        ([key, label]) =>
+          `<button type="button" class="mobile-bottom-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
       )
       .join('') +
-    `<button type="button" class="mobile-bottom-item ${!quickRoutes.some(([key]) => key === state.page) ? 'active' : ''}" data-action="mobileMore" aria-label="${t('familyMore')}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>${t('familyMore')}</span></button>`;
+    `<button type="button" class="mobile-bottom-item ${onTab ? '' : 'active'}" data-action="mobileMore" aria-label="${t('familyMore')}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons.more}</svg><span>${t('familyMore')}</span></button>`;
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     el.textContent = t(
       el.dataset.i18n === 'localOnly' && state.authEnabled
@@ -169,7 +166,7 @@ function groupVisibilityButtons() {
   return `<button type="button" class="btn btn-small" data-action="groupCollapseAll">${t('collapseAllGroups')}</button><button type="button" class="btn btn-small" data-action="groupExpandAll">${t('expandAllGroups')}</button>`;
 }
 function emptyStart() {
-  return `<div class="card empty"><div class="welcome-symbol">◈</div><h2>${t('welcome')}</h2><p>${t('welcomeBody')}</p><button type="button" class="btn btn-primary" data-page="accounts">+ ${t('addAccount')}</button></div>`;
+  return `<div class="card empty"><h2>${t('welcome')}</h2><p>${t('welcomeBody')}</p><button type="button" class="btn btn-primary" data-page="accounts">+ ${t('addAccount')}</button></div>`;
 }
 
 export {

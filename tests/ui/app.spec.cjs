@@ -675,12 +675,12 @@ test('monthly change compares each selected month with its immediate predecessor
   await nav(page, 'Dashboard');
   const change = page.locator('.metric').nth(1);
   await expect(change).toContainText('-€221.80 (-0.43%)');
-  await expect(change).toContainText('December 2026 · €51,221.80');
+  await expect(change).toContainText('December 2026 · €51 221.80');
   await setMonth(page, '2026-12');
-  await expect(change).toContainText('+€1,221.80 (+2.44%)');
-  await expect(change).toContainText('November 2026 · €50,000.00');
+  await expect(change).toContainText('+€1 221.80 (+2.44%)');
+  await expect(change).toContainText('November 2026 · €50 000.00');
   await setMonth(page, '2026-11');
-  await expect(change).toContainText('+€49,379.00 (+7951.53%)');
+  await expect(change).toContainText('+€49 379.00 (+7951.53%)');
   await expect(change).toContainText('October 2026 · €621.00');
   await setMonth(page, '2026-10');
   await expect(change).toContainText('Previous month is incomplete or missing');

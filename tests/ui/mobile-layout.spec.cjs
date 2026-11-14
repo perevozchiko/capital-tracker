@@ -181,10 +181,10 @@ for (const width of [320, 360, 390, 430, 844, 932]) {
         accountGroup(page, 'Long-term savings and investment accounts').locator(
           '.group-total strong',
         ),
-      ).toHaveText('€10,000,000.00');
+      ).toHaveText('€10 000 000.00');
       await expect(page.locator('.account-balance .money-text')).toBeVisible();
       await expect(page.locator('.account-balance strong')).toContainText(
-        '10,000,000.00',
+        '10 000 000.00',
       );
       await assertLayout(page);
       await page.screenshot({
@@ -197,17 +197,17 @@ for (const width of [320, 360, 390, 430, 844, 932]) {
         'Primary savings account with a long readable name',
         'history',
       );
-      await expect(page.locator('tbody')).toContainText('10,000,000.00');
+      await expect(page.locator('tbody')).toContainText('10 000 000.00');
       await assertCellReadable(
         page.locator('tbody tr').last().locator('td').last(),
       );
       await assertLayout(page);
       await nav(page, 'Dashboard');
       await expect(page.locator('.metric').first()).toContainText(
-        '€10,000,000.00',
+        '€10 000 000.00',
       );
       await expect(page.locator('.metric').nth(1)).toContainText(
-        '+€9,999,999.00',
+        '+€9 999 999.00',
       );
       await assertLayout(page);
       await expect(page.locator('.history-svg')).toBeVisible();
@@ -238,10 +238,10 @@ for (const currency of ['EUR', 'USD', 'RSD', 'RUB', 'TRY']) {
       await saveBalances(page, '2025-01', { 1: value }, rates);
       await saveBalances(page, '2025-02', { 1: '0' }, rates);
       await expect(page.locator('.balance-previous strong')).toContainText(
-        '10,000,000.99',
+        '10 000 000.99',
       );
       await expect(page.locator('.balance-change')).toContainText(
-        '10,000,000.99',
+        '10 000 000.99',
       );
       await assertLayout(page);
       await page.locator('[data-action="copyPrevious"]').click();
