@@ -10,7 +10,7 @@ Deeper references: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (invariants), [d
 
 ## Commands
 
-Requires Go 1.27.3+, Node.js 22+, Python 3.10+.
+Requires Go 1.27.4+, Node.js 22+, Python 3.10+.
 
 ```sh
 npm ci                      # once
@@ -65,7 +65,7 @@ Authentication is off by default (local mode). It turns on when any of `CAPITAL_
 
 ## Things that must change together
 
-- Schema change: add the next contiguous `internal/storage/migrations/NNN_name.sql` (currently up to 008). Never edit a released migration. If exported data changes, bump `SchemaVersion` in `internal/storage/transfer.go` (currently 8) and keep older versions importable.
+- Schema change: add the next contiguous `internal/storage/migrations/NNN_name.sql` (currently up to 009). Never edit a released migration. If exported data changes, bump `SchemaVersion` in `internal/storage/transfer.go` (currently 9) and keep older versions importable.
 - New or renamed frontend file: `web/embed.go` embed patterns, the `STATIC` list and `CACHE_NAME` in `web/sw.js` (bump the cache name on every frontend change).
 - User-visible strings go in `web/js/i18n/en.js`; the UI is English only.
 - Playwright version: `package-lock.json` must match the `mcr.microsoft.com/playwright:vX-noble` image tag in the CI and release workflows (`tests/ci-workflows.test.mjs` enforces it).
@@ -77,4 +77,4 @@ Authentication is off by default (local mode). It turns on when any of `CAPITAL_
 - No new frameworks, TypeScript, ORM or runtime npm dependencies without explicit discussion.
 - Every bug fix gets a regression test; destructive paths are tested on isolated data.
 - Prettier with single quotes for `web/` and `tests/`; `gofmt` for Go.
-- Commit messages follow Conventional Commits (`feat:`, `fix:`, `test:`, `ci:`, `docs:`, `chore(release):`). Work on branches with PRs against `master`; builds and releases are manual workflows.
+- Commit messages follow Conventional Commits (`feat:`, `fix:`, `test:`, `ci:`, `docs:`, `chore(release):`). Work on feature branches; merge them into `dev` (test instance, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)) and open PRs against `master`; builds and releases are manual workflows.

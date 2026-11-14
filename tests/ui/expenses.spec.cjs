@@ -1,5 +1,7 @@
 const { test, expect, open, nav, setMonth } = require('./helpers.cjs');
 const rows = (page) => page.locator('[data-expense-row]');
+// Names and amounts are plain text; only the ⋮ menu's group selector is a control.
+const editors = 'input, textarea, select:not([data-expense-move])';
 async function add(page, name, amount, currency = 'EUR', rate = '') {
   await page.locator('#expenseName').fill(name);
   await page.locator('#expenseAmount').fill(amount);
@@ -7,7 +9,7 @@ async function add(page, name, amount, currency = 'EUR', rate = '') {
   await page.getByRole('button', { name: 'Add expense', exact: true }).click();
   const row = rows(page).last();
   await expect(page.locator('#expenseName')).toBeFocused();
-  await expect(row.locator('input, select, textarea')).toHaveCount(0);
+  await expect(row.locator(editors)).toHaveCount(0);
   await expect(row.locator('[data-expense-name]')).toHaveText(name);
   if (rate) await page.locator(`[data-expense-rate="${currency}"]`).fill(rate);
   return row;
@@ -40,7 +42,7 @@ for (const width of [320, 1280]) {
     await expect(rows(page).locator('[data-expense-rate]')).toHaveCount(0);
     await expect(page.locator('#expenseTotal')).toHaveText('€953.24');
     await add(page, 'Отпуск', '200');
-    await expect(page.locator('#expenseTotal')).toHaveText('€1,153.24');
+    await expect(page.locator('#expenseTotal')).toHaveText('€1 153.24');
     await save(page);
     expect(await (await page.request.get(app + '/api/months')).json()).toEqual(
       [],
@@ -70,21 +72,21 @@ for (const width of [320, 1280]) {
     await expect(rows(page).first().locator('[data-expense-name]')).toHaveText(
       'Автомобиль',
     );
-    await expect(page.locator('#expenseTotal')).toHaveText('€1,153.24');
-    await expect(rows(page).locator('input, select, textarea')).toHaveCount(0);
+    await expect(page.locator('#expenseTotal')).toHaveText('€1 153.24');
+    await expect(rows(page).locator(editors)).toHaveCount(0);
     await rows(page)
       .first()
       .getByRole('button', { name: 'Remove expense' })
       .click();
     const replacement = await add(page, 'Автомобиль', '117200', 'RSD');
     await expect(replacement.locator('[data-expense-eur]')).toHaveText(
-      '€1,000.00',
+      '€1 000.00',
     );
     await rows(page)
       .nth(1)
       .getByRole('button', { name: 'Remove expense' })
       .click();
-    await expect(page.locator('#expenseTotal')).toHaveText('€1,100.00');
+    await expect(page.locator('#expenseTotal')).toHaveText('€1 100.00');
     await save(page);
     await setMonth(page, '2026-11');
     await expect(rows(page)).toHaveCount(0);
@@ -95,7 +97,7 @@ for (const width of [320, 1280]) {
       .getByRole('button', { name: 'Show amounts', exact: true })
       .click();
     await page.locator('[data-chart-source="expense"]').last().focus();
-    await expect(page.locator('#chartTooltip')).toContainText('€2,000.00');
+    await expect(page.locator('#chartTooltip')).toContainText('€2 000.00');
     await page.locator('#amountVisibility').click();
     await expect(
       rows(page).first().locator('[data-expense-amount] .money-text'),
@@ -200,7 +202,7 @@ test('loaded rates update each matching expense and its EUR equivalent', async (
     route.fulfill({ json: { date: '2026-10-30', rates: { RSD: '117.2' } } }),
   );
   await page.locator('[data-action="loadExpenseRates"]').click();
-  await expect(page.locator('#expenseTotal')).toHaveText('€1,000.00');
+  await expect(page.locator('#expenseTotal')).toHaveText('€1 000.00');
   await save(page);
 });
 
@@ -219,15 +221,15 @@ for (const width of [320, 1280]) {
     await expect(rows(page).locator('[data-expense-rate]')).toHaveCount(0);
     await expect(page.locator('[data-expense-rate]')).toHaveCount(1);
     await expect(page.locator('#expenseRates')).toBeVisible();
-    await expect(page.locator('#expenseTotal')).toHaveText('€1,100.00');
+    await expect(page.locator('#expenseTotal')).toHaveText('€1 100.00');
     await page.locator('[data-expense-rate="RSD"]').fill('100');
     await expect(rows(page).nth(0).locator('[data-expense-eur]')).toHaveText(
-      '€1,000.00',
+      '€1 000.00',
     );
     await expect(rows(page).nth(1).locator('[data-expense-eur]')).toHaveText(
       '€172.00',
     );
-    await expect(page.locator('#expenseTotal')).toHaveText('€1,272.00');
+    await expect(page.locator('#expenseTotal')).toHaveText('€1 272.00');
     // Adding another currency keeps the shared RSD rate intact.
     const temporary = await add(page, 'Temporary expense', '20', 'USD');
     await expect(page.locator('[data-expense-rate]')).toHaveCount(2);
@@ -235,7 +237,7 @@ for (const width of [320, 1280]) {
     await page.locator('[data-expense-rate="USD"]').fill('2');
     await temporary.getByRole('button', { name: 'Remove expense' }).click();
     await expect(page.locator('[data-expense-rate]')).toHaveCount(1);
-    await expect(page.locator('#expenseTotal')).toHaveText('€1,272.00');
+    await expect(page.locator('#expenseTotal')).toHaveText('€1 272.00');
     await save(page);
     const snapshot = await (
       await page.request.get(app + '/api/data/export')
@@ -258,7 +260,7 @@ for (const width of [320, 1280]) {
     await nav(page, 'Major expenses');
     await setMonth(page, '2026-10');
     await expect(page.locator('[data-expense-rate="RSD"]')).toHaveValue('100');
-    await expect(page.locator('#expenseTotal')).toHaveText('€1,272.00');
+    await expect(page.locator('#expenseTotal')).toHaveText('€1 272.00');
     await setMonth(page, '2026-09');
     await expect(page.locator('#expenseRates')).toBeHidden();
     await add(page, 'Earlier salary', '100000', 'RSD', '200');
@@ -353,7 +355,7 @@ test('export, clear and import restore expenses and income independently', async
     'Renovation',
   );
   await expect(page.locator('[data-expense-rate="RSD"]')).toHaveValue('117.2');
-  await expect(page.locator('#expenseTotal')).toHaveText('€1,000.00');
+  await expect(page.locator('#expenseTotal')).toHaveText('€1 000.00');
   await nav(page, 'Income');
-  await expect(page.locator('#incomeTotal')).toHaveText('€3,000.00');
+  await expect(page.locator('#incomeTotal')).toHaveText('€3 000.00');
 });

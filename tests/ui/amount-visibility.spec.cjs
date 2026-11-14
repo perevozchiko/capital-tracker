@@ -5,6 +5,7 @@ const {
   nav,
   createAccount,
   saveBalances,
+  setMonth,
   action,
 } = require('./helpers.cjs');
 
@@ -66,6 +67,7 @@ for (const storage of ['legacy preference', 'unavailable storage']) {
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.money-text:visible')).toHaveCount(0);
     await nav(page, 'Monthly balances');
+    await setMonth(page, '2025-01');
     await expect(page.locator('[data-balance="1"]')).toHaveAttribute(
       'type',
       'password',
@@ -119,7 +121,7 @@ for (const width of [320, 1280]) {
       .click();
     await expect(page.locator('.account-balance .money-text')).toBeVisible();
     await expect(page.locator('.account-balance strong')).toHaveText(
-      '€1,200.00',
+      '€1 200.00',
     );
     await page
       .getByRole('button', { name: 'Hide amounts', exact: true })
@@ -137,6 +139,7 @@ for (const width of [320, 1280]) {
     ).toBeVisible();
     await expect(page.locator('.money-text:visible')).toHaveCount(0);
     await nav(page, 'Monthly balances');
+    await setMonth(page, '2025-02');
     const balance = page.locator('[data-balance="1"]');
     await expect(balance).toHaveAttribute('type', 'password');
     await balance.fill('1350.25');
@@ -147,7 +150,7 @@ for (const width of [320, 1280]) {
     await expect(balance).toHaveValue('1350.25');
     await expect(page.locator('.balance-change')).toHaveText('+€350.25');
     await expect(page.locator('.balance-previous strong')).toHaveText(
-      '€1,000.00',
+      '€1 000.00',
     );
     await expect(page.locator('#confirmDialog')).not.toBeVisible();
     await page

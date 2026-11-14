@@ -99,10 +99,10 @@ for (const width of [320, 390, 768, 1440]) {
     await open(page, app);
     await seed(page, app);
     await expect(card(page, 'incomes').locator('.flow-total')).toHaveText(
-      '€3,000.00',
+      '€3 000.00',
     );
     await expect(card(page, 'incomes').locator('.flow-change')).toHaveText(
-      /↑ \+€1,000.00.*\+50.00%/,
+      /↑ \+€1\s000.00.*\+50.00%/,
     );
     await expect(card(page, 'incomes').locator('.flow-change')).toHaveClass(
       /positive/,

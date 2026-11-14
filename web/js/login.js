@@ -64,3 +64,15 @@ if ('serviceWorker' in navigator)
 window.addEventListener('pageshow', async (event) => {
   if (event.persisted) location.reload();
 });
+
+// A test instance announces itself before sign-in; /api/meta is public.
+fetch('/api/meta', { cache: 'no-store' })
+  .then((response) => (response.ok ? response.json() : {}))
+  .then((meta) => {
+    if (!meta.label) return;
+    const marker = document.querySelector('#instanceLabel');
+    marker.textContent = meta.label;
+    marker.hidden = false;
+    document.title = `[${meta.label}] ${document.title}`;
+  })
+  .catch(() => {});
