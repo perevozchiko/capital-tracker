@@ -4,7 +4,7 @@
 
 ## Build and run
 
-Install Go and build (Go 1.27.3 or later; GitHub Actions uses Go 1.27.3). The module requires this patched minimum version and Go automatically selects it when needed:
+Install Go and build (Go 1.27.4 or later; GitHub Actions uses Go 1.27.4). The module requires this patched minimum version and Go automatically selects it when needed:
 
 ```sh
 go mod tidy
@@ -61,7 +61,7 @@ The former separate `Browser UI tests` workflow was redundant: it ran much of th
 
 ## Download builds from GitHub Actions
 
-Run all local source checks before committing (requires Go 1.27.3+, Node.js 22+ and Python 3.10+ for the macOS/Linux host updater tests):
+Run all local source checks before committing (requires Go 1.27.4+, Node.js 22+ and Python 3.10+ for the macOS/Linux host updater tests):
 ```sh
 npm ci
 npm run check

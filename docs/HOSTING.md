@@ -46,7 +46,7 @@ The Go server stays on `127.0.0.1:8765`. Caddy on the same Linux machine serves 
 
 ## Install on a Linux server
 
-Build with Go 1.27.3 or newer for your server's CPU (amd64 or arm64). The module enforces the minimum patched Go version; automatic toolchain selection downloads it when necessary:
+Build with Go 1.27.4 or newer for your server's CPU (amd64 or arm64). The module enforces the minimum patched Go version; automatic toolchain selection downloads it when necessary:
 
 ```sh
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o capital-tracker ./cmd/capital-tracker

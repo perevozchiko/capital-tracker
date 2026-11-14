@@ -10,7 +10,7 @@ Deeper references: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (invariants), [d
 
 ## Commands
 
-Requires Go 1.27.3+, Node.js 22+, Python 3.10+.
+Requires Go 1.27.4+, Node.js 22+, Python 3.10+.
 
 ```sh
 npm ci                      # once
