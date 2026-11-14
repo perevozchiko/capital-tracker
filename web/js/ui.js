@@ -17,11 +17,12 @@ const icons = {
   more: '<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>',
 };
 // The screens used every month sit in the phone tab bar; the rest stay in the drawer.
+// A third entry is a fuller accessible name for a shortened visible label.
 const mobileTabs = [
   ['dashboard', 'familyHome'],
   ['monthly', 'familyMonthly'],
   ['incomes', 'navIncomes'],
-  ['expenses', 'familyExpenses'],
+  ['expenses', 'familyExpenses', 'navExpenses'],
 ];
 function notify(message, failed = false) {
   const element = $('#toast');
@@ -80,8 +81,8 @@ function renderNav() {
   $('#mobileBottomNav').innerHTML =
     mobileTabs
       .map(
-        ([key, label]) =>
-          `<button type="button" class="mobile-bottom-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
+        ([key, label, name]) =>
+          `<button type="button" class="mobile-bottom-item ${state.page === key ? 'active' : ''}" data-page="${key}" ${state.page === key ? 'aria-current="page"' : ''} ${name ? `aria-label="${t(name)}" title="${t(name)}"` : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icons[key]}</svg><span>${t(label)}</span></button>`,
       )
       .join('') +
     `<button type="button" class="mobile-bottom-item ${onTab ? '' : 'active'}" data-action="mobileMore" aria-label="${t('familyMore')}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons.more}</svg><span>${t('familyMore')}</span></button>`;
