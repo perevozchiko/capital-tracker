@@ -158,6 +158,10 @@ func run() error {
 			return err
 		}
 	}
+	label, err := httpapi.ParseInstanceLabel(os.Getenv("CAPITAL_TRACKER_INSTANCE_LABEL"))
+	if err != nil {
+		return err
+	}
 	s, e := storage.Open(*dataDir)
 	if e != nil {
 		return e
@@ -168,7 +172,7 @@ func run() error {
 			return fmt.Errorf("initialize demo data: %w", e)
 		}
 	}
-	handler := (&httpapi.Server{Updater: updateagent.FromEnv(), Store: s, Auth: auth, Version: version, Commit: buildinfo.ShortCommit(), Assets: web.Assets}).Handler()
+	handler := (&httpapi.Server{Updater: updateagent.FromEnv(), Store: s, Auth: auth, Version: version, Label: label, Commit: buildinfo.ShortCommit(), Assets: web.Assets}).Handler()
 	srv := httpapi.NewHTTPServer(net.JoinHostPort("127.0.0.1", *port), handler)
 	listener, e := net.Listen("tcp", srv.Addr)
 	if e != nil {

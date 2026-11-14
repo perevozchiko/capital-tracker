@@ -15,6 +15,7 @@ const state = {
   recurringExpenseHistory: [],
   settings: { language: 'en', theme: 'dark', version: '' },
   buildCommit: 'unknown',
+  instanceLabel: '',
   currencies: [],
   monthData: null,
   dashboard: null,

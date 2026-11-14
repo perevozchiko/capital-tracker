@@ -161,7 +161,7 @@ function renderHeader() {
       ? `${monthControls()}<button class="btn btn-primary" data-action="focusAdd">+ ${t('addAccount')}</button>`
       : '';
   document.documentElement.lang = 'en';
-  document.title = `${t(names[state.page])} · Capital Tracker`;
+  document.title = `${state.instanceLabel ? `[${state.instanceLabel}] ` : ''}${t(names[state.page])} · Capital Tracker`;
 }
 function groupVisibilityButtons() {
   return `<button type="button" class="btn btn-small" data-action="groupCollapseAll">${t('collapseAllGroups')}</button><button type="button" class="btn btn-small" data-action="groupExpandAll">${t('expandAllGroups')}</button>`;

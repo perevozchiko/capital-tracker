@@ -379,6 +379,11 @@ async function boot() {
     ]);
     state.settings = settings;
     state.buildCommit = metadata.commit || 'unknown';
+    if (metadata.label) {
+      $('#instanceLabel').textContent = metadata.label;
+      $('#instanceLabel').hidden = false;
+      state.instanceLabel = metadata.label;
+    }
     themeApply();
     await refresh();
     // state.month stays on the current calendar month: every opening starts

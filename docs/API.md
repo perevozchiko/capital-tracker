@@ -27,7 +27,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET` | `/api/dashboard?month=YYYY-MM&columns=12` | Summary, previous month and 1–120 monthly columns |
 | `GET` | `/api/capital/history` | Chronological complete/incomplete points |
 | `GET`, `PATCH` | `/api/settings` | Read / update appearance (legacy language field retained) |
-| `GET` | `/api/meta` | App identity, version, and build commit |
+| `GET` | `/api/meta` | App identity, version, and build commit; `label` only when `CAPITAL_TRACKER_INSTANCE_LABEL` is set |
 | `GET` | `/api/exchange-rates?month=YYYY-MM` | Fetch the latest available EUR rates on demand; optional month identifies the editor and does not select a historical date; does not save them |
 | `GET` | `/api/currencies` | Supported ISO 4217 currency codes from Go |
 | `GET` | `/api/data/export` | Download complete application JSON snapshot |

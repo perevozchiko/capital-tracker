@@ -121,3 +121,29 @@ button:disabled {
   min-height: 20px;
   overflow-wrap: anywhere;
 }
+
+/* Marker for a non-production instance (CAPITAL_TRACKER_INSTANCE_LABEL). */
+.instance-label {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 300;
+  transform: translateX(-50%);
+  max-width: 60vw;
+  padding: calc(3px + env(safe-area-inset-top)) 12px 3px;
+  overflow: hidden;
+  border-radius: 0 0 2px 2px;
+  background: var(--negative);
+  color: var(--bg);
+  font:
+    700 11px/1.3 system-ui,
+    sans-serif;
+  letter-spacing: 0.12em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.instance-label[hidden] {
+  display: none;
+}
