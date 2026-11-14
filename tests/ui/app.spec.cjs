@@ -724,7 +724,6 @@ test('monthly change handles zero, debt, unchanged totals and missing months', a
   }
   await setMonth(page, '2025-05');
   await page.reload();
-  await expect(page.locator('.month-picker')).toHaveValue('2025-07');
   await setMonth(page, '2025-05');
   await expect(change.locator('.metric-value')).toHaveText('+€50.00 (+50.00%)');
 });

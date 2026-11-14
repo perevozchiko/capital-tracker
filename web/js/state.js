@@ -1,10 +1,12 @@
+// Local calendar month as YYYY-MM (sv-SE formats dates as ISO).
+const currentMonth = () => new Date().toLocaleDateString('sv-SE').slice(0, 7);
 const state = {
   snapshotID:
     new URLSearchParams(globalThis.location?.search || '').get('backup') || '',
   snapshot: null,
   page: 'dashboard',
   renderID: 0,
-  month: new Date().toLocaleDateString('sv-SE').slice(0, 7),
+  month: currentMonth(),
   accounts: [],
   months: [],
   history: [],
@@ -32,7 +34,7 @@ const collapsedGroups = new Set(
   })(),
 );
 
-export { state, collapsedGroups };
+export { state, collapsedGroups, currentMonth };
 
 // Late responses must not replace a newer screen or clear its unsaved edits.
 export function captureView() {
