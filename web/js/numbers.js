@@ -28,3 +28,11 @@ export function differenceMinor(currentMinor, previousMinor) {
   if (currentMinor == null || previousMinor == null) return null;
   return (BigInt(currentMinor) - BigInt(previousMinor)).toString();
 }
+
+// A debt is stored as a negative contribution to net worth, but it is shown
+// and typed as the positive amount owed. Negation is its own inverse, so the
+// same call converts a stored balance for display and an entry for saving.
+export function kindAmount(kind, minor) {
+  if (minor == null || minor === '') return minor;
+  return kind === 'liability' ? (-BigInt(minor)).toString() : String(minor);
+}

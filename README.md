@@ -109,7 +109,7 @@ Click any image to open the original full-size PNG.</p>
 ## What it does
 
 - **Monthly net-worth snapshots:** update balances once a month, not every transaction. Add one account now and fill in the rest later; a missing balance is not zero.
-- **Accounts & groups:** keep bank, cash, investment and loan accounts in expandable groups with EUR subtotals. Drag accounts between groups, reorder them and archive without erasing history. Monthly balances show the same group order while keeping balances editable.
+- **Accounts & groups:** keep bank, cash, investment and loan accounts in expandable groups with EUR subtotals. Mark accounts as debts or money owed to you to see assets, debts and the debt ratio on the Dashboard. Drag accounts between groups, reorder them and archive without erasing history. Monthly balances show the same group order while keeping balances editable.
 - **Five currencies & FX history:** EUR is the reporting base, with USD, RSD, RUB and TRY. Enter month-specific rates or explicitly fetch quotes. Saved rates remain attached to their months; a separate Exchange rates screen charts the recorded history without repricing past balances.
 - **Monthly review dashboard:** EUR net worth, a previous-month comparison, income/expense summaries, group subtotals, a history chart and a four-part checklist for balances, income, major expenses and recurring expenses. Missing entries are shown as needing review.
 - **Income:** named sources such as salary and freelance work in their original currencies. Edit a recorded entry, view EUR equivalents and monthly income history, and retain each month's saved rates.

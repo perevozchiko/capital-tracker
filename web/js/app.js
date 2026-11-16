@@ -255,6 +255,7 @@ document.addEventListener('submit', async (e) => {
       name: form.elements.name.value,
       currency: form.elements.currency.value,
       start_month: form.elements.start.value,
+      kind: form.elements.kind.value,
       group_id: form.elements.group.value
         ? Number(form.elements.group.value)
         : null,
@@ -344,7 +345,10 @@ function pointTooltip(node, event) {
   )[Number(node.dataset.chartIndex)];
   if (!p) return;
   const tooltip = $('#chartTooltip');
-  tooltip.innerHTML = `${escapeHTML(monthLabel(p.month))} · ${moneyHTML(p.total_eur_minor)}${node.dataset.chartDecreased === 'true' ? `<br>${t('chartDecrease')}` : ''}`;
+  tooltip.innerHTML =
+    node.dataset.chartSeries === 'debt'
+      ? `${escapeHTML(monthLabel(p.month))} · ${t('debts')}: ${moneyHTML(p.liabilities_eur_minor)}`
+      : `${escapeHTML(monthLabel(p.month))} · ${moneyHTML(p.total_eur_minor)}${node.dataset.chartDecreased === 'true' ? `<br>${t('chartDecrease')}` : ''}`;
   tooltip.hidden = false;
   const rect = node.getBoundingClientRect();
   const clientX = event?.clientX || rect.left + rect.width / 2;

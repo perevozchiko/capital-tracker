@@ -24,7 +24,7 @@ go run ./cmd/capital-tracker --demo --port 8766
 
 **Demo mode never opens or changes your regular Capital Tracker database.** It uses a separate directory called `CapitalTrackerDemo` next to the regular `CapitalTracker` data directory. Normal `--data-dir` / `CAPITAL_TRACKER_DATA_DIR` overrides are deliberately ignored when `--demo` is selected. The sample is installed only if the demo database is completely empty, so edits made during a demo session remain in place when you restart it. To restore the original fixture, stop the demo and delete only the `CapitalTrackerDemo` folder, then launch with `--demo` again. Alternatively, use Settings → Danger zone → Delete all data while in demo mode, and restart.
 
-The included fictional example represents a typical euro-paid working household, **not actual financial records or official statistical averages**. It contains **12 complete end-of-month snapshots, October 2025 through September 2026**, with six accounts arranged in three groups (Cash and savings, Investments, Liabilities): EUR everyday checking, emergency savings, long-term investments, USD brokerage holdings, EUR cash, and a negative EUR car-loan balance. The sample also has **12 months of named income, occasional major purchases and recurring expenses** (rent, groceries, utilities, mobile service and transport), with their own EUR histories and exact example exchange rates. These notes are **independent of the account balances**, not automatically booked transactions. Each capital month has its own example EUR/USD rate. Explore **Dashboard**, **Accounts**, **Monthly balances**, **Income**, **Major expenses** and **Recurring expenses** to inspect and edit the example.
+The included fictional example represents a typical euro-paid working household, **not actual financial records or official statistical averages**. It contains **12 complete end-of-month snapshots, October 2025 through September 2026**, with six accounts arranged in three groups (Cash and savings, Investments, Liabilities): EUR everyday checking, emergency savings, long-term investments, USD brokerage holdings, EUR cash, and an EUR car loan tracked as a Debt account. The sample also has **12 months of named income, occasional major purchases and recurring expenses** (rent, groceries, utilities, mobile service and transport), with their own EUR histories and exact example exchange rates. These notes are **independent of the account balances**, not automatically booked transactions. Each capital month has its own example EUR/USD rate. Explore **Dashboard**, **Accounts**, **Monthly balances**, **Income**, **Major expenses** and **Recurring expenses** to inspect and edit the example.
 
 The example is also provided as a fully importable, versioned JSON snapshot in [`internal/demo/sample-2025-2026.json`](../internal/demo/sample-2025-2026.json). You can import it via **Settings → JSON import and export** if desired, but **import replaces the currently open database**. For safe exploration, prefer `--demo`.
 
@@ -37,6 +37,20 @@ Dashboard, Income, Major expenses and Recurring expenses share the same chart co
 Choose **Custom**, set **From month** and **To month**, then click **Apply**. Both months are included; the end month cannot precede the start month. A single month is allowed. A period without complete records displays an empty message rather than zero values.
 
 Each chart remembers its period while the page remains open. Filtering only changes the chart: it does not switch the editor month, save data, or discard unsaved income or expense entries. Hover over a point or focus it with the keyboard to inspect its month and exact EUR amount. The line and shaded area connect all complete recorded points across missing or incomplete calendar months. Gaps retain their calendar spacing without adding data points or saved values for those months. The eye button also hides chart amounts.
+
+## Loans, debts and money owed to you
+
+Every account has a **Type**, chosen when you create it and changeable later through **⋮ → Change type**:
+
+- **Asset** — money and investments you own (the default);
+- **Debt** — what you owe: a mortgage, a loan, a credit card;
+- **Owed to you** — money you have lent and expect back.
+
+In **Monthly balances**, enter a debt as the **positive amount you still owe** (for example `25000`), exactly like any other month-end balance. The app subtracts it from your balance and stores it as a negative amount, which is also how it appears in JSON, CSV and Excel exports and in group subtotals. For a debt, a falling amount is shown in green and a rising one in red. If a credit card is overpaid, enter a negative amount.
+
+Once at least one Debt or Owed-to-you account exists, the **Dashboard** adds an **Assets and debts** row for the selected month: **Assets** (everything you own, including what is owed to you), **Debts** with the **debt ratio** (debts as a percentage of assets) and, if you track them, **Owed to you**. Each card compares the figure with the previous calendar month. The balance chart gains a dashed **Debts** line next to the balance after debts. These figures need a complete month, like the total.
+
+Changing an account's type never changes a saved balance or any month's total: an account that already holds negative balances simply starts being counted as debt, in past months too, and its balances are then shown without the minus sign. Each figure is converted exactly and rounded once, so with foreign-currency accounts assets minus debts can differ from the total by a cent.
 
 ## Account groups
 
@@ -71,7 +85,7 @@ Open **Settings → JSON import and export** in the browser:
 - Import validates the format/schema version, currencies, dates, relationships and financial precision before starting a SQLite transaction. Malformed or inconsistent input is rejected; the existing data is preserved on failure. Import does not modify database migrations.
 - This is a portable application-data snapshot, **not** a replacement for the SQLite `backup` command, which remains the preferred full-database backup. JSON exports contain personal financial information and should be stored securely.
 
-JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":9}`. Older versions 1–8 can still be imported; version 1 accounts start in **Ungrouped**. Versions 1–6 have no recurring-expense groups and versions 1–8 have no major-expense groups, so those entries start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
+JSON schema identifier for current exports: `{"format":"capital-tracker","schema_version":10}`. Older versions 1–9 can still be imported; their accounts all import as assets, and version 1 accounts start in **Ungrouped**. Versions 1–6 have no recurring-expense groups and versions 1–8 have no major-expense groups, so those entries start in **Ungrouped**. Amounts such as `amount_minor` and fixed-point `rate_scaled` are decimal **strings**, never floating-point numbers. Period and timestamp records are retained. Exported data can be imported on another installation running a compatible schema version.
 
 ## Clearing all local data
 

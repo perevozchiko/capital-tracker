@@ -8,6 +8,19 @@ import (
 	"github.com/perevozchiko/capital-tracker/internal/finance"
 )
 
+// Account kinds. Balances are always signed contributions to net worth, so a
+// liability normally carries a negative balance. The kind only decides which
+// side of the assets/debts breakdown an account is reported on.
+const (
+	KindAsset      = "asset"
+	KindLiability  = "liability"
+	KindReceivable = "receivable"
+)
+
+func ValidKind(kind string) bool {
+	return kind == KindAsset || kind == KindLiability || kind == KindReceivable
+}
+
 // Accounts are kept even when archived; active periods control historical inclusion.
 type Account struct {
 	ID                int64   `json:"id"`
@@ -17,6 +30,7 @@ type Account struct {
 	ArchivedFromMonth *string `json:"archived_from_month"`
 	SortOrder         int64   `json:"sort_order"`
 	GroupID           *int64  `json:"group_id,omitempty"`
+	Kind              string  `json:"kind"`
 	CreatedAt         string  `json:"created_at"`
 	UpdatedAt         string  `json:"updated_at"`
 }
@@ -25,7 +39,7 @@ func scanAccount(rows interface{ Scan(...any) error }) (Account, error) {
 	var a Account
 	var archived sql.NullString
 	var group sql.NullInt64
-	e := rows.Scan(&a.ID, &a.Name, &a.Currency, &a.StartMonth, &archived, &a.SortOrder, &a.CreatedAt, &a.UpdatedAt, &group)
+	e := rows.Scan(&a.ID, &a.Name, &a.Currency, &a.StartMonth, &archived, &a.SortOrder, &a.CreatedAt, &a.UpdatedAt, &group, &a.Kind)
 	if archived.Valid {
 		a.ArchivedFromMonth = &archived.String
 	}
@@ -35,7 +49,7 @@ func scanAccount(rows interface{ Scan(...any) error }) (Account, error) {
 	return a, e
 }
 
-const accountCols = "id,name,currency,start_month,archived_from_month,sort_order,created_at,updated_at,group_id"
+const accountCols = "id,name,currency,start_month,archived_from_month,sort_order,created_at,updated_at,group_id,kind"
 
 func (s *Store) Accounts() ([]Account, error) {
 	rows, e := s.DB.Query("SELECT " + accountCols + " FROM accounts ORDER BY sort_order,id")
@@ -65,11 +79,18 @@ func (s *Store) CreateAccount(name, currency, start string) (Account, error) {
 }
 
 func (s *Store) CreateAccountInGroup(name, currency, start string, groupID *int64) (Account, error) {
+	return s.CreateAccountOfKind(name, currency, start, KindAsset, groupID)
+}
+
+func (s *Store) CreateAccountOfKind(name, currency, start, kind string, groupID *int64) (Account, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
 	name = strings.TrimSpace(name)
 	if name == "" || len([]rune(name)) > 100 {
 		return Account{}, invalid("name")
+	}
+	if !ValidKind(kind) {
+		return Account{}, invalid("kind")
 	}
 	if !finance.ValidCurrency(currency) {
 		return Account{}, invalid("currency")
@@ -97,7 +118,7 @@ func (s *Store) CreateAccountInGroup(name, currency, start string, groupID *int6
 	if e = tx.QueryRow("SELECT COALESCE(MAX(sort_order),0)+1 FROM accounts").Scan(&order); e != nil {
 		return Account{}, e
 	}
-	res, e := tx.Exec("INSERT INTO accounts(name,currency,start_month,sort_order,created_at,updated_at,group_id) VALUES(?,?,?,?,?,?,?)", name, currency, start, order, ts, ts, groupID)
+	res, e := tx.Exec("INSERT INTO accounts(name,currency,start_month,sort_order,created_at,updated_at,group_id,kind) VALUES(?,?,?,?,?,?,?,?)", name, currency, start, order, ts, ts, groupID, kind)
 	if e != nil {
 		return Account{}, e
 	}
@@ -134,9 +155,24 @@ func (s *Store) RenameAccount(id int64, name string) (Account, error) {
 // UpdateAccount changes the name and, only before history exists, the currency.
 // An omitted field leaves its existing value unchanged.
 func (s *Store) UpdateAccount(id int64, name, currency *string) (Account, error) {
+	return s.PatchAccount(id, AccountPatch{Name: name, Currency: currency})
+}
+
+// AccountPatch lists the editable account fields; nil leaves a field unchanged.
+type AccountPatch struct {
+	Name     *string
+	Currency *string
+	Kind     *string
+}
+
+// PatchAccount applies all supplied fields in one transaction. The kind may
+// change at any time: saved balances keep their sign, so net worth is never
+// revalued and only the assets/debts breakdown moves, as with group changes.
+func (s *Store) PatchAccount(id int64, patch AccountPatch) (Account, error) {
+	name, currency := patch.Name, patch.Currency
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
-	if name == nil && currency == nil {
+	if name == nil && currency == nil && patch.Kind == nil {
 		return Account{}, invalid("name")
 	}
 	tx, err := s.DB.Begin()
@@ -173,7 +209,13 @@ func (s *Store) UpdateAccount(id int64, name, currency *string) (Account, error)
 			a.Currency = *currency
 		}
 	}
-	if _, err = tx.Exec("UPDATE accounts SET name=?,currency=?,updated_at=? WHERE id=?", a.Name, a.Currency, now(), id); err != nil {
+	if patch.Kind != nil {
+		if !ValidKind(*patch.Kind) {
+			return Account{}, invalid("kind")
+		}
+		a.Kind = *patch.Kind
+	}
+	if _, err = tx.Exec("UPDATE accounts SET name=?,currency=?,kind=?,updated_at=? WHERE id=?", a.Name, a.Currency, a.Kind, now(), id); err != nil {
 		return Account{}, err
 	}
 	if err = tx.Commit(); err != nil {

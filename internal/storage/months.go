@@ -113,6 +113,46 @@ type MonthData struct {
 	TotalEURMinor    *string   `json:"total_eur_minor"`
 	MissingBalances  []int64   `json:"missing_balances"`
 	MissingRates     []string  `json:"missing_rates"`
+	Breakdown
+}
+
+// Breakdown splits a complete month's net worth by account kind. Every figure
+// is an exact EUR sum rounded once on its own, like group subtotals, so with
+// foreign currencies assets minus liabilities can differ from the total by a
+// cent. Liabilities are reported as a positive amount owed.
+type Breakdown struct {
+	// Assets include receivables.
+	AssetsEURMinor      *string `json:"assets_eur_minor"`
+	LiabilitiesEURMinor *string `json:"liabilities_eur_minor"`
+	ReceivablesEURMinor *string `json:"receivables_eur_minor"`
+	// Liabilities as a share of assets, in basis points; absent without
+	// positive assets.
+	DebtRatioBP *string `json:"debt_ratio_bp"`
+}
+
+// breakdown never fails a readable month: a part that does not fit int64 is
+// simply left out.
+func breakdown(assets, liabilities, receivables []finance.Entry) Breakdown {
+	var out Breakdown
+	text := func(entries []finance.Entry) (*string, int64, bool) {
+		total, err := finance.TotalEURMinor(entries)
+		if err != nil {
+			return nil, 0, false
+		}
+		s := strconv.FormatInt(total, 10)
+		return &s, total, true
+	}
+	var owned, owed int64
+	var okAssets, okDebts bool
+	out.AssetsEURMinor, owned, okAssets = text(assets)
+	out.LiabilitiesEURMinor, owed, okDebts = text(liabilities)
+	out.ReceivablesEURMinor, _, _ = text(receivables)
+	if okAssets && okDebts && owned > 0 {
+		if ratio, ok := finance.RatioBasisPointsString(owed, owned); ok {
+			out.DebtRatioBP = &ratio
+		}
+	}
+	return out
 }
 
 func (s *Store) PutMonth(month string, input MonthInput) error {
@@ -308,6 +348,7 @@ func (s *Store) Month(month string) (MonthData, error) {
 	sort.Slice(d.Rates, func(i, j int) bool { return d.Rates[i].Currency < d.Rates[j].Currency })
 	needed := map[string]bool{}
 	entries := []finance.Entry{}
+	var assets, liabilities, receivables []finance.Entry
 	for _, a := range d.Accounts {
 		value, exists := vals[a.ID]
 		if !exists {
@@ -317,7 +358,18 @@ func (s *Store) Month(month string) (MonthData, error) {
 			needed[a.Currency] = true
 		}
 		if exists && rates[a.Currency] > 0 {
-			entries = append(entries, finance.Entry{Amount: value, Rate: rates[a.Currency]})
+			entry := finance.Entry{Amount: value, Rate: rates[a.Currency]}
+			entries = append(entries, entry)
+			switch a.Kind {
+			case KindLiability:
+				// Stored negative; reported as the positive amount owed.
+				liabilities = append(liabilities, finance.Entry{Amount: -value, Rate: entry.Rate})
+			case KindReceivable:
+				receivables = append(receivables, entry)
+				assets = append(assets, entry)
+			default:
+				assets = append(assets, entry)
+			}
 		}
 	}
 	for c := range needed {
@@ -333,6 +385,7 @@ func (s *Store) Month(month string) (MonthData, error) {
 		}
 		t := strconv.FormatInt(total, 10)
 		d.TotalEURMinor = &t
+		d.Breakdown = breakdown(assets, liabilities, receivables)
 	}
 	return d, nil
 }

@@ -93,6 +93,18 @@ async function renderDashboard() {
   const allComplete = completed === sections.length;
   const nextSection = sections.find((section) => !section.saved) || sections[0];
 
+  // The split is only worth the space once a debt or receivable is tracked.
+  const kinds = new Set(d.accounts.map((a) => a.kind));
+  const previous = d.previous?.complete ? d.previous : null;
+  const breakdown =
+    kinds.has('liability') || kinds.has('receivable')
+      ? `<section class="dashboard-breakdown" aria-label="${t('breakdownTitle')}">
+      ${breakdownCard('assets', m.assets_eur_minor, previous?.assets_eur_minor, true, kinds.has('receivable') && m.receivables_eur_minor != null ? `${t('receivablesIncluded')}: ${moneyHTML(m.receivables_eur_minor)}` : t('assetsNote'))}
+      ${breakdownCard('debts', m.liabilities_eur_minor, previous?.liabilities_eur_minor, false, m.debt_ratio_bp != null ? `${t('debtRatio')}: <strong class="debt-ratio">${percentBP(m.debt_ratio_bp)}</strong> ${t('debtRatioOf')}` : t('debtRatioUnavailable'))}
+      ${kinds.has('receivable') ? breakdownCard('receivables', m.receivables_eur_minor, previous?.receivables_eur_minor, true, t('receivablesNote')) : ''}
+    </section>`
+      : '';
+
   $('#pageContent').innerHTML = `
     ${d.accounts.length === 0 ? emptyStart() : ''}
     <section class="grid-summary family-summary" aria-label="${t('familyTotalBalance')}">
@@ -112,6 +124,7 @@ async function renderDashboard() {
         <p class="family-explainer">${t('changeExplainer')}</p>
       </article>
     </section>
+    ${breakdown}
     <section class="dashboard-flows" aria-label="${t('selectedMonth')} · EUR">
       ${flows.map(flowCard).join('')}
     </section>
@@ -137,6 +150,25 @@ async function renderDashboard() {
         <p class="subtle">${t(allComplete ? 'monthReviewedHelp' : 'monthReviewHelp')}</p></div>
       <button class="btn btn-primary" type="button" data-page="${nextSection.page}">${t(nextSection.label)} →</button>
     </section>`;
+}
+
+// One side of the net-worth split, compared with the previous calendar month.
+// Totals are EUR cents already rounded by the server; BigInt keeps them exact.
+function breakdownCard(key, current, previous, higherIsBetter, note) {
+  let change = t(current == null ? 'breakdownIncomplete' : 'flowNoPrevious');
+  let color = 'neutral';
+  if (current != null && previous != null) {
+    const delta = BigInt(current) - BigInt(previous);
+    if (delta !== 0n)
+      color = delta > 0n === higherIsBetter ? 'positive' : 'negative';
+    change = `${delta > 0n ? '↑' : delta < 0n ? '↓' : '→'} ${moneyHTML(delta.toString(), 'EUR', delta > 0n ? '+' : '')} <span class="subtle">${t('comparedLastMonth')}</span>`;
+  }
+  return `<article class="card breakdown-card" data-breakdown="${key}">
+    <span class="breakdown-heading">${t(key)}</span>
+    <strong class="breakdown-total">${current == null ? '—' : moneyHTML(current)}</strong>
+    <span class="breakdown-change ${color}">${change}</span>
+    <span class="subtle breakdown-note">${note}</span>
+  </article>`;
 }
 
 function flowCard(flow) {

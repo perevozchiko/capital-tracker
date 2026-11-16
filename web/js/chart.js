@@ -65,7 +65,12 @@ function chartSVG(history, source, range) {
     innerH = H - pad.top - pad.bottom;
   const first = monthIndex(range.from),
     span = monthIndex(range.to) - first;
+  // Total debt is a second series, drawn only once some debt was recorded.
+  const debt = valid.filter((p) => p.liabilities_eur_minor != null);
+  const showDebt = debt.some((p) => BigInt(p.liabilities_eur_minor) !== 0n);
   const values = valid.map((p) => Number(p.total_eur_minor) / 100);
+  if (showDebt)
+    values.push(...debt.map((p) => Number(p.liabilities_eur_minor) / 100));
   let min = Math.min(...values),
     max = Math.max(...values);
   const spread = Math.max(
@@ -106,6 +111,21 @@ function chartSVG(history, source, range) {
     valid.length > 1
       ? `<path class="chart-area" fill="url(#${gradientID})" d="${line} L${xFor(valid.at(-1).month)},${baseline} L${xFor(valid[0].month)},${baseline} Z"/><path class="curve" d="${line}"/>`
       : '';
+  const debtLine = debt
+    .map(
+      (p, i) =>
+        `${i ? 'L' : 'M'}${xFor(p.month)},${yFor(Number(p.liabilities_eur_minor) / 100)}`,
+    )
+    .join(' ');
+  const debtMarks = showDebt
+    ? (debt.length > 1 ? `<path class="debt-curve" d="${debtLine}"/>` : '') +
+      debt
+        .map(
+          (p) =>
+            `<circle class="debt-dot" cx="${xFor(p.month)}" cy="${yFor(Number(p.liabilities_eur_minor) / 100)}" r="3.5" tabindex="0" role="img" aria-label="${escapeHTML(monthLabel(p.month))} · ${t('debts')}${document.documentElement.dataset.hideAmounts === 'true' ? '' : ': ' + escapeHTML(money(p.liabilities_eur_minor))}" data-chart-source="${source}" data-chart-series="debt" data-chart-index="${p.index}"/>`,
+        )
+        .join('')
+    : '';
   // Evenly spaced calendar labels remain legible for long and sparse histories.
   const labelCount = Math.min(narrow ? 3 : 6, span + 1);
   const labels = Array.from({ length: labelCount }, (_, i) => {
@@ -129,7 +149,7 @@ function chartSVG(history, source, range) {
           ? 'incomeHistory'
           : 'history',
   );
-  return `<div class="chart-wrap"><svg class="history-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}"><defs><linearGradient id="${gradientID}" x1="0" y1="0" x2="0" y2="1"><stop class="chart-gradient-top" offset="0%"/><stop class="chart-gradient-bottom" offset="100%"/></linearGradient></defs>${grid}${paths}${dots}${labels}</svg></div>${valid.some((p) => p.decreased) ? `<p class="chart-decrease-legend"><span aria-hidden="true"></span>${t('chartDecrease')}</p>` : ''}<p class="footer-note">${t('chartNote')}</p>`;
+  return `<div class="chart-wrap"><svg class="history-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}"><defs><linearGradient id="${gradientID}" x1="0" y1="0" x2="0" y2="1"><stop class="chart-gradient-top" offset="0%"/><stop class="chart-gradient-bottom" offset="100%"/></linearGradient></defs>${grid}${paths}${debtMarks}${dots}${labels}</svg></div>${showDebt ? `<p class="chart-series-legend"><span class="legend-net" aria-hidden="true"></span>${t('chartNetSeries')}<span class="legend-debt" aria-hidden="true"></span>${t('debts')}</p>` : ''}${valid.some((p) => p.decreased) ? `<p class="chart-decrease-legend"><span aria-hidden="true"></span>${t('chartDecrease')}</p>` : ''}<p class="footer-note">${t('chartNote')}</p>`;
 }
 
 function chart(history, source = 'capital') {

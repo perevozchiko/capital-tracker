@@ -79,3 +79,19 @@ test('balance differences retain sign and exactness at large values', () => {
     assert.equal(differenceMinor(a, b), expected);
   assert.equal(differenceMinor(undefined, '0'), null);
 });
+
+test('debts flip sign between storage and display, exactly and both ways', async () => {
+  const { kindAmount } = await import('../web/js/numbers.js');
+  assert.equal(kindAmount('liability', '-2500000'), '2500000');
+  assert.equal(kindAmount('liability', '2500000'), '-2500000');
+  assert.equal(kindAmount('liability', '0'), '0');
+  assert.equal(
+    kindAmount('liability', '-9007199254740993'),
+    '9007199254740993',
+  );
+  assert.equal(kindAmount('asset', '-100'), '-100');
+  assert.equal(kindAmount('receivable', '100'), '100');
+  assert.equal(kindAmount(undefined, '100'), '100');
+  for (const empty of [null, undefined, ''])
+    assert.equal(kindAmount('liability', empty), empty);
+});
