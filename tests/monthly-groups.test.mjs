@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { kindAmount } from '../web/js/numbers.js';
 
 const source = readFileSync(
   new URL('../web/js/monthly.js', import.meta.url),
@@ -98,6 +99,8 @@ function setup(active) {
     'document',
     'updateBalanceDifference',
     'groupVisibilityButtons',
+    'kindAmount',
+    'kindTag',
     fn + '\nreturn renderMonthly;',
   )(
     state,
@@ -117,6 +120,8 @@ function setup(active) {
     { documentElement: { dataset: {} }, querySelectorAll: () => [] },
     () => {},
     () => '',
+    kindAmount,
+    (kind) => (kind === 'liability' ? ' <span>Debt</span>' : ''),
   );
   return { state, content, calls, render, data };
 }
@@ -172,4 +177,21 @@ test('empty groups still render, while no active accounts have no balance inputs
   assert.match(html, /noActiveAccounts/);
   assert.doesNotMatch(html, /data-balance='\d+'/);
   assert.match(html, /data-action='saveMonth' disabled/);
+});
+
+test('a debt is shown and compared as the positive amount owed', async () => {
+  const ui = setup(true);
+  const loan = ui.data.accounts.find((a) => a.id === 1);
+  loan.kind = 'liability';
+  ui.data.balances.find((b) => b.account_id === 1).amount_minor = '-15000';
+  await ui.render();
+  const row = ui.content.innerHTML
+    .split("<div class='editor-row balance-row'>")
+    .find((html) => html.includes("data-balance='1'"));
+  assert.match(row, /data-kind='liability'/);
+  assert.match(row, /value='15000'/);
+  // The previous month is stored as 10000 for this fixture; shown negated.
+  assert.match(row, /data-previous-minor='-10000'/);
+  assert.match(row, /<span>Debt<\/span>/);
+  assert.match(row, /placeholder='enterDebt'/);
 });
