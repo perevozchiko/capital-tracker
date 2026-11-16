@@ -146,3 +146,21 @@ func ChangePercentBasisPointsString(current, previous int64) (string, bool) {
 	}
 	return q.String(), true
 }
+
+// RatioBasisPointsString returns part/whole as a percentage * 100, rounded to
+// the nearest basis point with ties away from zero. It needs a positive whole.
+func RatioBasisPointsString(part, whole int64) (string, bool) {
+	if whole <= 0 {
+		return "", false
+	}
+	rate := new(big.Rat).SetFrac(new(big.Int).Mul(big.NewInt(part), big.NewInt(10000)), big.NewInt(whole))
+	magnitude := new(big.Int).Abs(rate.Num())
+	q, remainder := new(big.Int).QuoRem(magnitude, rate.Denom(), new(big.Int))
+	if remainder.Mul(remainder, big.NewInt(2)).Cmp(rate.Denom()) >= 0 {
+		q.Add(q, big.NewInt(1))
+	}
+	if rate.Sign() < 0 {
+		q.Neg(q)
+	}
+	return q.String(), true
+}

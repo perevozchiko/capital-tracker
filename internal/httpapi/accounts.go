@@ -3,6 +3,8 @@ package httpapi
 import (
 	"net/http"
 	"strings"
+
+	"github.com/perevozchiko/capital-tracker/internal/storage"
 )
 
 func registerAccounts(mux *http.ServeMux, s *Server) {
@@ -21,11 +23,15 @@ func registerAccounts(mux *http.ServeMux, s *Server) {
 				Currency   string `json:"currency"`
 				StartMonth string `json:"start_month"`
 				GroupID    *int64 `json:"group_id"`
+				Kind       string `json:"kind"`
 			}
 			if !readJSON(w, r, &p) {
 				return
 			}
-			a, e := s.Store.CreateAccountInGroup(p.Name, p.Currency, p.StartMonth, p.GroupID)
+			if p.Kind == "" {
+				p.Kind = storage.KindAsset
+			}
+			a, e := s.Store.CreateAccountOfKind(p.Name, p.Currency, p.StartMonth, p.Kind, p.GroupID)
 			if e != nil {
 				handleError(w, e)
 				return
@@ -105,11 +111,12 @@ func registerAccounts(mux *http.ServeMux, s *Server) {
 			var p struct {
 				Name     *string `json:"name"`
 				Currency *string `json:"currency"`
+				Kind     *string `json:"kind"`
 			}
 			if !readJSON(w, r, &p) {
 				return
 			}
-			a, e := s.Store.UpdateAccount(id, p.Name, p.Currency)
+			a, e := s.Store.PatchAccount(id, storage.AccountPatch{Name: p.Name, Currency: p.Currency, Kind: p.Kind})
 			if e != nil {
 				handleError(w, e)
 				return

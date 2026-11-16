@@ -1,7 +1,8 @@
 import { captureView, state, collapsedGroups } from './state.js';
 import { api } from './api.js';
 import { t } from './messages.js';
-import { differenceMinor } from './numbers.js';
+import { differenceMinor, kindAmount } from './numbers.js';
+import { kindTag } from './accounts.js';
 import {
   escapeHTML,
   monthLabel,
@@ -24,15 +25,15 @@ function updateBalanceDifference(input) {
   } catch {}
   const delta = differenceMinor(current, input.dataset.previousMinor || null);
   const n = delta === null ? null : BigInt(delta);
+  // A growing debt is the unfavourable direction.
+  const debt = input.dataset.kind === 'liability';
   node.className =
     'balance-change ' +
-    (n === null
+    (n === null || n === 0n
       ? 'neutral'
-      : n > 0n
+      : n > 0n !== debt
         ? 'positive'
-        : n < 0n
-          ? 'negative'
-          : 'neutral');
+        : 'negative');
   node.innerHTML =
     n === null
       ? '—'
@@ -69,11 +70,12 @@ async function renderMonthly() {
     membersByGroup.set(id, members);
   }
   const balanceRow = (a) => {
-    const last = previousBalances.get(a.id);
+    // Debts are shown and typed as the positive amount owed.
+    const last = kindAmount(a.kind, previousBalances.get(a.id));
     return `<div class='editor-row balance-row'>
-   <label for='b-${a.id}'>${escapeHTML(a.name)}<small>${a.currency}</small></label>
+   <label for='b-${a.id}'>${escapeHTML(a.name)}<small>${a.currency}${kindTag(a.kind)}</small></label>
    <div class='balance-cell balance-previous'><span class='balance-field-label' title='${escapeHTML(monthLabel(previousMonth))}'>${t('previousBalance')}</span><strong>${last == null ? '—' : moneyHTML(last, a.currency)}</strong></div>
-   <div class='balance-cell balance-current'><span class='balance-field-label'>${t('currentBalance')}</span><input type='${document.documentElement.dataset.hideAmounts === 'true' ? 'password' : 'text'}' class='editor-input' id='b-${a.id}' data-balance='${a.id}' data-currency='${a.currency}' data-previous-minor='${last ?? ''}' inputmode='decimal' autocomplete='off' placeholder='${t('enterBalance')}' value='${escapeHTML(minorToInput(balances.get(a.id)))}'></div>
+   <div class='balance-cell balance-current'><span class='balance-field-label'>${t('currentBalance')}</span><input type='${document.documentElement.dataset.hideAmounts === 'true' ? 'password' : 'text'}' class='editor-input' id='b-${a.id}' data-balance='${a.id}' data-currency='${a.currency}' data-kind='${a.kind}' data-previous-minor='${last ?? ''}' inputmode='decimal' autocomplete='off' placeholder='${t(a.kind === 'liability' ? 'enterDebt' : 'enterBalance')}' value='${escapeHTML(minorToInput(kindAmount(a.kind, balances.get(a.id))))}'></div>
    <div class='balance-cell balance-difference'><span class='balance-field-label'>${t('balanceDifference')}</span><strong class='balance-change neutral' data-balance-change='${a.id}'>—</strong></div>
    <button type='button' class='btn btn-small balance-use-previous' data-action='copyPrevious' data-id='${a.id}' aria-label='${escapeHTML(t('usePrevious') + ' — ' + a.name)}' ${last == null ? 'disabled' : ''}>${t('usePrevious')}</button>
   </div>`;
