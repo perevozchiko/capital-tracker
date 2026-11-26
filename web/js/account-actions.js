@@ -4,8 +4,7 @@ import { t } from './messages.js';
 import { escapeHTML, monthLabel, nextMonth, moneyHTML } from './format.js';
 import { $, notify } from './ui.js';
 import { showConfirm } from './dialogs.js';
-import { groupSelector, kindSelector } from './accounts.js';
-import { kindAmount } from './numbers.js';
+import { groupSelector } from './accounts.js';
 import { render, refresh, mutation } from './router.js';
 
 function orderedAssignments() {
@@ -28,20 +27,17 @@ function showAccountEditor(action, account) {
   const titles = {
     rename: 'rename',
     currency: 'changeCurrency',
-    kind: 'changeKind',
     archive: 'archive',
     restore: 'restore',
   };
   const helpers = {
     currency: 'currencyHelp',
-    kind: 'kindChangeHelp',
     archive: 'archiveWarning',
     restore: 'restoreWarning',
   };
   const labels = {
     rename: 'accountName',
     currency: 'currency',
-    kind: 'accountKind',
     archive: 'archiveFrom',
     restore: 'restoreFrom',
   };
@@ -50,13 +46,7 @@ function showAccountEditor(action, account) {
   $('#editTitle').textContent = t(titles[action]) + ' · ' + account.name;
   $('#editHelp').textContent = helpers[action] ? t(helpers[action]) : '';
   let html = '';
-  if (action === 'kind') {
-    html =
-      '<label for="editValue">' +
-      t(labels[action]) +
-      '</label>' +
-      kindSelector(account.kind, 'id="editValue" name="value" required');
-  } else if (action === 'currency') {
+  if (action === 'currency') {
     html =
       '<label for="editValue">' +
       t(labels[action]) +
@@ -324,8 +314,6 @@ async function submitAccountEdit(form) {
       await request('/accounts/' + id, 'PATCH', { name: value });
     if (action === 'currency')
       await request('/accounts/' + id, 'PATCH', { currency: value });
-    if (action === 'kind')
-      await request('/accounts/' + id, 'PATCH', { kind: value });
     if (action === 'archive')
       await request('/accounts/' + id + '/archive', 'POST', { month: value });
     if (action === 'restore')
@@ -354,7 +342,7 @@ async function submitAccountEdit(form) {
 async function accountAction(action, id) {
   const account = state.accounts.find((a) => a.id === id);
   if (!account) return;
-  if (['rename', 'currency', 'kind', 'archive', 'restore'].includes(action)) {
+  if (['rename', 'currency', 'archive', 'restore'].includes(action)) {
     showAccountEditor(action, account);
     return;
   }
@@ -388,7 +376,7 @@ async function accountAction(action, id) {
       ? hist
           .map(
             ([month, value]) =>
-              `<tr><td>${monthLabel(month)}</td><td>${moneyHTML(kindAmount(account.kind, value), account.currency)}</td></tr>`,
+              `<tr><td>${monthLabel(month)}</td><td>${moneyHTML(value, account.currency)}</td></tr>`,
           )
           .join('')
       : `<tr><td colspan="2">${t('historicalEmpty')}</td></tr>`;

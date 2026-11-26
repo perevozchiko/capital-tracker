@@ -45,7 +45,6 @@ The browser is an **untrusted client**. All persisted values and state transitio
 
 - Accounts each have a single currency and one or more active periods. Archiving requires an explicit zero balance in the latest saved month and does not destroy historical balances. Archive/restore must not silently alter past saved months.
 - Groups organize accounts and can be moved or renamed; group membership is **current**, not recorded per month. Moving an account can change historical *group subtotals* but never historical *net worth*.
-- Accounts have a **current** kind (`asset`, `liability`, `receivable`). Balances are always signed contributions to net worth, so a debt is stored negative and the browser only flips the sign for display and entry. The kind splits a complete month into assets, liabilities and receivables; changing it can alter that historical *split* but never a saved balance or historical *net worth*.
 - Monthly balances use `(account_id, YYYY-MM, amount_minor)` with integer minor units; an absent row means *unknown*, not zero.
 - FX rates are per-month and stored as fixed-point integer values scaled by `10^8` (not IEEE floating point). EUR is the reporting base; rate interpretation is **1 EUR = X foreign units**.
 - A month is complete only when all active accounts have saved balances and every required non-EUR FX rate is present. A month can be saved partially.

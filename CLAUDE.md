@@ -56,7 +56,6 @@ Authentication is off by default (local mode). It turns on when any of `CAPITAL_
 ## Invariants to preserve
 
 - Money is integer minor units; FX rates are fixed-point integers scaled by 10^8, meaning "1 EUR = X foreign". Totals use `math/big` rationals and round once to EUR cents, ties away from zero. No `float64` or JS `Number` arithmetic on persisted amounts.
-- Balances are signed contributions to net worth: a `liability` account is stored negative and only the frontend flips the sign for display and entry (`kindAmount`). The account kind is current, like group membership.
 - A missing balance row means unknown, not zero. Incomplete months yield no reliable total or month-on-month change.
 - Each month keeps its own FX snapshot; nothing may silently revalue history (new quotes, group moves, archive/restore, restart, export/import).
 - `PUT /api/months/{month}` is a full transactional replacement; omitted entries are deleted on purpose.
@@ -66,7 +65,7 @@ Authentication is off by default (local mode). It turns on when any of `CAPITAL_
 
 ## Things that must change together
 
-- Schema change: add the next contiguous `internal/storage/migrations/NNN_name.sql` (currently up to 010). Never edit a released migration. If exported data changes, bump `SchemaVersion` in `internal/storage/transfer.go` (currently 10) and the accepted versions in `web/js/data-actions.js`, and keep older versions importable.
+- Schema change: add the next contiguous `internal/storage/migrations/NNN_name.sql` (currently up to 009). Never edit a released migration. If exported data changes, bump `SchemaVersion` in `internal/storage/transfer.go` (currently 9) and keep older versions importable.
 - New or renamed frontend file: `web/embed.go` embed patterns, the `STATIC` list and `CACHE_NAME` in `web/sw.js` (bump the cache name on every frontend change).
 - User-visible strings go in `web/js/i18n/en.js`; the UI is English only.
 - Playwright version: `package-lock.json` must match the `mcr.microsoft.com/playwright:vX-noble` image tag in the CI and release workflows (`tests/ci-workflows.test.mjs` enforces it).

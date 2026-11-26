@@ -11,10 +11,6 @@ import (
 	"github.com/perevozchiko/capital-tracker/internal/finance"
 )
 
-// SchemaVersion is the portable JSON version written by ExportData. Version 10
-// added the account kind; older documents import every account as an asset.
-const SchemaVersion = 10
-
 // TransferDocument is a portable, versioned snapshot of application data.
 // Monetary amounts and exchange rates use decimal strings to retain precision.
 type TransferDocument struct {
@@ -60,7 +56,7 @@ type TransferRate struct {
 func (s *Store) ExportData() (TransferDocument, error) {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
-	d := TransferDocument{Format: "capital-tracker", SchemaVersion: SchemaVersion, ExportedAt: now(),
+	d := TransferDocument{Format: "capital-tracker", SchemaVersion: 9, ExportedAt: now(),
 		Accounts: []Account{}, Groups: []AccountGroup{}, AccountPeriods: []TransferPeriod{}, Months: []Month{},
 		Balances: []TransferBalance{}, Rates: []TransferRate{}, Incomes: []Income{}, Expenses: []Expense{}, RecurringExpenses: []RecurringExpenseSnapshot{}, Settings: map[string]string{}}
 	tx, err := s.DB.Begin()
@@ -245,7 +241,7 @@ func periodActive(periods []TransferPeriod, month string) bool {
 // snapshots before touching the database. It never fixes invalid input silently.
 func ValidateTransfer(d TransferDocument) error {
 	bad := func() error { return invalid("import") }
-	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > SchemaVersion) || !validTransferTime(d.ExportedAt) ||
+	if d.Format != "capital-tracker" || (d.SchemaVersion < 1 || d.SchemaVersion > 9) || !validTransferTime(d.ExportedAt) ||
 		(d.SchemaVersion >= 6 && d.RecurringExpenses == nil) || d.Accounts == nil || (d.SchemaVersion >= 2 && d.Groups == nil) || (d.SchemaVersion >= 3 && d.Incomes == nil) || (d.SchemaVersion >= 5 && d.Expenses == nil) || d.AccountPeriods == nil || d.Months == nil || d.Balances == nil || d.Rates == nil || d.Settings == nil {
 		return bad()
 	}
@@ -338,10 +334,6 @@ func ValidateTransfer(d TransferDocument) error {
 			(a.ArchivedFromMonth != nil && !finance.ValidMonth(*a.ArchivedFromMonth)) ||
 			!validTransferTime(a.CreatedAt) || !validTransferTime(a.UpdatedAt) || a.SortOrder < 0 ||
 			(a.GroupID != nil && (d.SchemaVersion == 1 || !groups[*a.GroupID])) {
-			return bad()
-		}
-		// Documents older than version 10 carry no kind and import as assets.
-		if !ValidKind(a.Kind) && (a.Kind != "" || d.SchemaVersion >= 10) {
 			return bad()
 		}
 		accounts[a.ID] = a
@@ -487,10 +479,7 @@ func (s *Store) importData(d TransferDocument) error {
 		}
 	}
 	for _, a := range d.Accounts {
-		if a.Kind == "" {
-			a.Kind = KindAsset
-		}
-		if _, err = tx.Exec("INSERT INTO accounts("+accountCols+") VALUES(?,?,?,?,?,?,?,?,?,?)", a.ID, a.Name, a.Currency, a.StartMonth, a.ArchivedFromMonth, a.SortOrder, a.CreatedAt, a.UpdatedAt, a.GroupID, a.Kind); err != nil {
+		if _, err = tx.Exec("INSERT INTO accounts("+accountCols+") VALUES(?,?,?,?,?,?,?,?,?)", a.ID, a.Name, a.Currency, a.StartMonth, a.ArchivedFromMonth, a.SortOrder, a.CreatedAt, a.UpdatedAt, a.GroupID); err != nil {
 			return invalid("import")
 		}
 	}

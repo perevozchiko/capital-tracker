@@ -451,27 +451,4 @@ export default {
   reason_rate_locked_by_history:
     'Saved monthly exchange rates cannot be changed.',
   reason_unknown_conflict: 'The operation conflicts with saved history.',
-  accountKind: 'Type',
-  kindAsset: 'Asset',
-  kindLiability: 'Debt',
-  kindReceivable: 'Owed to you',
-  changeKind: 'Change type',
-  kindHelp:
-    'Choose Debt for loans, mortgages and credit cards, and Owed to you for money you have lent.',
-  kindChangeHelp:
-    'Debts are entered as the positive amount you owe and are subtracted from your balance. Changing the type keeps every saved balance and total; only the split between assets and debts changes.',
-  field_kind: 'Please select a supported account type.',
-  enterDebt: 'Amount owed',
-  breakdownTitle: 'Assets and debts',
-  breakdownIncomplete: 'Complete this month to see the split',
-  assets: 'Assets',
-  debts: 'Debts',
-  receivables: 'Owed to you',
-  assetsNote: 'Everything you own, before debts',
-  receivablesIncluded: 'Including owed to you',
-  receivablesNote: 'Money you have lent · included in assets',
-  debtRatio: 'Debt ratio',
-  debtRatioOf: 'of assets',
-  debtRatioUnavailable: 'Debt ratio needs positive assets',
-  chartNetSeries: 'Balance after debts',
 };

@@ -13,8 +13,6 @@ type Point struct {
 	Month         string  `json:"month"`
 	Complete      bool    `json:"complete"`
 	TotalEURMinor *string `json:"total_eur_minor"`
-	// Positive amount owed across liability accounts; absent when incomplete.
-	LiabilitiesEURMinor *string `json:"liabilities_eur_minor"`
 }
 
 func (s *Store) History() ([]Point, error) {
@@ -34,7 +32,7 @@ func (s *Store) History() ([]Point, error) {
 			}
 			return nil, e
 		}
-		out = append(out, Point{m.Month, d.Complete, d.TotalEURMinor, d.LiabilitiesEURMinor})
+		out = append(out, Point{m.Month, d.Complete, d.TotalEURMinor})
 	}
 	return out, nil
 }

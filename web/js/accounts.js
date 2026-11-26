@@ -9,25 +9,6 @@ import {
   pluralAccounts,
 } from './format.js';
 import { $, groupVisibilityButtons } from './ui.js';
-import { kindAmount } from './numbers.js';
-
-const KINDS = ['asset', 'liability', 'receivable'];
-const kindLabel = (kind) =>
-  t(
-    kind === 'liability'
-      ? 'kindLiability'
-      : kind === 'receivable'
-        ? 'kindReceivable'
-        : 'kindAsset',
-  );
-// Assets are the default and stay unmarked.
-const kindTag = (kind) =>
-  kind === 'liability' || kind === 'receivable'
-    ? ` <span class="kind-tag kind-${kind}">${kindLabel(kind)}</span>`
-    : '';
-function kindSelector(selected, attribute) {
-  return `<select ${attribute}>${KINDS.map((kind) => `<option value="${kind}" ${kind === selected ? 'selected' : ''}>${kindLabel(kind)}</option>`).join('')}</select>`;
-}
 function groupSelector(selected, attribute) {
   return `<select ${attribute} aria-label="${t('moveToGroup')}"><option value="" ${selected === null ? 'selected' : ''}>${t('ungrouped')}</option>${state.groups.groups.map((g) => `<option value="${g.id}" ${selected === g.id ? 'selected' : ''}>${escapeHTML(g.name)}</option>`).join('')}</select>`;
 }
@@ -72,9 +53,9 @@ async function renderAccounts() {
           a,
           i,
         ) => `<div class="account-row" data-account-row="${a.id}" draggable="${id !== 'archive'}">
-   <div class="account-main">${id === 'archive' ? '' : `<span class="drag-handle" title="${t('dragAccount')}" aria-hidden="true">⠿</span>`}<div class="account-mark">${a.currency === 'EUR' ? '€' : a.currency === 'USD' ? '$' : a.currency === 'RUB' ? '₽' : a.currency === 'TRY' ? '₺' : 'R'}</div><div><strong>${escapeHTML(a.name)} <span class="currency-tag">${a.currency}</span>${kindTag(a.kind)}</strong><small>${t('startMonth')}: ${escapeHTML(monthLabel(a.start_month))} · ${a.archived_from_month ? t('archived') + ' ' + escapeHTML(monthLabel(a.archived_from_month)) : t('active')}</small></div></div>
-   <div class="account-balance"><strong>${moneyHTML(kindAmount(a.kind, balances.get(a.id)), a.currency)}</strong><small>${escapeHTML(monthLabel(state.month, true))}</small></div>
-   <div class="actions"><details class="account-actions-menu" name="account-actions"><summary aria-label="${t('accountActions')}" title="${t('accountActions')}">⋮</summary><div class="action-menu-content"><button type="button" data-action="history" data-id="${a.id}">${t('historyAccount')}</button><button type="button" data-action="rename" data-id="${a.id}">${t('rename')}</button><button type="button" data-action="currency" data-id="${a.id}">${t('changeCurrency')}</button><button type="button" data-action="kind" data-id="${a.id}">${t('changeKind')}</button>${a.archived_from_month ? '' : `<label class="menu-move-label">${t('moveToGroup')}${groupSelector(a.group_id ?? null, 'data-move-account="' + a.id + '"')}</label><button type="button" data-action="up" data-id="${a.id}" ${i === 0 ? 'disabled' : ''}>${t('reorderUp')}</button><button type="button" data-action="down" data-id="${a.id}" ${i === members.length - 1 ? 'disabled' : ''}>${t('reorderDown')}</button>`}<button type="button" data-action="${a.archived_from_month ? 'restore' : 'archive'}" data-id="${a.id}">${t(a.archived_from_month ? 'restore' : 'archive')}</button><button type="button" class="menu-danger" data-action="delete" data-id="${a.id}">${t('delete')}</button></div></details></div>
+   <div class="account-main">${id === 'archive' ? '' : `<span class="drag-handle" title="${t('dragAccount')}" aria-hidden="true">⠿</span>`}<div class="account-mark">${a.currency === 'EUR' ? '€' : a.currency === 'USD' ? '$' : a.currency === 'RUB' ? '₽' : a.currency === 'TRY' ? '₺' : 'R'}</div><div><strong>${escapeHTML(a.name)} <span class="currency-tag">${a.currency}</span></strong><small>${t('startMonth')}: ${escapeHTML(monthLabel(a.start_month))} · ${a.archived_from_month ? t('archived') + ' ' + escapeHTML(monthLabel(a.archived_from_month)) : t('active')}</small></div></div>
+   <div class="account-balance"><strong>${moneyHTML(balances.get(a.id), a.currency)}</strong><small>${escapeHTML(monthLabel(state.month, true))}</small></div>
+   <div class="actions"><details class="account-actions-menu" name="account-actions"><summary aria-label="${t('accountActions')}" title="${t('accountActions')}">⋮</summary><div class="action-menu-content"><button type="button" data-action="history" data-id="${a.id}">${t('historyAccount')}</button><button type="button" data-action="rename" data-id="${a.id}">${t('rename')}</button><button type="button" data-action="currency" data-id="${a.id}">${t('changeCurrency')}</button>${a.archived_from_month ? '' : `<label class="menu-move-label">${t('moveToGroup')}${groupSelector(a.group_id ?? null, 'data-move-account="' + a.id + '"')}</label><button type="button" data-action="up" data-id="${a.id}" ${i === 0 ? 'disabled' : ''}>${t('reorderUp')}</button><button type="button" data-action="down" data-id="${a.id}" ${i === members.length - 1 ? 'disabled' : ''}>${t('reorderDown')}</button>`}<button type="button" data-action="${a.archived_from_month ? 'restore' : 'archive'}" data-id="${a.id}">${t(a.archived_from_month ? 'restore' : 'archive')}</button><button type="button" class="menu-danger" data-action="delete" data-id="${a.id}">${t('delete')}</button></div></details></div>
   </div>`,
       )
       .join('');
@@ -97,10 +78,9 @@ async function renderAccounts() {
       groups.length,
     );
   $('#pageContent').innerHTML =
-    `<section class="card panel"><h2>${t('addAccount')}</h2><p class="caption">${t('currencyHelp')} ${t('kindHelp')}</p><form id="addAccountForm" class="form-row form-row-groups">
+    `<section class="card panel"><h2>${t('addAccount')}</h2><p class="caption">${t('currencyHelp')}</p><form id="addAccountForm" class="form-row form-row-groups">
  <div class="field"><label for="accountName">${t('accountName')}</label><input id="accountName" name="name" maxlength="100" required placeholder="${t('namePlaceholder')}"></div>
  <div class="field"><label for="accountCurrency">${t('currency')}</label><select id="accountCurrency" name="currency">${state.currencies.map((c) => `<option>${c}</option>`).join('')}</select></div>
- <div class="field"><label for="accountKind">${t('accountKind')}</label>${kindSelector('asset', 'id="accountKind" name="kind"')}</div>
  <div class="field"><label for="accountGroup">${t('group')}</label>${groupSelector(null, 'id="accountGroup" name="group"')}</div>
  <div class="field"><label for="accountStart">${t('startMonth')}</label><input id="accountStart" name="start" type="month" min="1900-01" max="2200-12" required value="${state.months.length && state.month <= state.months.at(-1).month ? nextMonth(state.months.at(-1).month, 1) : state.month}"></div>
  <button class="btn btn-primary" type="submit">${t('createAccount')}</button></form></section>
@@ -108,4 +88,4 @@ async function renderAccounts() {
  <p class="caption">${t('dragGroupsHint')}</p>${html}</section>`;
 }
 
-export { renderAccounts, groupSelector, kindSelector, kindTag };
+export { renderAccounts, groupSelector };
