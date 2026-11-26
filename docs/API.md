@@ -13,8 +13,8 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET` | `/api/auth/status` | Return `enabled` and `authenticated`; does not accept device trust as a session |
 | `POST` | `/api/auth/login` | Configured auth only: username/password, optional `remember`, `code`, `trust_device`; returns 204 and cookies on success |
 | `POST` | `/api/auth/logout` | Configured auth only: revoke this session and clear its cookie; preserve device trust |
-| `GET`, `POST` | `/api/accounts` | List / create accounts (`name`, `currency`, `start_month`, optional `group_id`, optional `kind`: `asset` (default), `liability` or `receivable`) |
-| `PATCH`, `DELETE` | `/api/accounts/{id}` | Change account name, `kind` or currency (currency only before any recorded balance; the kind at any time) / delete history-free account |
+| `GET`, `POST` | `/api/accounts` | List / create accounts (`name`, `currency`, `start_month`, optional `group_id`) |
+| `PATCH`, `DELETE` | `/api/accounts/{id}` | Change account name or currency (currency only before any recorded balance) / delete history-free account |
 | `POST` | `/api/accounts/{id}/archive` | `{"month":"2026-11"}`; requires an explicit zero balance in the latest saved month, otherwise returns `409` with reason `archive_requires_zero_balance` |
 | `POST` | `/api/accounts/{id}/restore` | `{"start_month":"2026-12"}` |
 | `PUT` | `/api/accounts/reorder` | `{"ids":[1,2,3]}` full atomic order (legacy) |
@@ -25,7 +25,7 @@ All endpoints use JSON (`Content-Type: application/json` on writes) and errors h
 | `GET`, `POST` | `/api/months` | List / explicitly create empty month |
 | `GET`, `PUT`, `DELETE` | `/api/months/{YYYY-MM}` | Read / replace / delete a month (DELETE requires `{"confirm":true}`) |
 | `GET` | `/api/dashboard?month=YYYY-MM&columns=12` | Summary, previous month and 1–120 monthly columns |
-| `GET` | `/api/capital/history` | Chronological complete/incomplete points; complete points also carry `liabilities_eur_minor` |
+| `GET` | `/api/capital/history` | Chronological complete/incomplete points |
 | `GET`, `PATCH` | `/api/settings` | Read / update appearance (legacy language field retained) |
 | `GET` | `/api/meta` | App identity, version, and build commit; `label` only when `CAPITAL_TRACKER_INSTANCE_LABEL` is set |
 | `GET` | `/api/exchange-rates?month=YYYY-MM` | Fetch the latest available EUR rates on demand; optional month identifies the editor and does not select a historical date; does not save them |
@@ -51,19 +51,6 @@ Example full monthly replacement:
 ```
 
 `PUT /api/months/{month}` creates the month when needed, and removes old balance/rate entries omitted from this request. `POST /api/months` creates a deliberately empty month and rejects duplicates. `DELETE /api/months/{month}` requires JSON `{"confirm":true}` with the CSRF header and permanently removes the month plus its balances and rates via one SQLite transaction; other months remain unchanged. Never call `PUT` with an empty payload unintentionally, as that means clear the month. Requests are limited to 1 MiB.
-
-### Account kinds and the assets/debts split
-
-Every account has a `kind`: `asset`, `liability` (a debt you owe) or `receivable` (money owed to you). `amount_minor` is always the signed contribution to net worth, so a debt of 250.00 is sent and stored as `"-25000"`; the web app shows and accepts it as the positive amount owed and flips the sign itself. The server does not force a sign: an overpaid credit card may hold a positive balance, which reduces the amount owed.
-
-Month responses (`GET`/`PUT /api/months/{month}` and the months inside `/api/dashboard`) add, for complete months only and otherwise `null`:
-
-- `assets_eur_minor`: asset and receivable accounts;
-- `liabilities_eur_minor`: liability accounts, as a positive amount owed;
-- `receivables_eur_minor`: the receivable part of the assets;
-- `debt_ratio_bp`: liabilities as a share of assets in basis points, `null` unless assets are positive.
-
-Each figure is an exact EUR sum rounded once on its own, like group subtotals, so with foreign currencies assets minus liabilities can differ from `total_eur_minor` by a cent. The kind is current, not recorded per month: changing it never alters a saved balance or `total_eur_minor`, only how past months are split.
 
 For `GET /api/groups`, optional `view=monthly` keeps accounts active in the selected month in their assigned groups, including accounts archived later, instead of placing them in Archive. The default view retains the Accounts screen grouping.
 
@@ -100,7 +87,7 @@ When server authentication is configured, protected endpoints require the `capit
 
 Amounts must be nonnegative integer minor-unit strings; each entry requires a trimmed nonempty `name` of at most 100 characters. Multiple entries may share the same currency or name; their order is preserved. Rates mean **1 EUR = rate units of currency**, must be positive, and use at most eight decimals. EUR requires rate `1`. The total sums exact conversions and rounds once. An empty `entries` array records an explicitly reviewed zero-income month. `DELETE /api/incomes/{month}` removes both its entries and review marker. Writes require the regular CSRF header and return HTTP 204. Income notes have independent rates and never create or alter capital months or accounts.
 
-JSON exports use `schema_version: 10` and include each account's `kind`, `incomes`, `expenses`, `expense_groups` (per month: `month` and `groups`), monthly `recurring_expenses` snapshots and `monthly_reviews` markers (`section` and `month`). Versions 1–9 remain importable and, having no account kinds, import every account as an asset; entry-bearing income and expense months in older backups become reviewed months. Version 3 income totals are converted to entries named `Income · {currency}`; versions 1 and 2 contain no income notes. Import replaces all data, including income and expense notes. Versions 1–4 have no expense notes, versions 1–5 have no recurring snapshots, versions 1–6 have no recurring groups, and versions 1–8 have no major-expense groups.
+JSON exports use `schema_version: 9` and include `incomes`, `expenses`, `expense_groups` (per month: `month` and `groups`), monthly `recurring_expenses` snapshots and `monthly_reviews` markers (`section` and `month`). Versions 1–8 remain importable; entry-bearing income and expense months in older backups become reviewed months. Version 3 income totals are converted to entries named `Income · {currency}`; versions 1 and 2 contain no income notes. Import replaces all data, including income and expense notes. Versions 1–4 have no expense notes, versions 1–5 have no recurring snapshots, versions 1–6 have no recurring groups, and versions 1–8 have no major-expense groups.
 
 ## Major expenses
 

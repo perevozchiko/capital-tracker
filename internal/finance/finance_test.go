@@ -63,26 +63,3 @@ func TestPercentCannotOverflowForLargeNetWorthChanges(t *testing.T) {
 		t.Fatal("zero previous month must not have percent")
 	}
 }
-
-func TestRatioBasisPointsString(t *testing.T) {
-	for _, tc := range []struct {
-		part, whole int64
-		want        string
-		ok          bool
-	}{
-		{20000, 130000, "1538", true},
-		{1, 3, "3333", true},
-		{1, 20000, "1", true}, // exactly half a basis point rounds away from zero
-		{0, 100, "0", true},
-		{300, 100, "30000", true},
-		{-700, 100, "-70000", true},
-		{9000000000000000, 1, "90000000000000000000", true},
-		{100, 0, "", false},
-		{100, -5, "", false},
-	} {
-		got, ok := RatioBasisPointsString(tc.part, tc.whole)
-		if got != tc.want || ok != tc.ok {
-			t.Fatalf("ratio(%d,%d) = %q %v, want %q %v", tc.part, tc.whole, got, ok, tc.want, tc.ok)
-		}
-	}
-}

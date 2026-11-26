@@ -2,7 +2,6 @@ import { captureView, state } from './state.js';
 import { api, request } from './api.js';
 import { t } from './messages.js';
 import { rateText, parseMoney, parseRate } from './format.js';
-import { kindAmount } from './numbers.js';
 import { $, notify } from './ui.js';
 import { render, refresh } from './router.js';
 
@@ -64,7 +63,7 @@ async function saveMonth() {
         if (v != null)
           balances.push({
             account_id: Number(el.dataset.balance),
-            amount_minor: kindAmount(el.dataset.kind, v),
+            amount_minor: v,
           });
       }
       if (el.dataset.rate) {
